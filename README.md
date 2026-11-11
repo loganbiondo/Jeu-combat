@@ -1,6 +1,19 @@
 # Arena Ki Fighters
 
-Jeu de combat **téléchargeable** (Electron) — arène type **Smash** + jauge de **ki** façon Dragon Ball, avec **effets spéciaux** (beams, novae, séismes, auras, screen shake, hitstop, after-images).
+Jeu de combat — arène type **Smash** + jauge de **ki**, avec **effets spéciaux**.
+
+## Téléphone (Expo Go → Play Store)
+
+```bash
+cd mobile
+npm install
+npx expo start          # scanne le QR avec Expo Go
+# ou : npx expo start --tunnel
+```
+
+Détails : [mobile/README.md](mobile/README.md)
+
+## Desktop (Electron)
 
 ## Fonctionnalités
 
