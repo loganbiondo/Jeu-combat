@@ -19,9 +19,15 @@
       <header class="home-hero">
         <p class="brand-mark">ARENA KI FIGHTERS</p>
         <h1 class="brand-title">Smash doux.<br />Ki explosif.</h1>
-        <p class="brand-sub">Combats 1v1 / 2v2 — local ou en ligne — effets spéciaux à gogo.</p>
+        <p class="brand-sub">Combats 1v1 / 2v2 — local ou en ligne — et la <strong>Fusion Grok</strong> affichée en combat.</p>
+        <div class="fusion-banner-home" aria-label="Fusion Grok">
+          <span class="fusion-pill">NOUVEAU</span>
+          <strong>Fusion Grok</strong>
+          <em>Remplis la jauge dorée, appuie sur F — bannière + forme × Grok</em>
+        </div>
         <div class="cta-row">
           <button class="btn primary" data-go="mode">Jouer</button>
+          <button class="btn fusion" id="btn-fusion-demo">Fusion Grok</button>
           <button class="btn ghost" data-go="shop">Boutique</button>
           <button class="btn ghost" data-go="howto">Commandes</button>
         </div>
@@ -41,6 +47,7 @@
       <div class="panel">
         <h2>Choisir le mode</h2>
         <div class="mode-grid">
+          <button class="mode-card fusion-mode" data-setup="local-fusion"><span>Local</span><strong>Fusion Grok</strong><em>Jauge pleine — F pour fusionner</em></button>
           <button class="mode-card" data-setup="local-1v1"><span>Local</span><strong>1v1</strong><em>Même écran</em></button>
           <button class="mode-card" data-setup="local-2v2"><span>Local</span><strong>2v2</strong><em>2–4 manettes</em></button>
           <button class="mode-card" data-setup="online-1v1"><span>En ligne</span><strong>1v1</strong><em>Matchmaking</em></button>
@@ -55,6 +62,10 @@
       <div class="panel wide">
         <h2>Sélection des combattants</h2>
         <p id="select-hint" class="hint">Choisis un personnage original pour chaque slot.</p>
+        <div id="fusion-select-panel" class="fusion-select-panel">
+          <strong>Partenaire de Fusion : Grok</strong>
+          <span>En combat, la 3ᵉ barre du HUD = Fusion Grok. Pleine → touche <kbd>F</kbd>.</span>
+        </div>
         <div id="slot-tabs" class="slot-tabs"></div>
         <div id="char-grid" class="char-grid"></div>
         <div class="select-footer">
@@ -82,8 +93,9 @@
           <h3>Journal des coups</h3>
           <ul id="combat-log"></ul>
           <div class="combat-help">
-            <p>P1: WASD/Flèches · J attaque · K spécial · L ultra · I regen</p>
-            <p>P2: 8456 numpad · O/P/[ ] · Manettes OK</p>
+            <p>P1: WASD/Flèches · J attaque · K spécial · L ultra · I regen · <strong>F Fusion Grok</strong></p>
+            <p>P2: 8456 numpad · O/P/[ ] · H Fusion · Manettes OK</p>
+            <p class="fusion-help">Jauge dorée HUD = Fusion Grok — bannière « FUSION GROK ! » à l’activation</p>
           </div>
           <button class="btn ghost tiny" id="btn-forfeit">Abandonner</button>
         </aside>
@@ -141,6 +153,7 @@
           <li><strong>Ki</strong> : se remplit en frappant. Regen (I) soigne. Spéciaux / Ultra consomment du ki.</li>
           <li><strong>Attaques spectaculaires</strong> : charge de ki, cut-in anime, beams, novae, météores, projectiles, shockwaves, slow-mo, screen shake.</li>
           <li><strong>Ultra (L)</strong> : cut-in + charge + explosion multi-hits. <strong>Super Finisher</strong> si l’adversaire a déjà ≥80%.</li>
+          <li><strong>Fusion Grok (F)</strong> : jauge dorée sous le ki. Pleine → fusion avec Grok, bannière plein écran, forme « Héros × Grok », ultra Nova Fusion.</li>
           <li><strong>Audio</strong> : hits, charge, ultra, KO et fanfare de victoire (synthèse Web Audio).</li>
           <li><strong>Stages</strong> : Orbite Douce & Rails de Gelée (tirage aléatoire).</li>
           <li><strong>Local</strong> : clavier + jusqu’à 4 manettes. <strong>Online</strong> : serveur Socket.io.</li>

@@ -427,6 +427,55 @@ export const TECHNIQUES = {
     fx: 'bloom',
     shop: true,
     desc: 'Zone ralentissante + knockback'
+  },
+  // Grok + Fusion
+  wit_slash: {
+    id: 'wit_slash',
+    name: 'Trait d’Esprit',
+    kind: 'special',
+    kiCost: 22,
+    power: 1.3,
+    knock: 1.35,
+    range: 95,
+    cooldown: 1.1,
+    fx: 'trail',
+    desc: 'Slash doré qui fuse humour et ki'
+  },
+  orbit_dash: {
+    id: 'orbit_dash',
+    name: 'Dash Orbital',
+    kind: 'special',
+    kiCost: 24,
+    power: 1.2,
+    knock: 1.45,
+    range: 110,
+    cooldown: 1.25,
+    fx: 'ember',
+    desc: 'Dash en orbite autour de l’adversaire'
+  },
+  cosmic_punchline: {
+    id: 'cosmic_punchline',
+    name: 'Punchline Cosmique',
+    kind: 'ultra',
+    kiCost: 88,
+    power: 2.35,
+    knock: 2.15,
+    range: 170,
+    cooldown: 6,
+    fx: 'aurora',
+    desc: 'Nova d’esprit pur — punchline finale'
+  },
+  fusion_nova: {
+    id: 'fusion_nova',
+    name: 'Nova Fusion Grok',
+    kind: 'ultra',
+    kiCost: 75,
+    power: 2.8,
+    knock: 2.4,
+    range: 200,
+    cooldown: 5,
+    fx: 'spiral',
+    desc: 'Ultra de la Fusion Grok — explosion double âme'
   }
 };
 

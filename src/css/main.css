@@ -128,8 +128,81 @@ html, body {
   border-color: var(--stroke);
   color: var(--ink);
 }
+.btn.fusion {
+  background: linear-gradient(120deg, #111827, #1e3a5f);
+  border: 2px solid #f5d657;
+  color: #f5d657;
+  box-shadow: 0 8px 28px rgba(245, 214, 87, 0.28);
+}
 .btn.tiny { padding: 8px 14px; font-size: 0.85rem; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.fusion-banner-home {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 14px;
+  margin: 0 0 22px;
+  padding: 14px 16px;
+  border: 1px solid rgba(245, 214, 87, 0.45);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(245, 214, 87, 0.18), transparent 45%),
+    rgba(10, 20, 34, 0.72);
+  max-width: 42ch;
+  animation: fusionPulse 2.4s ease-in-out infinite;
+}
+.fusion-banner-home strong {
+  font-family: var(--font-display);
+  color: #f5d657;
+  font-size: 1.15rem;
+}
+.fusion-banner-home em {
+  color: var(--muted);
+  font-style: normal;
+  flex-basis: 100%;
+  font-size: 0.95rem;
+}
+.fusion-pill {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #0b1220;
+  background: #f5d657;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+@keyframes fusionPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 214, 87, 0.15); }
+  50% { box-shadow: 0 0 24px 2px rgba(245, 214, 87, 0.28); }
+}
+.fusion-select-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(245, 214, 87, 0.4);
+  background: rgba(15, 23, 42, 0.65);
+}
+.fusion-select-panel strong { color: #f5d657; font-family: var(--font-display); }
+.fusion-select-panel span { color: var(--muted); font-size: 0.92rem; }
+.fusion-select-panel kbd {
+  font-family: var(--font-display);
+  background: #f5d657;
+  color: #0b1220;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.mode-card.fusion-mode {
+  border-color: rgba(245, 214, 87, 0.65);
+  background: linear-gradient(160deg, rgba(245, 214, 87, 0.18), rgba(15, 23, 42, 0.92));
+  grid-column: 1 / -1;
+}
+.mode-card.fusion-mode strong { color: #f5d657; }
+.fusion-help { color: #f5d657 !important; }
 
 .panel {
   position: relative;

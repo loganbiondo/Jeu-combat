@@ -19,6 +19,7 @@ Détails : [mobile/README.md](mobile/README.md)
 
 - Personnages **100 % originaux** (humains, animaux, supers, gentils, méchants, aliens tout doux)
 - Techniques spéciales & ultras avec FX distincts + **attaques spectaculaires** (cut-in, charge, beams, météores, projectiles, slow-mo)
+- **Fusion Grok** : jauge dorée dans le HUD, touche **F** / bouton FUSION, bannière plein écran, forme « Héros × Grok »
 - **Super Finisher** quand l’adversaire est déjà haut %
 - Audio synthétisé (hits, ki, ultra, KO, victoire)
 - Stages : Orbite Douce, Rails de Gelée
@@ -62,9 +63,10 @@ Dans la console DevTools du jeu : `localStorage.setItem('aki-server', 'http://IP
 | Spécial | K | P |
 | Ultra | L | [ |
 | Regen | I | ] |
+| **Fusion Grok** | **F** | **H** |
 | Saut | Espace / Haut | 8 / 0 |
 
-Manettes : stick + A (saut) · X (attaque) · B (spécial) · Y (ultra) · RB (regen)
+Manettes : stick + A (saut) · X (attaque) · B (spécial) · Y (ultra) · LB/LT (fusion) · RB (regen)
 
 ## Build
 

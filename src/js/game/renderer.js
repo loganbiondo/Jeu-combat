@@ -134,6 +134,24 @@ export class Renderer {
       ctx.restore();
     }
 
+    // Fusion Grok aura
+    if (f.fused) {
+      const pulse = 40 + Math.sin(t * 16) * 10;
+      const aura = ctx.createRadialGradient(0, 0, 6, 0, 0, pulse);
+      aura.addColorStop(0, 'rgba(245,214,87,0.7)');
+      aura.addColorStop(0.45, 'rgba(125,211,252,0.35)');
+      aura.addColorStop(1, 'rgba(15,23,42,0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(0, 0, pulse, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(245,214,87,0.85)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, 34 + Math.sin(t * 10) * 3, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
     // Ki aura when high ki or charging ultra
     if (f.ki > 70 || f.action === 'charge' || f.action === 'ultra') {
       const boost = f.action === 'charge' || f.action === 'ultra' ? 1.6 : 1;
@@ -190,8 +208,14 @@ export class Renderer {
     ctx.lineWidth = 4;
     ctx.strokeStyle = 'rgba(7,17,31,0.75)';
     ctx.strokeText(f.name, f.x, f.y - 48);
-    ctx.fillStyle = '#f8fafc';
+    ctx.fillStyle = f.fused ? '#f5d657' : '#f8fafc';
     ctx.fillText(f.name, f.x, f.y - 48);
+    if (f.fused) {
+      ctx.fillStyle = '#7dd3fc';
+      ctx.font = '800 11px "Exo 2", "Trebuchet MS", sans-serif';
+      ctx.strokeText('FUSION GROK', f.x, f.y - 62);
+      ctx.fillText('FUSION GROK', f.x, f.y - 62);
+    }
     ctx.fillStyle = f.percent > 100 ? '#fb7185' : '#fde047';
     ctx.font = '800 18px "Exo 2", "Trebuchet MS", sans-serif';
     ctx.strokeText(`${f.percent.toFixed(0)}%`, f.x, f.y - 30);
@@ -209,7 +233,7 @@ export class Renderer {
     const slots = fighters.slice().sort((a, b) => a.slot - b.slot);
     slots.forEach((f, i) => {
       const x = 40 + (i % 2) * 640;
-      const y = i < 2 ? 24 : 100;
+      const y = i < 2 ? 24 : 108;
       this.drawFighterHUD(ctx, f, x, y);
     });
     ctx.save();
@@ -223,14 +247,14 @@ export class Renderer {
   drawFighterHUD(ctx, f, x, y) {
     ctx.save();
     ctx.fillStyle = 'rgba(15,23,42,0.55)';
-    ctx.strokeStyle = f.colors?.accent || '#7dd3fc';
+    ctx.strokeStyle = f.fused ? '#f5d657' : f.colors?.accent || '#7dd3fc';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(x, y, 280, 64, 12);
+    ctx.roundRect(x, y, 280, 78, 12);
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = '#f8fafc';
+    ctx.fillStyle = f.fused ? '#f5d657' : '#f8fafc';
     ctx.font = 'bold 14px "Trebuchet MS", sans-serif';
     ctx.fillText(f.name, x + 14, y + 20);
 
@@ -253,6 +277,25 @@ export class Renderer {
     ctx.fillStyle = kiG;
     ctx.fillRect(x + 14, y + 44, 180 * (f.ki / 100), 8);
 
+    // Fusion Grok meter
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(x + 14, y + 58, 180, 8);
+    const fusePct = f.fused
+      ? Math.max(0, f.fusionTimer / 14)
+      : Math.max(0, (f.fusionMeter || 0) / (f.maxFusionMeter || 100));
+    const fuseG = ctx.createLinearGradient(x + 14, 0, x + 194, 0);
+    fuseG.addColorStop(0, '#f5d657');
+    fuseG.addColorStop(1, '#7dd3fc');
+    ctx.fillStyle = fuseG;
+    ctx.fillRect(x + 14, y + 58, 180 * fusePct, 8);
+    ctx.fillStyle = f.fused || fusePct >= 1 ? '#f5d657' : '#94a3b8';
+    ctx.font = '800 10px "Exo 2", "Trebuchet MS", sans-serif';
+    ctx.fillText(
+      f.fused ? `FUSION GROK ${Math.ceil(f.fusionTimer || 0)}s` : fusePct >= 1 ? 'FUSION GROK PRÊTE (F)' : 'FUSION GROK',
+      x + 14,
+      y + 74
+    );
+
     // Stocks
     for (let s = 0; s < f.stocks; s++) {
       ctx.fillStyle = f.colors?.body || '#fff';
@@ -264,6 +307,32 @@ export class Renderer {
     ctx.fillStyle = '#fde047';
     ctx.font = 'bold 18px "Trebuchet MS", sans-serif';
     ctx.fillText(`${f.percent?.toFixed?.(0) ?? 0}%`, x + 210, y + 22);
+    ctx.restore();
+  }
+
+  drawFusionBanner(engine) {
+    if (!engine.fusionBanner || engine.fusionBanner <= 0) return;
+    const ctx = this.ctx;
+    const a = Math.min(1, engine.fusionBanner);
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.fillStyle = 'rgba(7,17,31,0.72)';
+    ctx.fillRect(0, 280, 1280, 120);
+    ctx.strokeStyle = '#f5d657';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(80, 290);
+    ctx.lineTo(1200, 290);
+    ctx.moveTo(80, 390);
+    ctx.lineTo(1200, 390);
+    ctx.stroke();
+    ctx.fillStyle = '#f5d657';
+    ctx.font = '800 54px "Exo 2", "Trebuchet MS", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(engine.fusionBannerText || 'FUSION GROK !', 640, 350);
+    ctx.fillStyle = '#7dd3fc';
+    ctx.font = '800 18px "Exo 2", "Trebuchet MS", sans-serif';
+    ctx.fillText('Deux âmes · un smash cosmique', 640, 378);
     ctx.restore();
   }
 
@@ -287,6 +356,7 @@ export class Renderer {
     engine.fx.draw(ctx);
     for (const f of engine.fighters) this.drawFighter(f, engine.time);
     this.drawHUD(engine.fighters, engine.mode, engine.stage?.name || 'Arène');
+    this.drawFusionBanner(engine);
 
     ctx.restore();
   }

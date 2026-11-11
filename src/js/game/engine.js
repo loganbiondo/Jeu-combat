@@ -1,4 +1,4 @@
-import { getCharacter, SKINS } from '../data/characters.js';
+import { getCharacter, SKINS, FUSION_GROK } from '../data/characters.js';
 import { getTechnique } from '../data/techniques.js';
 import { getStage } from './stages.js';
 import { FXSystem } from './fx.js';
@@ -62,6 +62,20 @@ export class Fighter {
     this.pendingUltra = null;
     this.spectacleTimer = 0;
     this.spectacleHits = 0;
+
+    // Fusion Grok
+    this.baseCharacterId = ch.id;
+    this.baseName = this.name;
+    this.baseColors = { ...this.colors };
+    this.baseStats = { ...this.stats };
+    this.baseSpecials = [...this.specials];
+    this.baseUltraId = this.ultraId;
+    this.fusionMeter = opts.startFused ? 100 : 0;
+    this.maxFusionMeter = 100;
+    this.fused = false;
+    this.fusionTimer = 0;
+    this.fusionFlash = 0;
+    this.canFusion = opts.canFusion !== false && ch.id !== 'grok';
   }
 
   get dead() {
@@ -90,7 +104,14 @@ export class CombatEngine {
       });
     });
     this.host = config.host !== false;
-    this.pushLog('Le combat commence ! Effets spéciaux prêts.');
+    this.fusionBanner = 0;
+    this.fusionBannerText = '';
+    if (config.fusionReady) {
+      for (const f of this.fighters) {
+        if (f.canFusion) f.fusionMeter = f.maxFusionMeter;
+      }
+    }
+    this.pushLog('Le combat commence ! Remplis la jauge Fusion Grok (F).');
   }
 
   pushLog(msg) {
@@ -118,6 +139,13 @@ export class CombatEngine {
     defender.combo += 1;
     attacker.combo += 1;
     attacker.ki = clamp(attacker.ki + 8 * (opts.kiGain || 1) * attacker.stats.kiRegen, 0, attacker.maxKi);
+    if (attacker.canFusion && !attacker.fused) {
+      attacker.fusionMeter = clamp(
+        attacker.fusionMeter + dmg * 0.55 + 4,
+        0,
+        attacker.maxFusionMeter
+      );
+    }
 
     const knockMul = (opts.knock || 1) * (0.7 + defender.percent / 80) / defender.stats.weight;
     const dir = Math.sign(defender.x - attacker.x) || attacker.facing;
@@ -393,6 +421,65 @@ export class CombatEngine {
     this.pushLog(`${f.name} se régénère (+${heal.toFixed(0)} PV).`);
   }
 
+  tryFusion(f) {
+    if (!f.canFusion || f.fused || f.hitstun > 0 || f.chargeTimer > 0) return;
+    if (f.fusionMeter < f.maxFusionMeter) {
+      this.fx.floatText(f.x, f.y - 42, 'FUSION?', '#94a3b8');
+      return;
+    }
+    const mul = FUSION_GROK.statsMul;
+    f.fused = true;
+    f.fusionTimer = FUSION_GROK.duration;
+    f.fusionFlash = 1.2;
+    f.fusionMeter = 0;
+    f.characterId = FUSION_GROK.id;
+    f.name = `${f.baseName} × Grok`;
+    f.colors = { ...FUSION_GROK.colors };
+    f.stats = {
+      hp: f.baseStats.hp * mul.hp,
+      atk: f.baseStats.atk * mul.atk,
+      def: f.baseStats.def * mul.def,
+      speed: f.baseStats.speed * mul.speed,
+      weight: f.baseStats.weight * mul.weight,
+      jump: f.baseStats.jump * mul.jump,
+      kiRegen: f.baseStats.kiRegen * mul.kiRegen
+    };
+    f.maxHp = f.stats.hp;
+    f.hp = clamp(f.hp + 25, 0, f.maxHp);
+    f.ki = f.maxKi;
+    f.specials = [...FUSION_GROK.specials];
+    f.ultraId = FUSION_GROK.ultra;
+    f.radius = 26;
+    f.invuln = Math.max(f.invuln, 0.8);
+    this.fusionBanner = 2.2;
+    this.fusionBannerText = 'FUSION GROK !';
+    this.fx.cutIn(f, 'FUSION GROK');
+    this.fx.shockwave(f.x, f.y, { maxR: 260, color: '#f5d657', width: 16 });
+    this.fx.burst(f.x, f.y, { count: 72, speed: 320, paletteName: 'aurora', gravity: 20, life: 1 });
+    this.fx.floatText(f.x, f.y - 70, 'FUSION GROK', '#f5d657');
+    this.fx.screenShake(14, 0.45);
+    audio.ultra();
+    this.pushLog(`${f.baseName} fusionne avec Grok ! Forme cosmique activée.`);
+  }
+
+  endFusion(f) {
+    if (!f.fused) return;
+    f.fused = false;
+    f.fusionTimer = 0;
+    f.characterId = f.baseCharacterId;
+    f.name = f.baseName;
+    f.colors = { ...f.baseColors };
+    f.stats = { ...f.baseStats };
+    f.maxHp = f.baseStats.hp;
+    f.hp = Math.min(f.hp, f.maxHp);
+    f.specials = [...f.baseSpecials];
+    f.ultraId = f.baseUltraId;
+    f.radius = 22;
+    this.fx.floatText(f.x, f.y - 50, 'FUSION FIN', '#94a3b8');
+    this.fx.burst(f.x, f.y, { count: 28, speed: 180, paletteName: 'aurora' });
+    this.pushLog(`La Fusion Grok de ${f.name} se dissipe.`);
+  }
+
   applyInput(f, input, dt) {
     if (!f.alive || f.dead) return;
     if (f.hitstun > 0 || f.chargeTimer > 0) return;
@@ -415,6 +502,7 @@ export class CombatEngine {
     if (input.special) this.trySpecial(f, 0);
     if (input.ultra) this.tryUltra(f);
     if (input.regen) this.tryRegen(f);
+    if (input.fusion) this.tryFusion(f);
   }
 
   updateSpectacle(f, dt) {
@@ -453,6 +541,7 @@ export class CombatEngine {
     const sdt = dt * (fxState.dtScale || 1);
 
     this.time += sdt;
+    if (this.fusionBanner > 0) this.fusionBanner = Math.max(0, this.fusionBanner - sdt);
 
     // Projectiles vs fighters
     this.fx.collideProjectiles(this.fighters, (proj, target) => {
@@ -494,6 +583,15 @@ export class CombatEngine {
 
       if (f.actionTimer <= 0 && f.action !== 'idle') f.action = 'idle';
       f.ki = clamp(f.ki + sdt * 3.5 * f.stats.kiRegen, 0, f.maxKi);
+      if (f.canFusion && !f.fused) {
+        f.fusionMeter = clamp(f.fusionMeter + sdt * 2.2, 0, f.maxFusionMeter);
+      }
+      if (f.fused) {
+        f.fusionTimer -= sdt;
+        f.fusionFlash = Math.max(0, f.fusionFlash - sdt);
+        if (Math.random() < 0.25) this.fx.afterImage(f);
+        if (f.fusionTimer <= 0) this.endFusion(f);
+      }
 
       this.updateSpectacle(f, sdt);
 
@@ -530,9 +628,16 @@ export class CombatEngine {
         action: f.action,
         colors: f.colors,
         invuln: f.invuln,
-        shieldTimer: f.shieldTimer
+        shieldTimer: f.shieldTimer,
+        fused: f.fused,
+        fusionMeter: f.fusionMeter,
+        maxFusionMeter: f.maxFusionMeter,
+        fusionTimer: f.fusionTimer,
+        canFusion: f.canFusion
       })),
-      log: this.log.slice(0, 12)
+      log: this.log.slice(0, 12),
+      fusionBanner: this.fusionBanner,
+      fusionBannerText: this.fusionBannerText
     };
   }
 }

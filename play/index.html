@@ -49,6 +49,12 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
  radial-gradient(circle at 20% 20%,rgba(245,214,87,.16),transparent 50%),rgba(10,20,34,.75)}
 .heroArt{height:160px;border-radius:20px;margin:8px 0 16px;overflow:hidden;border:1px solid rgba(125,211,252,.25);position:relative}
 .heroArt canvas{width:100%;height:100%}
+.fusionCard{margin:10px 0 14px;padding:14px;border-radius:16px;border:1px solid rgba(245,214,87,.5);
+background:radial-gradient(circle at 15% 20%,rgba(245,214,87,.18),transparent 50%),rgba(10,20,34,.78)}
+.fusionCard strong{display:block;font-family:"Exo 2",sans-serif;color:var(--sun);font-size:1.1rem}
+.fusionCard span{color:var(--muted);font-size:.92rem;line-height:1.35}
+.btn.fusion{border-color:rgba(245,214,87,.7);color:var(--sun);background:linear-gradient(120deg,rgba(17,24,39,.95),rgba(30,58,95,.9))}
+.hold.fusionBtn{border-color:#f5d657;color:#f5d657;min-width:88px}
 </style>
 </head>
 <body>
@@ -57,17 +63,21 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
   <section id="home" class="screen on">
     <div class="brand">ARENA KI FIGHTERS</div>
     <h1>Smash doux.<br/>Ki explosif.</h1>
-    <p class="sub">Combattants originaux, ultras spectaculaires, arène cosmique.</p>
+    <p class="sub">Combattants originaux + Fusion Grok visible en combat.</p>
+    <div class="fusionCard"><strong>✦ Fusion Grok</strong><span>Jauge dorée sous le ki → bouton FUSION → bannière « FUSION GROK ! » et forme Héros × Grok.</span></div>
     <div class="heroArt"><canvas id="heroCanvas" width="640" height="280"></canvas></div>
-    <button class="btn primary" id="goPlay">Jouer 1v1 vs IA</button>
+    <button class="btn primary" id="goFusion">Jouer Fusion Grok</button>
+    <button class="btn" id="goPlay">Jouer 1v1 vs IA</button>
     <button class="btn" id="goChars">Choisir mon héros</button>
   </section>
   <section id="chars" class="screen">
     <div class="brand">ROSTER</div>
     <h1 style="font-size:2rem">Choisis ton style</h1>
-    <p class="sub">Chaque perso a une silhouette et des pouvoirs uniques.</p>
+    <p class="sub">Chaque perso peut fusionner avec Grok en combat.</p>
+    <div class="fusionCard"><strong>Partenaire : Grok</strong><span>En arène, remplis la jauge Fusion puis appuie sur FUSION.</span></div>
     <div class="grid" id="charGrid"></div>
-    <button class="btn primary" id="startFromChars">Entrer dans l'arène</button>
+    <button class="btn primary fusion" id="startFusionFromChars">Entrer en Fusion Grok</button>
+    <button class="btn" id="startFromChars">Entrer dans l'arène</button>
     <button class="btn" data-back="home">Retour</button>
   </section>
   <section id="combat" class="screen">
@@ -84,6 +94,7 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
         <button class="hold" data-hold="attack" type="button" style="border-color:#f5d657">Atk</button>
         <button class="hold" data-hold="special" type="button" style="border-color:#3ec7f0">Spé</button>
         <button class="hold" data-hold="ultra" type="button" style="border-color:#ff6b8a">ULTRA</button>
+        <button class="hold fusionBtn" data-hold="fusion" type="button">FUSION</button>
         <button class="hold" data-hold="regen" type="button" style="border-color:#5ee39a">Regen</button>
       </div>
     </div>
@@ -232,8 +243,31 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       free: false,
       specials: ["velvet_warp", "ki_drain"],
       ultra: "midnight_bloom"
+    },
+    {
+      id: "grok",
+      name: "Grok",
+      role: "super",
+      species: "alien",
+      tagline: "Esprit cosmique \u2014 partenaire de Fusion",
+      colors: { body: "#111827", accent: "#f5d657", outline: "#f8fafc" },
+      stats: { hp: 110, atk: 15, def: 10, speed: 6.6, weight: 1, jump: 14.5, kiRegen: 1.35 },
+      free: true,
+      fusionPartner: true,
+      specials: ["wit_slash", "orbit_dash"],
+      ultra: "cosmic_punchline"
     }
   ];
+  var FUSION_GROK = {
+    id: "fusion_grok",
+    name: "Fusion Grok",
+    tagline: "Deux \xE2mes, un smash cosmique",
+    colors: { body: "#1e293b", accent: "#f5d657", outline: "#7dd3fc" },
+    statsMul: { hp: 1.25, atk: 1.45, def: 1.2, speed: 1.25, jump: 1.15, kiRegen: 1.4, weight: 1.1 },
+    specials: ["wit_slash", "orbit_dash"],
+    ultra: "fusion_nova",
+    duration: 14
+  };
   var SKINS = {
     lumo: {
       aurora: { body: "#a5b4fc", accent: "#86efac", outline: "#312e81", label: "Aurore" }
@@ -675,6 +709,55 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       fx: "bloom",
       shop: true,
       desc: "Zone ralentissante + knockback"
+    },
+    // Grok + Fusion
+    wit_slash: {
+      id: "wit_slash",
+      name: "Trait d\u2019Esprit",
+      kind: "special",
+      kiCost: 22,
+      power: 1.3,
+      knock: 1.35,
+      range: 95,
+      cooldown: 1.1,
+      fx: "trail",
+      desc: "Slash dor\xE9 qui fuse humour et ki"
+    },
+    orbit_dash: {
+      id: "orbit_dash",
+      name: "Dash Orbital",
+      kind: "special",
+      kiCost: 24,
+      power: 1.2,
+      knock: 1.45,
+      range: 110,
+      cooldown: 1.25,
+      fx: "ember",
+      desc: "Dash en orbite autour de l\u2019adversaire"
+    },
+    cosmic_punchline: {
+      id: "cosmic_punchline",
+      name: "Punchline Cosmique",
+      kind: "ultra",
+      kiCost: 88,
+      power: 2.35,
+      knock: 2.15,
+      range: 170,
+      cooldown: 6,
+      fx: "aurora",
+      desc: "Nova d\u2019esprit pur \u2014 punchline finale"
+    },
+    fusion_nova: {
+      id: "fusion_nova",
+      name: "Nova Fusion Grok",
+      kind: "ultra",
+      kiCost: 75,
+      power: 2.8,
+      knock: 2.4,
+      range: 200,
+      cooldown: 5,
+      fx: "spiral",
+      desc: "Ultra de la Fusion Grok \u2014 explosion double \xE2me"
     }
   };
   function getTechnique(id) {
@@ -1782,6 +1865,18 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       this.pendingUltra = null;
       this.spectacleTimer = 0;
       this.spectacleHits = 0;
+      this.baseCharacterId = ch.id;
+      this.baseName = this.name;
+      this.baseColors = { ...this.colors };
+      this.baseStats = { ...this.stats };
+      this.baseSpecials = [...this.specials];
+      this.baseUltraId = this.ultraId;
+      this.fusionMeter = opts.startFused ? 100 : 0;
+      this.maxFusionMeter = 100;
+      this.fused = false;
+      this.fusionTimer = 0;
+      this.fusionFlash = 0;
+      this.canFusion = opts.canFusion !== false && ch.id !== "grok";
     }
     get dead() {
       return this.stocks <= 0;
@@ -1809,7 +1904,14 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
         });
       });
       this.host = config.host !== false;
-      this.pushLog("Le combat commence ! Effets sp\xE9ciaux pr\xEAts.");
+      this.fusionBanner = 0;
+      this.fusionBannerText = "";
+      if (config.fusionReady) {
+        for (const f of this.fighters) {
+          if (f.canFusion) f.fusionMeter = f.maxFusionMeter;
+        }
+      }
+      this.pushLog("Le combat commence ! Remplis la jauge Fusion Grok (F).");
     }
     pushLog(msg) {
       const stamp = this.time.toFixed(1);
@@ -1834,6 +1936,13 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       defender.combo += 1;
       attacker.combo += 1;
       attacker.ki = clamp(attacker.ki + 8 * (opts.kiGain || 1) * attacker.stats.kiRegen, 0, attacker.maxKi);
+      if (attacker.canFusion && !attacker.fused) {
+        attacker.fusionMeter = clamp(
+          attacker.fusionMeter + dmg * 0.55 + 4,
+          0,
+          attacker.maxFusionMeter
+        );
+      }
       const knockMul = (opts.knock || 1) * (0.7 + defender.percent / 80) / defender.stats.weight;
       const dir = Math.sign(defender.x - attacker.x) || attacker.facing;
       defender.vx += dir * 180 * knockMul;
@@ -2077,6 +2186,63 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       audio.regen();
       this.pushLog(`${f.name} se r\xE9g\xE9n\xE8re (+${heal.toFixed(0)} PV).`);
     }
+    tryFusion(f) {
+      if (!f.canFusion || f.fused || f.hitstun > 0 || f.chargeTimer > 0) return;
+      if (f.fusionMeter < f.maxFusionMeter) {
+        this.fx.floatText(f.x, f.y - 42, "FUSION?", "#94a3b8");
+        return;
+      }
+      const mul = FUSION_GROK.statsMul;
+      f.fused = true;
+      f.fusionTimer = FUSION_GROK.duration;
+      f.fusionFlash = 1.2;
+      f.fusionMeter = 0;
+      f.characterId = FUSION_GROK.id;
+      f.name = `${f.baseName} \xD7 Grok`;
+      f.colors = { ...FUSION_GROK.colors };
+      f.stats = {
+        hp: f.baseStats.hp * mul.hp,
+        atk: f.baseStats.atk * mul.atk,
+        def: f.baseStats.def * mul.def,
+        speed: f.baseStats.speed * mul.speed,
+        weight: f.baseStats.weight * mul.weight,
+        jump: f.baseStats.jump * mul.jump,
+        kiRegen: f.baseStats.kiRegen * mul.kiRegen
+      };
+      f.maxHp = f.stats.hp;
+      f.hp = clamp(f.hp + 25, 0, f.maxHp);
+      f.ki = f.maxKi;
+      f.specials = [...FUSION_GROK.specials];
+      f.ultraId = FUSION_GROK.ultra;
+      f.radius = 26;
+      f.invuln = Math.max(f.invuln, 0.8);
+      this.fusionBanner = 2.2;
+      this.fusionBannerText = "FUSION GROK !";
+      this.fx.cutIn(f, "FUSION GROK");
+      this.fx.shockwave(f.x, f.y, { maxR: 260, color: "#f5d657", width: 16 });
+      this.fx.burst(f.x, f.y, { count: 72, speed: 320, paletteName: "aurora", gravity: 20, life: 1 });
+      this.fx.floatText(f.x, f.y - 70, "FUSION GROK", "#f5d657");
+      this.fx.screenShake(14, 0.45);
+      audio.ultra();
+      this.pushLog(`${f.baseName} fusionne avec Grok ! Forme cosmique activ\xE9e.`);
+    }
+    endFusion(f) {
+      if (!f.fused) return;
+      f.fused = false;
+      f.fusionTimer = 0;
+      f.characterId = f.baseCharacterId;
+      f.name = f.baseName;
+      f.colors = { ...f.baseColors };
+      f.stats = { ...f.baseStats };
+      f.maxHp = f.baseStats.hp;
+      f.hp = Math.min(f.hp, f.maxHp);
+      f.specials = [...f.baseSpecials];
+      f.ultraId = f.baseUltraId;
+      f.radius = 22;
+      this.fx.floatText(f.x, f.y - 50, "FUSION FIN", "#94a3b8");
+      this.fx.burst(f.x, f.y, { count: 28, speed: 180, paletteName: "aurora" });
+      this.pushLog(`La Fusion Grok de ${f.name} se dissipe.`);
+    }
     applyInput(f, input, dt) {
       if (!f.alive || f.dead) return;
       if (f.hitstun > 0 || f.chargeTimer > 0) return;
@@ -2098,6 +2264,7 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       if (input.special) this.trySpecial(f, 0);
       if (input.ultra) this.tryUltra(f);
       if (input.regen) this.tryRegen(f);
+      if (input.fusion) this.tryFusion(f);
     }
     updateSpectacle(f, dt) {
       if (f.spectacleTimer <= 0) return;
@@ -2132,6 +2299,7 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       if (fxState.frozen) return;
       const sdt = dt * (fxState.dtScale || 1);
       this.time += sdt;
+      if (this.fusionBanner > 0) this.fusionBanner = Math.max(0, this.fusionBanner - sdt);
       this.fx.collideProjectiles(this.fighters, (proj, target) => {
         const owner = this.fighters.find((x) => x.id === proj.ownerId);
         if (!owner || owner.team === target.team) return false;
@@ -2166,6 +2334,15 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
         }
         if (f.actionTimer <= 0 && f.action !== "idle") f.action = "idle";
         f.ki = clamp(f.ki + sdt * 3.5 * f.stats.kiRegen, 0, f.maxKi);
+        if (f.canFusion && !f.fused) {
+          f.fusionMeter = clamp(f.fusionMeter + sdt * 2.2, 0, f.maxFusionMeter);
+        }
+        if (f.fused) {
+          f.fusionTimer -= sdt;
+          f.fusionFlash = Math.max(0, f.fusionFlash - sdt);
+          if (Math.random() < 0.25) this.fx.afterImage(f);
+          if (f.fusionTimer <= 0) this.endFusion(f);
+        }
         this.updateSpectacle(f, sdt);
         const wasGround = f.onGround;
         const input = inputsBySlot[f.slot] || { moveX: 0 };
@@ -2199,9 +2376,16 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
           action: f.action,
           colors: f.colors,
           invuln: f.invuln,
-          shieldTimer: f.shieldTimer
+          shieldTimer: f.shieldTimer,
+          fused: f.fused,
+          fusionMeter: f.fusionMeter,
+          maxFusionMeter: f.maxFusionMeter,
+          fusionTimer: f.fusionTimer,
+          canFusion: f.canFusion
         })),
-        log: this.log.slice(0, 12)
+        log: this.log.slice(0, 12),
+        fusionBanner: this.fusionBanner,
+        fusionBannerText: this.fusionBannerText
       };
     }
   };
@@ -2276,7 +2460,9 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       bolt: drawBolt,
       quillox: drawQuillox,
       ironpaw: drawIronpaw,
-      velvet: drawVelvet
+      velvet: drawVelvet,
+      grok: drawGrok,
+      fusion_grok: drawFusionGrok
     };
     (drawers[id] || drawLumo)(ctx, { body, accent, o, dark, light, t, action });
     ctx.restore();
@@ -2774,6 +2960,82 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
     ctx.arc(18, 0, 9, 0, Math.PI * 2);
     ctx.fill();
   }
+  function drawGrok(ctx, p) {
+    ctx.fillStyle = "rgba(245,214,87,0.25)";
+    ctx.beginPath();
+    ctx.arc(0, 0, 30, 0, Math.PI * 2);
+    ctx.fill();
+    limb(ctx, -8, 12, -14, 28, 6, p.body, p.o);
+    limb(ctx, 8, 12, 14, 28, 6, p.body, p.o);
+    limb(ctx, -12, 0, -24, -10, 5, p.accent, p.o);
+    limb(ctx, 12, 0, 24, 8, 5, p.accent, p.o);
+    const g = ctx.createRadialGradient(-4, -8, 2, 0, 0, 22);
+    g.addColorStop(0, "#334155");
+    g.addColorStop(1, p.body);
+    ctx.fillStyle = g;
+    ctx.strokeStyle = p.o;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, -2, 18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.strokeStyle = p.accent;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, -2, 22, -0.4, Math.PI * 1.2);
+    ctx.stroke();
+    ctx.fillStyle = p.accent;
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const a = -Math.PI / 2 + i * Math.PI * 2 / 5;
+      const r = i % 2 === 0 ? 10 : 4;
+      const x = Math.cos(a) * r;
+      const y = -22 + Math.sin(a) * r;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    eyes(ctx, -5, -4, 10, 3.4);
+  }
+  function drawFusionGrok(ctx, p) {
+    ctx.fillStyle = "rgba(125,211,252,0.3)";
+    ctx.beginPath();
+    ctx.ellipse(-20, -4, 12, 26, -0.4, 0, Math.PI * 2);
+    ctx.ellipse(20, -4, 12, 26, 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    limb(ctx, -10, 14, -18, 32, 8, p.body, p.o);
+    limb(ctx, 10, 14, 18, 32, 8, p.body, p.o);
+    limb(ctx, -14, 2, -28, -12, 7, p.accent, p.o);
+    limb(ctx, 14, 2, 30, 10, 7, "#7dd3fc", p.o);
+    const g = ctx.createLinearGradient(-20, -28, 20, 28);
+    g.addColorStop(0, "#0f172a");
+    g.addColorStop(0.5, p.body);
+    g.addColorStop(1, "#1e3a5f");
+    ctx.fillStyle = g;
+    ctx.strokeStyle = p.o;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 20, 24, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = p.accent;
+    ctx.beginPath();
+    ctx.arc(-6, -6, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#7dd3fc";
+    ctx.beginPath();
+    ctx.arc(7, -5, 5, 0, Math.PI * 2);
+    ctx.fill();
+    eyes(ctx, -6, -16, 12, 3.2);
+    ctx.strokeStyle = p.accent;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(-16, -28);
+    ctx.lineTo(0, -40);
+    ctx.lineTo(16, -28);
+    ctx.stroke();
+  }
   function drawPortrait(ctx, id, colors, size = 120) {
     ctx.save();
     ctx.clearRect(0, 0, size, size);
@@ -2916,6 +3178,22 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
         ctx.stroke();
         ctx.restore();
       }
+      if (f.fused) {
+        const pulse = 40 + Math.sin(t * 16) * 10;
+        const aura = ctx.createRadialGradient(0, 0, 6, 0, 0, pulse);
+        aura.addColorStop(0, "rgba(245,214,87,0.7)");
+        aura.addColorStop(0.45, "rgba(125,211,252,0.35)");
+        aura.addColorStop(1, "rgba(15,23,42,0)");
+        ctx.fillStyle = aura;
+        ctx.beginPath();
+        ctx.arc(0, 0, pulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(245,214,87,0.85)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, 34 + Math.sin(t * 10) * 3, 0, Math.PI * 2);
+        ctx.stroke();
+      }
       if (f.ki > 70 || f.action === "charge" || f.action === "ultra") {
         const boost = f.action === "charge" || f.action === "ultra" ? 1.6 : 1;
         const pulse = (28 + Math.sin(t * 14) * 6) * boost;
@@ -2963,8 +3241,14 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       ctx.lineWidth = 4;
       ctx.strokeStyle = "rgba(7,17,31,0.75)";
       ctx.strokeText(f.name, f.x, f.y - 48);
-      ctx.fillStyle = "#f8fafc";
+      ctx.fillStyle = f.fused ? "#f5d657" : "#f8fafc";
       ctx.fillText(f.name, f.x, f.y - 48);
+      if (f.fused) {
+        ctx.fillStyle = "#7dd3fc";
+        ctx.font = '800 11px "Exo 2", "Trebuchet MS", sans-serif';
+        ctx.strokeText("FUSION GROK", f.x, f.y - 62);
+        ctx.fillText("FUSION GROK", f.x, f.y - 62);
+      }
       ctx.fillStyle = f.percent > 100 ? "#fb7185" : "#fde047";
       ctx.font = '800 18px "Exo 2", "Trebuchet MS", sans-serif';
       ctx.strokeText(`${f.percent.toFixed(0)}%`, f.x, f.y - 30);
@@ -2981,7 +3265,7 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       const slots = fighters.slice().sort((a, b) => a.slot - b.slot);
       slots.forEach((f, i) => {
         const x = 40 + i % 2 * 640;
-        const y = i < 2 ? 24 : 100;
+        const y = i < 2 ? 24 : 108;
         this.drawFighterHUD(ctx, f, x, y);
       });
       ctx.save();
@@ -2995,13 +3279,13 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       var _a, _b, _c, _d, _e;
       ctx.save();
       ctx.fillStyle = "rgba(15,23,42,0.55)";
-      ctx.strokeStyle = ((_a = f.colors) == null ? void 0 : _a.accent) || "#7dd3fc";
+      ctx.strokeStyle = f.fused ? "#f5d657" : ((_a = f.colors) == null ? void 0 : _a.accent) || "#7dd3fc";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.roundRect(x, y, 280, 64, 12);
+      ctx.roundRect(x, y, 280, 78, 12);
       ctx.fill();
       ctx.stroke();
-      ctx.fillStyle = "#f8fafc";
+      ctx.fillStyle = f.fused ? "#f5d657" : "#f8fafc";
       ctx.font = 'bold 14px "Trebuchet MS", sans-serif';
       ctx.fillText(f.name, x + 14, y + 20);
       ctx.fillStyle = "#334155";
@@ -3019,6 +3303,21 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       kiG.addColorStop(1, "#fef08a");
       ctx.fillStyle = kiG;
       ctx.fillRect(x + 14, y + 44, 180 * (f.ki / 100), 8);
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(x + 14, y + 58, 180, 8);
+      const fusePct = f.fused ? Math.max(0, f.fusionTimer / 14) : Math.max(0, (f.fusionMeter || 0) / (f.maxFusionMeter || 100));
+      const fuseG = ctx.createLinearGradient(x + 14, 0, x + 194, 0);
+      fuseG.addColorStop(0, "#f5d657");
+      fuseG.addColorStop(1, "#7dd3fc");
+      ctx.fillStyle = fuseG;
+      ctx.fillRect(x + 14, y + 58, 180 * fusePct, 8);
+      ctx.fillStyle = f.fused || fusePct >= 1 ? "#f5d657" : "#94a3b8";
+      ctx.font = '800 10px "Exo 2", "Trebuchet MS", sans-serif';
+      ctx.fillText(
+        f.fused ? `FUSION GROK ${Math.ceil(f.fusionTimer || 0)}s` : fusePct >= 1 ? "FUSION GROK PR\xCATE (F)" : "FUSION GROK",
+        x + 14,
+        y + 74
+      );
       for (let s = 0; s < f.stocks; s++) {
         ctx.fillStyle = ((_b = f.colors) == null ? void 0 : _b.body) || "#fff";
         ctx.beginPath();
@@ -3028,6 +3327,31 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       ctx.fillStyle = "#fde047";
       ctx.font = 'bold 18px "Trebuchet MS", sans-serif';
       ctx.fillText(`${(_e = (_d = (_c = f.percent) == null ? void 0 : _c.toFixed) == null ? void 0 : _d.call(_c, 0)) != null ? _e : 0}%`, x + 210, y + 22);
+      ctx.restore();
+    }
+    drawFusionBanner(engine2) {
+      if (!engine2.fusionBanner || engine2.fusionBanner <= 0) return;
+      const ctx = this.ctx;
+      const a = Math.min(1, engine2.fusionBanner);
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.fillStyle = "rgba(7,17,31,0.72)";
+      ctx.fillRect(0, 280, 1280, 120);
+      ctx.strokeStyle = "#f5d657";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(80, 290);
+      ctx.lineTo(1200, 290);
+      ctx.moveTo(80, 390);
+      ctx.lineTo(1200, 390);
+      ctx.stroke();
+      ctx.fillStyle = "#f5d657";
+      ctx.font = '800 54px "Exo 2", "Trebuchet MS", sans-serif';
+      ctx.textAlign = "center";
+      ctx.fillText(engine2.fusionBannerText || "FUSION GROK !", 640, 350);
+      ctx.fillStyle = "#7dd3fc";
+      ctx.font = '800 18px "Exo 2", "Trebuchet MS", sans-serif';
+      ctx.fillText("Deux \xE2mes \xB7 un smash cosmique", 640, 378);
       ctx.restore();
     }
     render(engine2) {
@@ -3047,6 +3371,7 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       engine2.fx.draw(ctx);
       for (const f of engine2.fighters) this.drawFighter(f, engine2.time);
       this.drawHUD(engine2.fighters, engine2.mode, ((_a = engine2.stage) == null ? void 0 : _a.name) || "Ar\xE8ne");
+      this.drawFusionBanner(engine2);
       ctx.restore();
     }
   };
@@ -3081,7 +3406,8 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
         attack: press("attack"),
         special: press("special"),
         ultra: press("ultra"),
-        regen: press("regen")
+        regen: press("regen"),
+        fusion: press("fusion")
       };
       prevHeld[slot] = { ...cur };
     }
@@ -3123,7 +3449,8 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
     engine = new CombatEngine({
       mode: config.mode || "1v1",
       fighters: config.fighters,
-      stocks: (_a = config.stocks) != null ? _a : 3
+      stocks: (_a = config.stocks) != null ? _a : 3,
+      fusionReady: !!config.fusionReady
     });
     renderer = new Renderer(canvas);
     const fit = () => {
@@ -3184,29 +3511,27 @@ const CHARS=[
 {id:'mossy',name:'Mossy',tag:'Gardien forestier · runes vivantes',colors:{body:'#4ade80',accent:'#a3e635',outline:'#14532d'}},
 {id:'zib',name:'Zib',tag:'Alien chaos · étincelles roses',colors:{body:'#f9a8d4',accent:'#67e8f9',outline:'#9d174d'}},
 {id:'kira',name:'Kira',tag:'Parkour · poing solaire',colors:{body:'#fde047',accent:'#38bdf8',outline:'#854d0e'}},
-{id:'bolt',name:'Bolt',tag:'Écureuil survolté · queue foudre',colors:{body:'#fdba74',accent:'#facc15',outline:'#9a3412'}}
+{id:'bolt',name:'Bolt',tag:'Écureuil survolté · queue foudre',colors:{body:'#fdba74',accent:'#facc15',outline:'#9a3412'}},
+{id:'grok',name:'Grok',tag:'Esprit cosmique · partenaire de Fusion',colors:{body:'#111827',accent:'#f5d657',outline:'#f8fafc'}}
 ];
 const PROMPTS=['Inventе un snack qui recharge le ki.','Décris une arène en nuages caramel.','Imagine une danse de victoire ridicule.','Propose un nom de technique inédite.','Écris un haiku sur un smash raté.','Design un stage trampoline gelée.']
 .map(s=>s.replace(/\u0435/g,'e'));
 let me='lumo', moveX=0, fighting=false;
 const $=id=>document.getElementById(id);
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on'); if(id==='home') paintHero();}
-function handleGameMsg(data){if(!data?.type)return; if(data.type==='ready')$('stage').textContent=data.stage||'Arène'; if(data.type==='log')$('log').textContent=(data.log||[]).map(l=>l.msg).slice(0,2).join(' · '); if(data.type==='ended'){fighting=false; const winners=new Set(data.winnerTeams||[]); const names=(data.fighters||[]).filter(f=>winners.has(f.team)).map(f=>f.name).join(' & '); $('winTitle').textContent=names||'Match terminé'; $('rewardText').textContent=PROMPTS[Math.floor(Math.random()*PROMPTS.length)]; show('victory');}}
+function handleGameMsg(data){if(!data?.type)return; if(data.type==='ready')$('stage').textContent=data.stage||'Arène · Fusion Grok active'; if(data.type==='log')$('log').textContent=(data.log||[]).map(l=>l.msg).slice(0,2).join(' · '); if(data.type==='ended'){fighting=false; const winners=new Set(data.winnerTeams||[]); const names=(data.fighters||[]).filter(f=>winners.has(f.team)).map(f=>f.name).join(' & '); $('winTitle').textContent=names||'Match terminé'; $('rewardText').textContent=PROMPTS[Math.floor(Math.random()*PROMPTS.length)]; show('victory');}}
 window.ReactNativeWebView={postMessage(raw){try{handleGameMsg(JSON.parse(raw))}catch{}}};
 function send(msg){window.AKI?.onMessage?.(msg)}
 function sendInput(extra={}){send({type:'input',slot:0,input:{moveX,...extra}})}
 function paintPortrait(canvas,ch){const ctx=canvas.getContext('2d'); window.AKI.drawPortrait(ctx,ch.id,ch.colors,canvas.width)}
-function paintHero(){const c=$('heroCanvas'); const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); const g=ctx.createLinearGradient(0,0,c.width,c.height); g.addColorStop(0,'#0b1d3a'); g.addColorStop(1,'#1e3a5f'); ctx.fillStyle=g; ctx.fillRect(0,0,c.width,c.height); ['lumo','kira','zib','bolt'].forEach((id,i)=>{ctx.save(); ctx.translate(90+i*140,170); ctx.scale(1.6,1.6); const ch=CHARS.find(x=>x.id===id); window.AKI.drawPortrait?null:null; // draw full sprite via temporary
-  // Use drawPortrait into offscreen then blit? Simpler: call onMessage no - use drawPortrait cropped
-  ctx.restore()});
-  // draw four portraits
-  ['lumo','kira','zib','bolt'].forEach((id,i)=>{const off=document.createElement('canvas'); off.width=120; off.height=120; const octx=off.getContext('2d'); const ch=CHARS.find(x=>x.id===id); window.AKI.drawPortrait(octx,ch.id,ch.colors,120); ctx.drawImage(off,40+i*150,70,120,120)})}
+function paintHero(){const c=$('heroCanvas'); const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); const g=ctx.createLinearGradient(0,0,c.width,c.height); g.addColorStop(0,'#0b1d3a'); g.addColorStop(1,'#1e3a5f'); ctx.fillStyle=g; ctx.fillRect(0,0,c.width,c.height);
+  ['lumo','kira','grok','bolt'].forEach((id,i)=>{const off=document.createElement('canvas'); off.width=120; off.height=120; const octx=off.getContext('2d'); const ch=CHARS.find(x=>x.id===id); window.AKI.drawPortrait(octx,ch.id,ch.colors,120); ctx.drawImage(off,40+i*150,70,120,120)})}
 function renderChars(){const grid=$('charGrid'); grid.innerHTML=''; CHARS.forEach(c=>{const b=document.createElement('button'); b.type='button'; b.className='card'+(me===c.id?' on':''); const cv=document.createElement('canvas'); cv.width=180; cv.height=180; b.appendChild(cv); const strong=document.createElement('strong'); strong.textContent=c.name; const small=document.createElement('small'); small.textContent=c.tag; b.appendChild(strong); b.appendChild(small); b.onclick=()=>{me=c.id; renderChars()}; grid.appendChild(b); paintPortrait(cv,c)})}
-function startCombat(){show('combat'); fighting=true; const foe=CHARS.find(c=>c.id!==me)||CHARS[1]; send({type:'start',config:{mode:'1v1',stocks:3,fighters:[{id:'p0',slot:0,team:0,characterId:me,name:CHARS.find(c=>c.id===me).name,stocks:3},{id:'p1',slot:1,team:1,characterId:foe.id,name:foe.name,stocks:3}]}})}
+function startCombat(opts={}){show('combat'); fighting=true; const heroId=me==='grok'?'lumo':me; const foe=CHARS.find(c=>c.id==='grok')||CHARS.find(c=>c.id!==heroId)||CHARS[1]; const hero=CHARS.find(c=>c.id===heroId); send({type:'start',config:{mode:'1v1',stocks:3,fusionReady:!!opts.fusionReady,fighters:[{id:'p0',slot:0,team:0,characterId:hero.id,name:hero.name,stocks:3},{id:'p1',slot:1,team:1,characterId:foe.id,name:foe.name,stocks:3}]}})}
 setInterval(()=>{if(!fighting||!$('combat').classList.contains('on'))return; send({type:'input',slot:1,input:{moveX:Math.random()>.5?1:-1,jump:Math.random()>.92,attack:Math.random()>.85,special:Math.random()>.95,ultra:Math.random()>.985}})},180);
 function bindHold(el,on,off){const s=e=>{e.preventDefault();on()}; const e=ev=>{ev.preventDefault();off()}; el.addEventListener('touchstart',s,{passive:false}); el.addEventListener('touchend',e); el.addEventListener('touchcancel',e); el.addEventListener('mousedown',s); el.addEventListener('mouseup',e); el.addEventListener('mouseleave',e)}
 document.querySelectorAll('[data-hold]').forEach(el=>{const k=el.getAttribute('data-hold'); if(k==='left')bindHold(el,()=>{moveX=-1;sendInput({moveX:-1})},()=>{moveX=0;sendInput({moveX:0})}); else if(k==='right')bindHold(el,()=>{moveX=1;sendInput({moveX:1})},()=>{moveX=0;sendInput({moveX:0})}); else bindHold(el,()=>sendInput({[k]:true}),()=>sendInput({[k]:false}))});
-$('goPlay').onclick=startCombat; $('goChars').onclick=()=>{renderChars();show('chars')}; $('startFromChars').onclick=startCombat; $('forfeit').onclick=()=>send({type:'forfeit'});
+$('goPlay').onclick=()=>startCombat(); $('goFusion').onclick=()=>startCombat({fusionReady:true}); $('goChars').onclick=()=>{renderChars();show('chars')}; $('startFromChars').onclick=()=>startCombat(); $('startFusionFromChars').onclick=()=>startCombat({fusionReady:true}); $('forfeit').onclick=()=>send({type:'forfeit'});
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>show(b.getAttribute('data-back')));
 paintHero();
 </script>

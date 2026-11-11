@@ -76,7 +76,9 @@ export function drawCharacterSprite(ctx, id, colors, t, action = 'idle') {
     bolt: drawBolt,
     quillox: drawQuillox,
     ironpaw: drawIronpaw,
-    velvet: drawVelvet
+    velvet: drawVelvet,
+    grok: drawGrok,
+    fusion_grok: drawFusionGrok
   };
   (drawers[id] || drawLumo)(ctx, { body, accent, o, dark, light, t, action });
   ctx.restore();
@@ -641,6 +643,89 @@ function drawVelvet(ctx, p) {
   ctx.beginPath();
   ctx.arc(18, 0, 9, 0, Math.PI * 2);
   ctx.fill();
+}
+
+function drawGrok(ctx, p) {
+  // Cosmic wit spirit — dark core + gold ring + star eye
+  ctx.fillStyle = 'rgba(245,214,87,0.25)';
+  ctx.beginPath();
+  ctx.arc(0, 0, 30, 0, Math.PI * 2);
+  ctx.fill();
+  limb(ctx, -8, 12, -14, 28, 6, p.body, p.o);
+  limb(ctx, 8, 12, 14, 28, 6, p.body, p.o);
+  limb(ctx, -12, 0, -24, -10, 5, p.accent, p.o);
+  limb(ctx, 12, 0, 24, 8, 5, p.accent, p.o);
+  const g = ctx.createRadialGradient(-4, -8, 2, 0, 0, 22);
+  g.addColorStop(0, '#334155');
+  g.addColorStop(1, p.body);
+  ctx.fillStyle = g;
+  ctx.strokeStyle = p.o;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(0, -2, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.strokeStyle = p.accent;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(0, -2, 22, -0.4, Math.PI * 1.2);
+  ctx.stroke();
+  // star crest
+  ctx.fillStyle = p.accent;
+  ctx.beginPath();
+  for (let i = 0; i < 5; i++) {
+    const a = -Math.PI / 2 + (i * Math.PI * 2) / 5;
+    const r = i % 2 === 0 ? 10 : 4;
+    const x = Math.cos(a) * r;
+    const y = -22 + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+  eyes(ctx, -5, -4, 10, 3.4);
+}
+
+function drawFusionGrok(ctx, p) {
+  // Dual-soul fused form — larger, gold/cyan ribbons
+  ctx.fillStyle = 'rgba(125,211,252,0.3)';
+  ctx.beginPath();
+  ctx.ellipse(-20, -4, 12, 26, -0.4, 0, Math.PI * 2);
+  ctx.ellipse(20, -4, 12, 26, 0.4, 0, Math.PI * 2);
+  ctx.fill();
+  limb(ctx, -10, 14, -18, 32, 8, p.body, p.o);
+  limb(ctx, 10, 14, 18, 32, 8, p.body, p.o);
+  limb(ctx, -14, 2, -28, -12, 7, p.accent, p.o);
+  limb(ctx, 14, 2, 30, 10, 7, '#7dd3fc', p.o);
+  const g = ctx.createLinearGradient(-20, -28, 20, 28);
+  g.addColorStop(0, '#0f172a');
+  g.addColorStop(0.5, p.body);
+  g.addColorStop(1, '#1e3a5f');
+  ctx.fillStyle = g;
+  ctx.strokeStyle = p.o;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 20, 24, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // twin cores
+  ctx.fillStyle = p.accent;
+  ctx.beginPath();
+  ctx.arc(-6, -6, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#7dd3fc';
+  ctx.beginPath();
+  ctx.arc(7, -5, 5, 0, Math.PI * 2);
+  ctx.fill();
+  eyes(ctx, -6, -16, 12, 3.2);
+  // crown flare
+  ctx.strokeStyle = p.accent;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(-16, -28);
+  ctx.lineTo(0, -40);
+  ctx.lineTo(16, -28);
+  ctx.stroke();
 }
 
 /** Portrait carré pour UI (sélection) */

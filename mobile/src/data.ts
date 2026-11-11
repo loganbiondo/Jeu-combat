@@ -17,6 +17,7 @@ export const CHARACTERS: Character[] = [
   { id: 'zib', name: 'Zib', role: 'méchant', species: 'alien', tagline: 'Chaos rose', colors: { body: '#f9a8d4', accent: '#67e8f9', outline: '#9d174d' }, free: true },
   { id: 'kira', name: 'Kira', role: 'gentil', species: 'humain', tagline: 'Poing solaire', colors: { body: '#fde047', accent: '#38bdf8', outline: '#854d0e' }, free: true },
   { id: 'bolt', name: 'Bolt', role: 'super', species: 'animal', tagline: 'Écureuil survolté', colors: { body: '#fdba74', accent: '#facc15', outline: '#9a3412' }, free: true },
+  { id: 'grok', name: 'Grok', role: 'super', species: 'alien', tagline: 'Partenaire de Fusion', colors: { body: '#111827', accent: '#f5d657', outline: '#f8fafc' }, free: true },
   { id: 'quillox', name: 'Quillox', role: 'gentil', species: 'alien', tagline: 'Plumes tourbillons', colors: { body: '#99f6e4', accent: '#e9d5ff', outline: '#115e59' }, free: false },
   { id: 'ironpaw', name: 'Ironpaw', role: 'super', species: 'animal', tagline: 'Félin blindé', colors: { body: '#94a3b8', accent: '#f97316', outline: '#1e293b' }, free: false },
   { id: 'velvet', name: 'Velvet Nyx', role: 'méchant', species: 'humain', tagline: 'Téléport velours', colors: { body: '#e879f9', accent: '#1e1b4b', outline: '#4a044e' }, free: false }

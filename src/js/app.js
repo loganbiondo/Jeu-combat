@@ -176,7 +176,7 @@ function stopLoop() {
   state.engine = null;
 }
 
-function startCombat(fighters, { online = false, host = true } = {}) {
+function startCombat(fighters, { online = false, host = true, fusionReady = false } = {}) {
   stopLoop();
   showScreen('combat');
   const canvas = document.getElementById('game-canvas');
@@ -185,7 +185,8 @@ function startCombat(fighters, { online = false, host = true } = {}) {
     online,
     fighters,
     host,
-    stocks: 3
+    stocks: 3,
+    fusionReady: fusionReady || !!state.setup?.fusionReady
   });
   state.renderer = new Renderer(canvas);
   state.renderer.resize();
@@ -506,16 +507,33 @@ function bindUI() {
       audio.ui();
       const key = btn.getAttribute('data-setup');
       const [net, mode] = key.split('-');
-      state.setup = { online: net === 'online', mode };
+      const fusionMode = mode === 'fusion';
+      state.setup = {
+        online: net === 'online',
+        mode: fusionMode ? '1v1' : mode,
+        fusionReady: fusionMode
+      };
       initSelections();
       renderSelect();
       showScreen('select');
     });
   });
 
+  document.getElementById('btn-fusion-demo')?.addEventListener('click', () => {
+    audio.ui();
+    state.setup = { online: false, mode: '1v1', fusionReady: true };
+    initSelections();
+    // Prefer a free non-Grok hero so Fusion Grok is visible
+    const hero = CHARACTERS.find((c) => c.free && c.id !== 'grok') || CHARACTERS[0];
+    const foe = CHARACTERS.find((c) => c.id === 'grok') || CHARACTERS[1];
+    state.selections[0].characterId = hero.id;
+    state.selections[1].characterId = foe.id;
+    startCombat(fighterConfigsFromSelections(), { online: false, fusionReady: true });
+  });
+
   document.getElementById('btn-start-match').addEventListener('click', () => {
     if (state.setup.online) startOnlineFlow();
-    else startCombat(fighterConfigsFromSelections(), { online: false });
+    else startCombat(fighterConfigsFromSelections(), { online: false, fusionReady: !!state.setup.fusionReady });
   });
 
   document.getElementById('btn-cancel-queue').addEventListener('click', () => {

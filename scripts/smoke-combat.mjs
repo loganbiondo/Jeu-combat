@@ -39,6 +39,7 @@ globalThis.AudioContext = class {
 
 const engine = new CombatEngine({
   mode: '1v1',
+  fusionReady: true,
   fighters: [
     { id: 'a', slot: 0, team: 0, characterId: 'lumo', name: 'Lumo', stocks: 2 },
     { id: 'b', slot: 1, team: 1, characterId: 'zib', name: 'Zib', stocks: 2 }
@@ -51,6 +52,7 @@ engine.fighters[1].ki = 100;
 
 let frames = 0;
 const maxFrames = 60 * 45; // 45s
+let sawFusion = false;
 while (!engine.ended && frames < maxFrames) {
   const inputs = {
     0: {
@@ -59,7 +61,8 @@ while (!engine.ended && frames < maxFrames) {
       attack: frames % 18 === 0,
       special: frames % 90 === 10,
       ultra: frames === 120 || frames === 600,
-      regen: frames % 200 === 50
+      regen: frames % 200 === 50,
+      fusion: frames === 30
     },
     1: {
       moveX: frames % 35 < 18 ? -1 : 1,
@@ -67,23 +70,26 @@ while (!engine.ended && frames < maxFrames) {
       attack: frames % 22 === 0,
       special: frames % 100 === 20,
       ultra: frames === 200,
-      regen: false
+      regen: false,
+      fusion: false
     }
   };
   engine.update(1 / 60, inputs);
+  if (engine.fighters[0].fused || (engine.fusionBannerText || '').includes('FUSION')) sawFusion = true;
   frames += 1;
 }
 
 const snap = engine.snapshot();
-const ok = snap.log.length > 0 && (snap.ended || frames >= maxFrames);
+const ok = snap.log.length > 0 && (snap.ended || frames >= maxFrames) && sawFusion;
 console.log(
   JSON.stringify(
     {
       ok,
       ended: snap.ended,
       frames,
+      sawFusion,
       winners: snap.winnerTeams,
-      stocks: snap.fighters.map((f) => ({ name: f.name, stocks: f.stocks, percent: Math.round(f.percent) })),
+      stocks: snap.fighters.map((f) => ({ name: f.name, stocks: f.stocks, percent: Math.round(f.percent), fused: f.fused })),
       logHead: snap.log.slice(0, 5).map((l) => l.msg)
     },
     null,

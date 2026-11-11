@@ -131,8 +131,33 @@ export const CHARACTERS = [
     free: false,
     specials: ['velvet_warp', 'ki_drain'],
     ultra: 'midnight_bloom'
+  },
+  {
+    id: 'grok',
+    name: 'Grok',
+    role: 'super',
+    species: 'alien',
+    tagline: 'Esprit cosmique — partenaire de Fusion',
+    colors: { body: '#111827', accent: '#f5d657', outline: '#f8fafc' },
+    stats: { hp: 110, atk: 15, def: 10, speed: 6.6, weight: 1.0, jump: 14.5, kiRegen: 1.35 },
+    free: true,
+    fusionPartner: true,
+    specials: ['wit_slash', 'orbit_dash'],
+    ultra: 'cosmic_punchline'
   }
 ];
+
+/** Forme fusionnée héros × Grok — stats boost + ultra dédiée */
+export const FUSION_GROK = {
+  id: 'fusion_grok',
+  name: 'Fusion Grok',
+  tagline: 'Deux âmes, un smash cosmique',
+  colors: { body: '#1e293b', accent: '#f5d657', outline: '#7dd3fc' },
+  statsMul: { hp: 1.25, atk: 1.45, def: 1.2, speed: 1.25, jump: 1.15, kiRegen: 1.4, weight: 1.1 },
+  specials: ['wit_slash', 'orbit_dash'],
+  ultra: 'fusion_nova',
+  duration: 14
+};
 
 export const SKINS = {
   lumo: {

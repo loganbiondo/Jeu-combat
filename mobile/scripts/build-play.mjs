@@ -76,6 +76,12 @@ ${cssGame}
  radial-gradient(circle at 20% 20%,rgba(245,214,87,.16),transparent 50%),rgba(10,20,34,.75)}
 .heroArt{height:160px;border-radius:20px;margin:8px 0 16px;overflow:hidden;border:1px solid rgba(125,211,252,.25);position:relative}
 .heroArt canvas{width:100%;height:100%}
+.fusionCard{margin:10px 0 14px;padding:14px;border-radius:16px;border:1px solid rgba(245,214,87,.5);
+background:radial-gradient(circle at 15% 20%,rgba(245,214,87,.18),transparent 50%),rgba(10,20,34,.78)}
+.fusionCard strong{display:block;font-family:"Exo 2",sans-serif;color:var(--sun);font-size:1.1rem}
+.fusionCard span{color:var(--muted);font-size:.92rem;line-height:1.35}
+.btn.fusion{border-color:rgba(245,214,87,.7);color:var(--sun);background:linear-gradient(120deg,rgba(17,24,39,.95),rgba(30,58,95,.9))}
+.hold.fusionBtn{border-color:#f5d657;color:#f5d657;min-width:88px}
 </style>
 </head>
 <body>
@@ -84,17 +90,21 @@ ${cssGame}
   <section id="home" class="screen on">
     <div class="brand">ARENA KI FIGHTERS</div>
     <h1>Smash doux.<br/>Ki explosif.</h1>
-    <p class="sub">Combattants originaux, ultras spectaculaires, arène cosmique.</p>
+    <p class="sub">Combattants originaux + Fusion Grok visible en combat.</p>
+    <div class="fusionCard"><strong>✦ Fusion Grok</strong><span>Jauge dorée sous le ki → bouton FUSION → bannière « FUSION GROK ! » et forme Héros × Grok.</span></div>
     <div class="heroArt"><canvas id="heroCanvas" width="640" height="280"></canvas></div>
-    <button class="btn primary" id="goPlay">Jouer 1v1 vs IA</button>
+    <button class="btn primary" id="goFusion">Jouer Fusion Grok</button>
+    <button class="btn" id="goPlay">Jouer 1v1 vs IA</button>
     <button class="btn" id="goChars">Choisir mon héros</button>
   </section>
   <section id="chars" class="screen">
     <div class="brand">ROSTER</div>
     <h1 style="font-size:2rem">Choisis ton style</h1>
-    <p class="sub">Chaque perso a une silhouette et des pouvoirs uniques.</p>
+    <p class="sub">Chaque perso peut fusionner avec Grok en combat.</p>
+    <div class="fusionCard"><strong>Partenaire : Grok</strong><span>En arène, remplis la jauge Fusion puis appuie sur FUSION.</span></div>
     <div class="grid" id="charGrid"></div>
-    <button class="btn primary" id="startFromChars">Entrer dans l'arène</button>
+    <button class="btn primary fusion" id="startFusionFromChars">Entrer en Fusion Grok</button>
+    <button class="btn" id="startFromChars">Entrer dans l'arène</button>
     <button class="btn" data-back="home">Retour</button>
   </section>
   <section id="combat" class="screen">
@@ -111,6 +121,7 @@ ${cssGame}
         <button class="hold" data-hold="attack" type="button" style="border-color:#f5d657">Atk</button>
         <button class="hold" data-hold="special" type="button" style="border-color:#3ec7f0">Spé</button>
         <button class="hold" data-hold="ultra" type="button" style="border-color:#ff6b8a">ULTRA</button>
+        <button class="hold fusionBtn" data-hold="fusion" type="button">FUSION</button>
         <button class="hold" data-hold="regen" type="button" style="border-color:#5ee39a">Regen</button>
       </div>
     </div>
@@ -135,29 +146,27 @@ const CHARS=[
 {id:'mossy',name:'Mossy',tag:'Gardien forestier · runes vivantes',colors:{body:'#4ade80',accent:'#a3e635',outline:'#14532d'}},
 {id:'zib',name:'Zib',tag:'Alien chaos · étincelles roses',colors:{body:'#f9a8d4',accent:'#67e8f9',outline:'#9d174d'}},
 {id:'kira',name:'Kira',tag:'Parkour · poing solaire',colors:{body:'#fde047',accent:'#38bdf8',outline:'#854d0e'}},
-{id:'bolt',name:'Bolt',tag:'Écureuil survolté · queue foudre',colors:{body:'#fdba74',accent:'#facc15',outline:'#9a3412'}}
+{id:'bolt',name:'Bolt',tag:'Écureuil survolté · queue foudre',colors:{body:'#fdba74',accent:'#facc15',outline:'#9a3412'}},
+{id:'grok',name:'Grok',tag:'Esprit cosmique · partenaire de Fusion',colors:{body:'#111827',accent:'#f5d657',outline:'#f8fafc'}}
 ];
 const PROMPTS=['Inventе un snack qui recharge le ki.','Décris une arène en nuages caramel.','Imagine une danse de victoire ridicule.','Propose un nom de technique inédite.','Écris un haiku sur un smash raté.','Design un stage trampoline gelée.']
 .map(s=>s.replace(/\\u0435/g,'e'));
 let me='lumo', moveX=0, fighting=false;
 const $=id=>document.getElementById(id);
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on'); if(id==='home') paintHero();}
-function handleGameMsg(data){if(!data?.type)return; if(data.type==='ready')$('stage').textContent=data.stage||'Arène'; if(data.type==='log')$('log').textContent=(data.log||[]).map(l=>l.msg).slice(0,2).join(' · '); if(data.type==='ended'){fighting=false; const winners=new Set(data.winnerTeams||[]); const names=(data.fighters||[]).filter(f=>winners.has(f.team)).map(f=>f.name).join(' & '); $('winTitle').textContent=names||'Match terminé'; $('rewardText').textContent=PROMPTS[Math.floor(Math.random()*PROMPTS.length)]; show('victory');}}
+function handleGameMsg(data){if(!data?.type)return; if(data.type==='ready')$('stage').textContent=data.stage||'Arène · Fusion Grok active'; if(data.type==='log')$('log').textContent=(data.log||[]).map(l=>l.msg).slice(0,2).join(' · '); if(data.type==='ended'){fighting=false; const winners=new Set(data.winnerTeams||[]); const names=(data.fighters||[]).filter(f=>winners.has(f.team)).map(f=>f.name).join(' & '); $('winTitle').textContent=names||'Match terminé'; $('rewardText').textContent=PROMPTS[Math.floor(Math.random()*PROMPTS.length)]; show('victory');}}
 window.ReactNativeWebView={postMessage(raw){try{handleGameMsg(JSON.parse(raw))}catch{}}};
 function send(msg){window.AKI?.onMessage?.(msg)}
 function sendInput(extra={}){send({type:'input',slot:0,input:{moveX,...extra}})}
 function paintPortrait(canvas,ch){const ctx=canvas.getContext('2d'); window.AKI.drawPortrait(ctx,ch.id,ch.colors,canvas.width)}
-function paintHero(){const c=$('heroCanvas'); const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); const g=ctx.createLinearGradient(0,0,c.width,c.height); g.addColorStop(0,'#0b1d3a'); g.addColorStop(1,'#1e3a5f'); ctx.fillStyle=g; ctx.fillRect(0,0,c.width,c.height); ['lumo','kira','zib','bolt'].forEach((id,i)=>{ctx.save(); ctx.translate(90+i*140,170); ctx.scale(1.6,1.6); const ch=CHARS.find(x=>x.id===id); window.AKI.drawPortrait?null:null; // draw full sprite via temporary
-  // Use drawPortrait into offscreen then blit? Simpler: call onMessage no - use drawPortrait cropped
-  ctx.restore()});
-  // draw four portraits
-  ['lumo','kira','zib','bolt'].forEach((id,i)=>{const off=document.createElement('canvas'); off.width=120; off.height=120; const octx=off.getContext('2d'); const ch=CHARS.find(x=>x.id===id); window.AKI.drawPortrait(octx,ch.id,ch.colors,120); ctx.drawImage(off,40+i*150,70,120,120)})}
+function paintHero(){const c=$('heroCanvas'); const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); const g=ctx.createLinearGradient(0,0,c.width,c.height); g.addColorStop(0,'#0b1d3a'); g.addColorStop(1,'#1e3a5f'); ctx.fillStyle=g; ctx.fillRect(0,0,c.width,c.height);
+  ['lumo','kira','grok','bolt'].forEach((id,i)=>{const off=document.createElement('canvas'); off.width=120; off.height=120; const octx=off.getContext('2d'); const ch=CHARS.find(x=>x.id===id); window.AKI.drawPortrait(octx,ch.id,ch.colors,120); ctx.drawImage(off,40+i*150,70,120,120)})}
 function renderChars(){const grid=$('charGrid'); grid.innerHTML=''; CHARS.forEach(c=>{const b=document.createElement('button'); b.type='button'; b.className='card'+(me===c.id?' on':''); const cv=document.createElement('canvas'); cv.width=180; cv.height=180; b.appendChild(cv); const strong=document.createElement('strong'); strong.textContent=c.name; const small=document.createElement('small'); small.textContent=c.tag; b.appendChild(strong); b.appendChild(small); b.onclick=()=>{me=c.id; renderChars()}; grid.appendChild(b); paintPortrait(cv,c)})}
-function startCombat(){show('combat'); fighting=true; const foe=CHARS.find(c=>c.id!==me)||CHARS[1]; send({type:'start',config:{mode:'1v1',stocks:3,fighters:[{id:'p0',slot:0,team:0,characterId:me,name:CHARS.find(c=>c.id===me).name,stocks:3},{id:'p1',slot:1,team:1,characterId:foe.id,name:foe.name,stocks:3}]}})}
+function startCombat(opts={}){show('combat'); fighting=true; const heroId=me==='grok'?'lumo':me; const foe=CHARS.find(c=>c.id==='grok')||CHARS.find(c=>c.id!==heroId)||CHARS[1]; const hero=CHARS.find(c=>c.id===heroId); send({type:'start',config:{mode:'1v1',stocks:3,fusionReady:!!opts.fusionReady,fighters:[{id:'p0',slot:0,team:0,characterId:hero.id,name:hero.name,stocks:3},{id:'p1',slot:1,team:1,characterId:foe.id,name:foe.name,stocks:3}]}})}
 setInterval(()=>{if(!fighting||!$('combat').classList.contains('on'))return; send({type:'input',slot:1,input:{moveX:Math.random()>.5?1:-1,jump:Math.random()>.92,attack:Math.random()>.85,special:Math.random()>.95,ultra:Math.random()>.985}})},180);
 function bindHold(el,on,off){const s=e=>{e.preventDefault();on()}; const e=ev=>{ev.preventDefault();off()}; el.addEventListener('touchstart',s,{passive:false}); el.addEventListener('touchend',e); el.addEventListener('touchcancel',e); el.addEventListener('mousedown',s); el.addEventListener('mouseup',e); el.addEventListener('mouseleave',e)}
 document.querySelectorAll('[data-hold]').forEach(el=>{const k=el.getAttribute('data-hold'); if(k==='left')bindHold(el,()=>{moveX=-1;sendInput({moveX:-1})},()=>{moveX=0;sendInput({moveX:0})}); else if(k==='right')bindHold(el,()=>{moveX=1;sendInput({moveX:1})},()=>{moveX=0;sendInput({moveX:0})}); else bindHold(el,()=>sendInput({[k]:true}),()=>sendInput({[k]:false}))});
-$('goPlay').onclick=startCombat; $('goChars').onclick=()=>{renderChars();show('chars')}; $('startFromChars').onclick=startCombat; $('forfeit').onclick=()=>send({type:'forfeit'});
+$('goPlay').onclick=()=>startCombat(); $('goFusion').onclick=()=>startCombat({fusionReady:true}); $('goChars').onclick=()=>{renderChars();show('chars')}; $('startFromChars').onclick=()=>startCombat(); $('startFusionFromChars').onclick=()=>startCombat({fusionReady:true}); $('forfeit').onclick=()=>send({type:'forfeit'});
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>show(b.getAttribute('data-back')));
 paintHero();
 </script>

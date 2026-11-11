@@ -37,7 +37,8 @@ function edgeInputs() {
       attack: press('attack'),
       special: press('special'),
       ultra: press('ultra'),
-      regen: press('regen')
+      regen: press('regen'),
+      fusion: press('fusion')
     };
     prevHeld[slot] = { ...cur };
   }
@@ -83,7 +84,8 @@ function startCombat(config) {
   engine = new CombatEngine({
     mode: config.mode || '1v1',
     fighters: config.fighters,
-    stocks: config.stocks ?? 3
+    stocks: config.stocks ?? 3,
+    fusionReady: !!config.fusionReady
   });
   renderer = new Renderer(canvas);
   const fit = () => {

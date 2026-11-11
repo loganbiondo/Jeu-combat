@@ -10,6 +10,7 @@ const KEY_MAPS = [
     special: ['KeyK', 'KeyX'],
     ultra: ['KeyL', 'KeyC'],
     regen: ['KeyI', 'KeyV'],
+    fusion: ['KeyF', 'KeyG'],
     jump: ['Space', 'KeyW', 'ArrowUp']
   },
   // P2
@@ -22,6 +23,7 @@ const KEY_MAPS = [
     special: ['KeyP'],
     ultra: ['BracketLeft'],
     regen: ['BracketRight'],
+    fusion: ['KeyH', 'KeyN'],
     jump: ['Digit8', 'Numpad8', 'Numpad0']
   }
 ];
@@ -76,6 +78,7 @@ export class InputManager {
     let special = this.anyPressed(map.special);
     let ultra = this.anyPressed(map.ultra);
     let regen = this.anyPressed(map.regen);
+    let fusion = this.anyPressed(map.fusion || []);
 
     if (pad) {
       const ax = pad.axes[0] || 0;
@@ -92,12 +95,15 @@ export class InputManager {
       special = special || edge(1);
       ultra = ultra || edge(3);
       regen = regen || edge(5) || edge(7);
+      fusion = fusion || edge(4) || edge(6);
       this.padPrev[slot] = {
         0: btn(0),
         1: btn(1),
         2: btn(2),
         3: btn(3),
+        4: btn(4),
         5: btn(5),
+        6: btn(6),
         7: btn(7),
         12: btn(12)
       };
@@ -115,11 +121,12 @@ export class InputManager {
         special: false,
         ultra: false,
         regen: false,
+        fusion: false,
         moveX: 0
       };
     }
 
     const moveX = (right ? 1 : 0) - (left ? 1 : 0);
-    return { left, right, up, down, jump, attack, special, ultra, regen, moveX };
+    return { left, right, up, down, jump, attack, special, ultra, regen, fusion, moveX };
   }
 }

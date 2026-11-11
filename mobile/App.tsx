@@ -18,7 +18,7 @@ import { GAME_HTML } from './src/gameHtml';
 const WebView = RNWebView as unknown as React.ComponentType<any>;
 
 type Screen = 'home' | 'mode' | 'select' | 'combat' | 'ad' | 'victory' | 'shop' | 'howto';
-type Setup = { mode: '1v1' | '2v2' };
+type Setup = { mode: '1v1' | '2v2'; fusionReady?: boolean };
 
 const ADS = [
   { title: 'Ki Cola Cosmique', body: 'Pétillante, douce, 100 % smash.' },
@@ -65,10 +65,16 @@ export default function App() {
 
   const slotCount = setup.mode === '2v2' ? 4 : 2;
 
-  const startSelect = (mode: '1v1' | '2v2') => {
-    setSetup({ mode });
-    const free = CHARACTERS.filter((c) => save.unlockedCharacters.includes(c.id));
-    setSelections(Array.from({ length: mode === '2v2' ? 4 : 2 }, (_, i) => free[i % free.length].id));
+  const startSelect = (mode: '1v1' | '2v2', fusionReady = false) => {
+    setSetup({ mode, fusionReady });
+    const free = CHARACTERS.filter((c) => save.unlockedCharacters.includes(c.id) && c.id !== 'grok');
+    const pool = free.length ? free : CHARACTERS.filter((c) => c.free && c.id !== 'grok');
+    const next = Array.from({ length: mode === '2v2' ? 4 : 2 }, (_, i) => pool[i % pool.length].id);
+    if (fusionReady) {
+      const grok = CHARACTERS.find((c) => c.id === 'grok');
+      if (grok && next.length > 1) next[1] = grok.id;
+    }
+    setSelections(next);
     setActiveSlot(0);
     setScreen('select');
   };
@@ -104,9 +110,9 @@ export default function App() {
     // Simple CPU for other slots: game still runs; player controls slot 0
     postToGame({
       type: 'start',
-      config: { mode: setup.mode, fighters, stocks: 3 }
+      config: { mode: setup.mode, fighters, stocks: 3, fusionReady: !!setup.fusionReady }
     });
-  }, [screen, webReady, selections, setup.mode, slotCount]);
+  }, [screen, webReady, selections, setup.mode, setup.fusionReady, slotCount]);
 
   // Lightweight CPU for slots > 0
   useEffect(() => {
@@ -215,8 +221,13 @@ export default function App() {
         <ScrollView contentContainerStyle={styles.pad}>
           <Text style={styles.brand}>ARENA KI FIGHTERS</Text>
           <Text style={styles.title}>Smash doux.{'\n'}Ki explosif.</Text>
-          <Text style={styles.sub}>Teste avec Expo Go — bientôt Play Store.</Text>
-          <Btn label="Jouer" onPress={() => setScreen('mode')} primary />
+          <Text style={styles.sub}>Teste avec Expo Go — Fusion Grok visible en combat.</Text>
+          <View style={styles.fusionCard}>
+            <Text style={styles.fusionTitle}>✦ Fusion Grok</Text>
+            <Text style={styles.muted}>Jauge dorée → bouton FUSION → bannière « FUSION GROK ! »</Text>
+          </View>
+          <Btn label="Jouer Fusion Grok" onPress={() => startSelect('1v1', true)} primary />
+          <Btn label="Jouer" onPress={() => setScreen('mode')} />
           <Btn label="Boutique" onPress={() => setScreen('shop')} />
           <Btn label="Commandes" onPress={() => setScreen('howto')} />
           {!save.adFree && (
@@ -234,8 +245,9 @@ export default function App() {
         <ScrollView contentContainerStyle={styles.pad}>
           <Text style={styles.h2}>Mode</Text>
           <Text style={styles.muted}>Sur téléphone : tu joues le slot 1, l’IA gère les autres.</Text>
-          <Btn label="1v1 (toi vs IA)" onPress={() => startSelect('1v1')} primary />
-          <Btn label="2v2 (toi + IA vs IA)" onPress={() => startSelect('2v2')} primary />
+          <Btn label="Fusion Grok (jauge pleine)" onPress={() => startSelect('1v1', true)} primary />
+          <Btn label="1v1 (toi vs IA)" onPress={() => startSelect('1v1')} />
+          <Btn label="2v2 (toi + IA vs IA)" onPress={() => startSelect('2v2')} />
           <Btn label="Retour" onPress={() => setScreen('home')} />
         </ScrollView>
       )}
@@ -353,6 +365,7 @@ export default function App() {
               <Hold label="Atk" accent="#fde047" onPressIn={() => sendInput({ attack: true })} onPressOut={() => sendInput({ attack: false })} />
               <Hold label="Spé" accent="#38bdf8" onPressIn={() => sendInput({ special: true })} onPressOut={() => sendInput({ special: false })} />
               <Hold label="ULTRA" accent="#fb7185" onPressIn={() => sendInput({ ultra: true })} onPressOut={() => sendInput({ ultra: false })} />
+              <Hold label="FUSION" accent="#f5d657" onPressIn={() => sendInput({ fusion: true })} onPressOut={() => sendInput({ fusion: false })} />
               <Hold label="Regen" accent="#4ade80" onPressIn={() => sendInput({ regen: true })} onPressOut={() => sendInput({ regen: false })} />
             </View>
           </View>
@@ -417,8 +430,9 @@ export default function App() {
       {screen === 'howto' && (
         <ScrollView contentContainerStyle={styles.pad}>
           <Text style={styles.h2}>Commandes tactiles</Text>
-          <Text style={styles.sub}>◀ ▶ déplacer · Jump · Atk · Spé · ULTRA · Regen</Text>
+          <Text style={styles.sub}>◀ ▶ déplacer · Jump · Atk · Spé · ULTRA · FUSION · Regen</Text>
           <Text style={styles.sub}>Remplis le ki en frappant, puis ULTRA pour le cut-in spectaculaire.</Text>
+          <Text style={styles.sub}>Fusion Grok : jauge dorée sous le ki → FUSION → bannière + forme Héros × Grok.</Text>
           <Text style={styles.sub}>Expo Go = test. Play Store = build EAS plus tard.</Text>
           <Btn label="Retour" onPress={() => setScreen('home')} />
         </ScrollView>
@@ -521,6 +535,15 @@ const styles = StyleSheet.create({
   },
   adLabel: { color: '#fb7185', fontWeight: '800', letterSpacing: 1, fontSize: 11 },
   adTitle: { color: '#fff', fontWeight: '800', fontSize: 16 },
+  fusionCard: {
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(245,214,87,0.5)',
+    backgroundColor: 'rgba(15,23,42,0.85)',
+    gap: 4
+  },
+  fusionTitle: { color: '#f5d657', fontWeight: '800', fontSize: 16 },
   rowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     paddingHorizontal: 12,
