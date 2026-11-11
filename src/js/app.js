@@ -389,37 +389,49 @@ function bindNet() {
   });
   state.net.on('match:state', (snap) => {
     if (!state.engine || state.localSeat === 0) return;
-    // Soft sync positions + Fusion Grok for non-host
+    const clamp = (n, lo, hi, fallback) => {
+      const v = Number(n);
+      if (!Number.isFinite(v)) return fallback;
+      return Math.max(lo, Math.min(hi, v));
+    };
+    // Soft sync positions + Fusion Grok for non-host (bornes anti-abus)
     snap.fighters?.forEach((sf) => {
       const f = state.engine.fighters.find((x) => x.slot === sf.slot);
       if (!f) return;
-      f.x = sf.x;
-      f.y = sf.y;
-      f.vx = sf.vx;
-      f.vy = sf.vy;
-      f.percent = sf.percent;
-      f.hp = sf.hp;
-      f.maxHp = sf.maxHp ?? f.maxHp;
-      f.ki = sf.ki;
-      f.stocks = sf.stocks;
-      f.alive = sf.alive;
-      f.action = sf.action;
-      f.facing = sf.facing;
-      f.characterId = sf.characterId ?? f.characterId;
-      f.name = sf.name ?? f.name;
-      if (sf.colors) f.colors = sf.colors;
+      f.x = clamp(sf.x, -500, 1800, f.x);
+      f.y = clamp(sf.y, -500, 1200, f.y);
+      f.vx = clamp(sf.vx, -2000, 2000, f.vx);
+      f.vy = clamp(sf.vy, -2000, 2000, f.vy);
+      f.percent = clamp(sf.percent, 0, 999, f.percent);
+      f.hp = clamp(sf.hp, 0, 500, f.hp);
+      f.maxHp = clamp(sf.maxHp ?? f.maxHp, 1, 500, f.maxHp);
+      f.ki = clamp(sf.ki, 0, 100, f.ki);
+      f.stocks = clamp(sf.stocks, 0, 5, f.stocks);
+      f.alive = !!sf.alive;
+      f.action = typeof sf.action === 'string' ? sf.action.slice(0, 24) : f.action;
+      f.facing = sf.facing === -1 ? -1 : 1;
+      if (typeof sf.characterId === 'string') f.characterId = sf.characterId.slice(0, 32);
+      if (typeof sf.name === 'string') f.name = sf.name.slice(0, 40);
+      if (sf.colors && typeof sf.colors === 'object') f.colors = sf.colors;
       f.fused = !!sf.fused;
-      f.fusionMeter = sf.fusionMeter ?? f.fusionMeter;
-      f.maxFusionMeter = sf.maxFusionMeter ?? f.maxFusionMeter;
-      f.fusionTimer = sf.fusionTimer ?? f.fusionTimer;
+      f.fusionMeter = clamp(sf.fusionMeter ?? f.fusionMeter, 0, 100, f.fusionMeter);
+      f.maxFusionMeter = clamp(sf.maxFusionMeter ?? f.maxFusionMeter, 1, 100, f.maxFusionMeter);
+      f.fusionTimer = clamp(sf.fusionTimer ?? f.fusionTimer, 0, 30, f.fusionTimer);
       f.canFusion = sf.canFusion ?? f.canFusion;
     });
-    if (snap.log) state.engine.log = snap.log;
-    state.engine.fusionBanner = snap.fusionBanner ?? 0;
-    state.engine.fusionBannerText = snap.fusionBannerText || '';
+    if (Array.isArray(snap.log)) {
+      state.engine.log = snap.log.slice(0, 40).map((l) => ({
+        t: String(l?.t ?? '').slice(0, 12),
+        msg: String(l?.msg ?? '').slice(0, 160)
+      }));
+    }
+    state.engine.fusionBanner = clamp(snap.fusionBanner ?? 0, 0, 10, 0);
+    state.engine.fusionBannerText = String(snap.fusionBannerText || '').slice(0, 48);
     if (snap.ended) {
       state.engine.ended = true;
-      state.engine.winnerTeams = snap.winnerTeams;
+      state.engine.winnerTeams = Array.isArray(snap.winnerTeams)
+        ? snap.winnerTeams.filter((t) => t === 0 || t === 1).slice(0, 2)
+        : [];
     }
   });
   state.net.on('match:peer-left', () => {

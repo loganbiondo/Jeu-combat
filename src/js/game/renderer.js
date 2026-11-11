@@ -302,8 +302,9 @@ export class Renderer {
       ctx.fillText('PARTENAIRE FUSION', x + 14, y + 70);
     }
 
-    // Stocks
-    for (let s = 0; s < f.stocks; s++) {
+    // Stocks (cap HUD pour éviter un freeze si stocks abusifs)
+    const stockDots = Math.max(0, Math.min(5, Number(f.stocks) || 0));
+    for (let s = 0; s < stockDots; s++) {
       ctx.fillStyle = f.colors?.body || '#fff';
       ctx.beginPath();
       ctx.arc(x + 220 + s * 16, y + 36, 6, 0, Math.PI * 2);

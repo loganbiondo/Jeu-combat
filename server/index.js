@@ -129,8 +129,19 @@ io.on('connection', (socket) => {
 
   socket.on('match:state', (payload = {}) => {
     const roomId = socket.data.roomId;
-    if (!roomId) return;
-    // Host seat 0 broadcasts authoritative-ish snapshot for simplicity
+    const room = rooms.get(roomId);
+    if (!room) return;
+    const me = room.players.find((p) => p.id === socket.data.playerId);
+    // Seul le siège 0 (hôte) peut diffuser l'état
+    if (!me || me.seat !== 0) return;
+    if (Array.isArray(payload.fighters)) {
+      payload.fighters = payload.fighters.slice(0, 4).map((f) => ({
+        ...f,
+        stocks: Math.max(0, Math.min(5, Number(f?.stocks) || 0)),
+        name: String(f?.name || '').slice(0, 40),
+        characterId: String(f?.characterId || '').slice(0, 32)
+      }));
+    }
     socket.to(roomId).emit('match:state', payload);
   });
 
@@ -142,7 +153,10 @@ io.on('connection', (socket) => {
 
   socket.on('match:end', (payload = {}) => {
     const roomId = socket.data.roomId;
-    if (!roomId) return;
+    const room = rooms.get(roomId);
+    if (!room) return;
+    const me = room.players.find((p) => p.id === socket.data.playerId);
+    if (!me || me.seat !== 0) return;
     io.to(roomId).emit('match:end', payload);
     rooms.delete(roomId);
   });
