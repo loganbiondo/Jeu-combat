@@ -90,7 +90,10 @@ export class CombatEngine {
       });
     });
     this.host = config.host !== false;
-    this.pushLog('Le combat commence ! Effets spéciaux prêts.');
+    this.pushLog(`Le combat commence en 4D — ${this.stage.name} !`);
+    // Ouverture dimensionnelle
+    this.fx.tesseractBurst(640, 300, { size: 48, life: 0.9, count: 28 });
+    this.fx.addChronoWarp(0.45);
   }
 
   pushLog(msg) {

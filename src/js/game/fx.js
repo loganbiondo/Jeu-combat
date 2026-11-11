@@ -35,7 +35,9 @@ const FX_PALETTES = {
   regen: ['#86efac', '#fef08a', '#bbf7d0', '#ffffff'],
   jump: ['#bae6fd', '#e0f2fe', '#ffffff', '#7dd3fc'],
   land: ['#cbd5e1', '#94a3b8', '#e2e8f0', '#64748b'],
-  charge: ['#fef08a', '#38bdf8', '#ffffff', '#f472b6']
+  charge: ['#fef08a', '#38bdf8', '#ffffff', '#f472b6'],
+  chrono: ['#67e8f9', '#e879f9', '#fef08a', '#c4b5fd'],
+  tesseract: ['#22d3ee', '#a78bfa', '#f0abfc', '#ffffff']
 };
 
 function palette(name) {
@@ -60,6 +62,8 @@ export class FXSystem {
     this.cutIns = [];
     this.craters = [];
     this.orbitals = [];
+    this.tesseracts = [];
+    this.chronoSlices = [];
     this.shake = { x: 0, y: 0, mag: 0, time: 0 };
     this.hitstop = 0;
     this.slowMo = 0;
@@ -67,6 +71,7 @@ export class FXSystem {
     this.flashColor = '#ffffff';
     this.vignette = 0;
     this.timeScale = 1;
+    this.chronoWarp = 0;
   }
 
   reset() {
@@ -82,12 +87,15 @@ export class FXSystem {
     this.cutIns.length = 0;
     this.craters.length = 0;
     this.orbitals.length = 0;
+    this.tesseracts.length = 0;
+    this.chronoSlices.length = 0;
     this.shake = { x: 0, y: 0, mag: 0, time: 0 };
     this.hitstop = 0;
     this.slowMo = 0;
     this.flashAlpha = 0;
     this.vignette = 0;
     this.timeScale = 1;
+    this.chronoWarp = 0;
   }
 
   screenShake(mag = 8, time = 0.25) {
@@ -102,6 +110,46 @@ export class FXSystem {
   addSlowMo(duration = 0.45, scale = 0.35) {
     this.slowMo = Math.max(this.slowMo, duration);
     this.timeScale = Math.min(this.timeScale, scale);
+  }
+
+  addChronoWarp(amount = 0.55) {
+    this.chronoWarp = Math.min(1.2, this.chronoWarp + amount);
+  }
+
+  /** Mini hypercube explosif (signature 4D) */
+  tesseractBurst(x, y, opts = {}) {
+    const colors = palette(opts.paletteName || 'tesseract');
+    this.tesseracts.push({
+      x,
+      y,
+      life: opts.life || 0.7,
+      maxLife: opts.life || 0.7,
+      size: opts.size || 28,
+      spin: opts.spin || 4,
+      color: colors[0],
+      color2: colors[1] || '#e879f9'
+    });
+    this.burst(x, y, {
+      count: opts.count || 22,
+      speed: opts.speed || 240,
+      paletteName: opts.paletteName || 'chrono',
+      spark: true,
+      gravity: 40,
+      size: 5
+    });
+  }
+
+  chronoSlice(x, y, opts = {}) {
+    this.chronoSlices.push({
+      x,
+      y,
+      w: opts.w || 90,
+      h: opts.h || 8,
+      life: opts.life || 0.4,
+      maxLife: opts.life || 0.4,
+      angle: opts.angle || rand(-0.4, 0.4),
+      color: opts.color || '#67e8f9'
+    });
   }
 
   burst(x, y, opts = {}) {
@@ -312,6 +360,10 @@ export class FXSystem {
     if (ultra) {
       this.cutIn(caster, tech.name);
       this.chargeUp(caster, 1.4);
+      this.tesseractBurst(caster.x, caster.y - 20, { size: 42, life: 0.85 });
+      this.addChronoWarp(0.7);
+      this.chronoSlice(caster.x, caster.y - 10, { w: 160, h: 10, color: '#e879f9' });
+      this.chronoSlice(caster.x, caster.y + 12, { w: 120, h: 6, color: '#67e8f9', angle: 0.2 });
     }
 
     switch (fx) {
@@ -438,6 +490,14 @@ export class FXSystem {
         this.burst(caster.x, caster.y, { count: 28, speed: 220, paletteName: 'warp', size: 6, spark: true });
         this.ring(caster.x, caster.y, { maxR: 70, paletteName: 'warp', life: 0.3 });
         this.shockwave(caster.x, caster.y, { maxR: 90, color: '#e879f9' });
+        this.tesseractBurst(caster.x, caster.y, { size: 36, paletteName: 'warp' });
+        this.addChronoWarp(0.55);
+        for (let i = 0; i < 3; i++) {
+          this.chronoSlice(caster.x + rand(-20, 20), caster.y + rand(-24, 24), {
+            w: 70 + i * 20,
+            color: palette('warp')[i % 3]
+          });
+        }
         for (let i = 0; i < 6; i++) this.afterImage(caster);
         break;
 
@@ -529,7 +589,12 @@ export class FXSystem {
       gravity: 120
     });
     this.ring(x, y, { maxR: heavy ? 90 : 40, paletteName: 'hit', width: heavy ? 5 : 3 });
-    if (heavy) this.shockwave(x, y, { maxR: 110, color: '#fde047', width: 8 });
+    if (heavy) {
+      this.shockwave(x, y, { maxR: 110, color: '#fde047', width: 8 });
+      this.tesseractBurst(x, y, { size: 22, life: 0.4, count: 12 });
+      this.chronoSlice(x, y, { w: 70, color: '#fef08a' });
+      this.addChronoWarp(0.2);
+    }
     this.floatText(x, y - 20, `${Math.round(damage)}%`, heavy ? '#fb7185' : '#fef08a');
     this.screenShake(heavy ? 14 : 5, heavy ? 0.3 : 0.12);
     this.addHitstop(heavy ? 7 : 3);
@@ -544,12 +609,21 @@ export class FXSystem {
     this.shockwave(x, y, { maxR: 220, color: '#fb7185', width: 16 });
     this.ring(x, y, { maxR: 160, paletteName: 'ko', width: 8, life: 0.65 });
     this.ring(x, y, { maxR: 100, paletteName: 'aurora', width: 4, life: 0.45 });
+    this.tesseractBurst(x, y, { size: 56, life: 1.0, count: 36, speed: 320 });
+    this.addChronoWarp(1.0);
+    for (let i = 0; i < 5; i++) {
+      this.chronoSlice(x, y - 40 + i * 18, {
+        w: 100 + i * 20,
+        color: palette('chrono')[i % 4],
+        angle: (i - 2) * 0.12
+      });
+    }
     this.screenShake(24, 0.6);
     this.addHitstop(12);
     this.addSlowMo(0.6, 0.3);
     this.flashAlpha = 0.6;
     this.flashColor = '#fef08a';
-    this.floatText(x, y - 40, 'KO!', '#fb7185');
+    this.floatText(x, y - 40, 'KO 4D!', '#fb7185');
   }
 
   onKiRegen(fighter) {
@@ -625,6 +699,7 @@ export class FXSystem {
 
     this.flashAlpha = Math.max(0, this.flashAlpha - sdt * 2.2);
     this.vignette = Math.max(0, this.vignette - sdt * 1.2);
+    this.chronoWarp = Math.max(0, this.chronoWarp - sdt * 1.35);
 
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
@@ -695,6 +770,18 @@ export class FXSystem {
       o.life -= sdt;
       o.angle += o.speed * sdt;
       if (o.life <= 0) this.orbitals.splice(i, 1);
+    }
+
+    for (let i = this.tesseracts.length - 1; i >= 0; i--) {
+      const te = this.tesseracts[i];
+      te.life -= sdt;
+      te.size *= 1 + sdt * 1.8;
+      if (te.life <= 0) this.tesseracts.splice(i, 1);
+    }
+
+    for (let i = this.chronoSlices.length - 1; i >= 0; i--) {
+      this.chronoSlices[i].life -= sdt;
+      if (this.chronoSlices[i].life <= 0) this.chronoSlices.splice(i, 1);
     }
 
     for (let i = this.craters.length - 1; i >= 0; i--) {
@@ -771,6 +858,60 @@ export class FXSystem {
       ctx.beginPath();
       ctx.ellipse(0, 0, a.radius * 0.9, a.radius * 1.1, 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
+    }
+
+    for (const te of this.tesseracts) {
+      const alpha = Math.max(0, te.life / te.maxLife);
+      const s = te.size;
+      const rot = (1 - alpha) * te.spin;
+      ctx.save();
+      ctx.translate(te.x, te.y);
+      ctx.rotate(rot);
+      ctx.globalAlpha = alpha * 0.9;
+      ctx.strokeStyle = te.color;
+      ctx.lineWidth = 2;
+      ctx.shadowColor = te.color2;
+      ctx.shadowBlur = 14;
+      // Outer square
+      ctx.strokeRect(-s * 0.5, -s * 0.5, s, s);
+      // Inner rotated square (4D projection feel)
+      ctx.rotate(Math.PI / 4);
+      ctx.strokeStyle = te.color2;
+      ctx.strokeRect(-s * 0.32, -s * 0.32, s * 0.64, s * 0.64);
+      ctx.rotate(-Math.PI / 4);
+      // Connecting corners
+      ctx.beginPath();
+      const inset = s * 0.18;
+      const corners = [
+        [-s * 0.5, -s * 0.5],
+        [s * 0.5, -s * 0.5],
+        [s * 0.5, s * 0.5],
+        [-s * 0.5, s * 0.5]
+      ];
+      const inner = corners.map(([x, y]) => [x * 0.45, y * 0.45]);
+      for (let i = 0; i < 4; i++) {
+        ctx.moveTo(corners[i][0], corners[i][1]);
+        ctx.lineTo(inner[i][0], inner[i][1]);
+      }
+      ctx.stroke();
+      void inset;
+      ctx.restore();
+    }
+
+    for (const sl of this.chronoSlices) {
+      const alpha = Math.max(0, sl.life / sl.maxLife);
+      ctx.save();
+      ctx.translate(sl.x, sl.y);
+      ctx.rotate(sl.angle);
+      ctx.globalAlpha = alpha * 0.85;
+      ctx.globalCompositeOperation = 'lighter';
+      const g = ctx.createLinearGradient(-sl.w / 2, 0, sl.w / 2, 0);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(0.5, sl.color);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(-sl.w / 2, -sl.h / 2, sl.w, sl.h);
       ctx.restore();
     }
 

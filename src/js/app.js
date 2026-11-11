@@ -185,7 +185,8 @@ function startCombat(fighters, { online = false, host = true } = {}) {
     online,
     fighters,
     host,
-    stocks: 3
+    stocks: 3,
+    stageId: 'hypercube_rift'
   });
   state.renderer = new Renderer(canvas);
   state.renderer.resize();

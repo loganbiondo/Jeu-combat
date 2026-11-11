@@ -83,7 +83,8 @@ function startCombat(config) {
   engine = new CombatEngine({
     mode: config.mode || '1v1',
     fighters: config.fighters,
-    stocks: config.stocks ?? 3
+    stocks: config.stocks ?? 3,
+    stageId: config.stageId || 'hypercube_rift'
   });
   renderer = new Renderer(canvas);
   const fit = () => {

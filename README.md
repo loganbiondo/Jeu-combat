@@ -1,6 +1,6 @@
 # Arena Ki Fighters
 
-Jeu de combat — arène type **Smash** + jauge de **ki**, avec **effets spéciaux**.
+Jeu de combat — arène type **Smash** + jauge de **ki**, rendu **4D** (hypercube, failles, chrono-warp).
 
 ## Téléphone (Expo Go → Play Store)
 
@@ -21,7 +21,7 @@ Détails : [mobile/README.md](mobile/README.md)
 - Techniques spéciales & ultras avec FX distincts + **attaques spectaculaires** (cut-in, charge, beams, météores, projectiles, slow-mo)
 - **Super Finisher** quand l’adversaire est déjà haut %
 - Audio synthétisé (hits, ki, ultra, KO, victoire)
-- Stages : Orbite Douce, Rails de Gelée
+- Stages 4D : Faille Hypercube, Orbite Douce, Rails de Gelée
 - Combats **1v1 / 2v2**, **local** (clavier + manettes) ou **en ligne** (Socket.io)
 - Dégâts = stats + aléatoire, barres de vie + % Smash, stocks
 - Ki : se remplit en frappant → regen PV ou coups puissants
