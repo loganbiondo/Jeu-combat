@@ -21,8 +21,8 @@ await esbuild.build({
 
 const js = fs.readFileSync(outJs, 'utf8');
 const cssGame = `
-  #wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
-  canvas#game{background:#0b1d3a;max-width:100%;max-height:100%}
+  #wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative;background:#050b14}
+  canvas#game{background:#050b14;max-width:100%;max-height:100%;display:block}
 `;
 
 const gameHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>${cssGame}</style></head><body><div id="wrap"><canvas id="game" width="1280" height="720"></canvas></div><script>${js}</script></body></html>`;
@@ -34,48 +34,47 @@ const play = `<!DOCTYPE html>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
 <title>Arena Ki Fighters</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;800&family=Nunito:wght@600;800&display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#061018;--ink:#f3f7fb;--muted:#9eb6c9;--sun:#f5d657;--cyan:#3ec7f0;--hot:#ff6b8a;--ok:#5ee39a}
+:root{--bg:#050b14;--ink:#f3f7fb;--muted:#9eb6c9;--sun:#f5d657;--cyan:#3ec7f0;--hot:#ff6b8a}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,sans-serif;overflow:hidden;touch-action:manipulation}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Trebuchet MS",Segoe UI,system-ui,sans-serif;overflow:hidden;touch-action:none}
 #app{height:100%;display:flex;flex-direction:column;position:relative}
 .bgfx{position:fixed;inset:0;pointer-events:none;background:
- radial-gradient(ellipse 80% 50% at 80% 10%,rgba(255,107,138,.22),transparent 55%),
- radial-gradient(ellipse 70% 45% at 10% 90%,rgba(62,199,240,.2),transparent 50%),
- linear-gradient(165deg,#061018 0%,#12314a 48%,#1a4a5e 100%);
- animation:hue 14s ease-in-out infinite alternate}
-@keyframes hue{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(14deg)}}
-.screen{display:none;flex:1;flex-direction:column;padding:22px 18px calc(18px + env(safe-area-inset-bottom));overflow:auto;position:relative;z-index:1}
+ radial-gradient(ellipse 70% 45% at 85% 0%,rgba(56,189,248,.18),transparent 55%),
+ radial-gradient(ellipse 60% 40% at 10% 100%,rgba(251,113,133,.16),transparent 50%),
+ linear-gradient(160deg,#050b14 0%,#0c1a2a 45%,#13263a 100%)}
+.screen{display:none;flex:1;flex-direction:column;padding:20px 16px calc(16px + env(safe-area-inset-bottom));overflow:auto;position:relative;z-index:1;touch-action:manipulation}
 .screen.on{display:flex}
-.brand{font-family:"Exo 2",sans-serif;color:var(--sun);font-weight:800;letter-spacing:.2em;font-size:.78rem;text-shadow:0 0 18px rgba(245,214,87,.35)}
-h1{font-family:"Exo 2",sans-serif;font-weight:800;font-size:clamp(2.1rem,8vw,3.2rem);line-height:.98;margin:12px 0 10px;
-background:linear-gradient(120deg,#fff 10%,#7dd3fc 45%,#f5d657 85%);-webkit-background-clip:text;background-clip:text;color:transparent}
-.sub{color:var(--muted);font-size:1.02rem;line-height:1.4;max-width:28ch;margin:0 0 18px}
-.btn{display:block;width:100%;margin:8px 0;padding:15px;border-radius:999px;border:1px solid rgba(125,211,252,.3);
-background:rgba(10,20,34,.72);color:var(--ink);font-family:"Exo 2",sans-serif;font-weight:800;font-size:1rem}
-.btn.primary{border:0;background:linear-gradient(120deg,#3ec7f0,#f5d657);color:#0b1220;box-shadow:0 10px 28px rgba(62,199,240,.28)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.card{border:2px solid transparent;border-radius:18px;padding:10px;background:rgba(10,20,34,.78);text-align:left;color:inherit;
-box-shadow:0 8px 24px rgba(0,0,0,.25)}
-.card.on{border-color:var(--sun);box-shadow:0 0 0 1px var(--sun),0 10px 28px rgba(245,214,87,.2)}
+.brand{font-weight:800;letter-spacing:.22em;font-size:.72rem;color:var(--sun)}
+h1{font-weight:800;font-size:clamp(2rem,7.5vw,3rem);line-height:1;margin:10px 0;letter-spacing:-.02em}
+.sub{color:var(--muted);font-size:1rem;line-height:1.4;max-width:30ch;margin:0 0 16px}
+.btn{display:block;width:100%;margin:8px 0;padding:16px;border-radius:18px;border:1px solid rgba(125,211,252,.28);
+background:rgba(10,20,34,.78);color:var(--ink);font-weight:800;font-size:1rem}
+.btn.primary{border:0;background:linear-gradient(120deg,#3ec7f0,#f5d657);color:#071018}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{border:2px solid transparent;border-radius:16px;padding:8px;background:rgba(10,20,34,.82);text-align:left;color:inherit}
+.card.on{border-color:var(--sun)}
 .card canvas{width:100%;height:auto;border-radius:12px;display:block;background:#0b1d3a}
-.card strong{display:block;margin-top:8px;font-family:"Exo 2",sans-serif}
-.card small{color:var(--muted);display:block;line-height:1.25}
-#combat{padding:8px;gap:6px;overflow:hidden}
-#frameWrap{flex:1;min-height:38vh;border-radius:16px;overflow:hidden;border:1px solid rgba(125,211,252,.35);background:#0b1d3a;position:relative}
+.card strong{display:block;margin-top:6px}
+.card small{color:var(--muted);display:block;line-height:1.25;font-size:.78rem}
+#combat{padding:0;gap:0;overflow:hidden}
+#frameWrap{flex:1;min-height:0;overflow:hidden;background:#050b14;position:relative}
 ${cssGame}
-#stage{text-align:center;color:var(--muted);font-size:.8rem;font-weight:800;font-family:"Exo 2",sans-serif}
-#log{font-size:.7rem;color:#94a3b8;white-space:nowrap;overflow:auto;min-height:1.2em}
-.controls{display:flex;justify-content:space-between;gap:8px}
-.pad,.acts{display:flex;flex-wrap:wrap;gap:8px}
-.hold{min-width:56px;min-height:52px;border-radius:16px;border:2px solid rgba(125,211,252,.45);background:rgba(10,20,34,.92);color:#fff;font-weight:800;font-family:"Exo 2",sans-serif;font-size:.85rem}
-.hold:active{background:rgba(62,199,240,.35);transform:scale(.97)}
-.hintbar{margin:2px 0 0;text-align:center;color:#9eb6c9;font-size:.72rem}
-.reward{border:1px solid rgba(245,214,87,.45);border-radius:18px;padding:16px;background:
- radial-gradient(circle at 20% 20%,rgba(245,214,87,.16),transparent 50%),rgba(10,20,34,.75)}
-.heroArt{height:160px;border-radius:20px;margin:8px 0 16px;overflow:hidden;border:1px solid rgba(125,211,252,.25);position:relative}
+.touchHud{position:absolute;inset:0;pointer-events:none;z-index:5}
+.stickZone,.btnZone{position:absolute;bottom:calc(12px + env(safe-area-inset-bottom));pointer-events:auto}
+.stickZone{left:12px;width:148px;height:148px}
+.btnZone{right:10px;display:grid;grid-template-columns:repeat(3,70px);gap:10px;align-content:end}
+#stick{width:148px;height:148px;border-radius:50%;border:2px solid rgba(125,211,252,.4);background:rgba(7,17,31,.45);position:relative;touch-action:none}
+#knob{position:absolute;left:49px;top:49px;width:50px;height:50px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#7dd3fc,#0ea5e9);box-shadow:0 6px 16px rgba(0,0,0,.35)}
+.act{width:70px;height:70px;border-radius:50%;border:2px solid rgba(125,211,252,.45);background:rgba(7,17,31,.72);color:#fff;font-weight:800;font-size:.72rem;touch-action:none}
+.act:active,.act.on{transform:scale(.94);background:rgba(56,189,248,.35)}
+.act.smash{border-color:#fb923c}.act.ki{border-color:#67e8f9}.act.spe{border-color:#38bdf8}
+.act.forme{border-color:#facc15}.act.ultra{border-color:#fb7185}.act.guard{border-color:#a5b4fc}
+.topBar{position:absolute;top:8px;left:0;right:0;display:flex;justify-content:space-between;padding:0 12px;pointer-events:auto;z-index:6}
+.chip{background:rgba(7,17,31,.65);border:1px solid rgba(125,211,252,.3);border-radius:999px;padding:8px 12px;color:#9eb6c9;font-size:.75rem;font-weight:800}
+#log{position:absolute;top:48px;left:12px;right:12px;font-size:.7rem;color:#94a3b8;text-align:center;pointer-events:none;z-index:6}
+.reward{border:1px solid rgba(245,214,87,.45);border-radius:18px;padding:16px;background:rgba(10,20,34,.75)}
+.heroArt{height:170px;border-radius:20px;margin:8px 0 16px;overflow:hidden;border:1px solid rgba(125,211,252,.25)}
 .heroArt canvas{width:100%;height:100%}
 </style>
 </head>
@@ -84,48 +83,47 @@ ${cssGame}
 <div id="app">
   <section id="home" class="screen on">
     <div class="brand">ARENA KI FIGHTERS</div>
-    <h1>Smash doux.<br/>Ki explosif.</h1>
-    <p class="sub">Combat 2D style DBZ / Tekken / Street Fighter — combos, ki, garde.</p>
+    <h1>Arène 3D.<br/>Humains. Ki.</h1>
+    <p class="sub">Gameplay 2026 tactile — caméra cinéma, transformations, dash-cancel.</p>
     <div class="heroArt"><canvas id="heroCanvas" width="640" height="280"></canvas></div>
     <button class="btn primary" id="goPlay">Jouer 1v1 vs IA</button>
-    <button class="btn" id="goChars">Choisir mon héros</button>
+    <button class="btn" id="goChars">Choisir mon combattant</button>
   </section>
   <section id="chars" class="screen">
-    <div class="brand">ROSTER</div>
-    <h1 style="font-size:2rem">Choisis ton style</h1>
-    <p class="sub">Chaque perso a une silhouette et des pouvoirs uniques.</p>
+    <div class="brand">ROSTER 2026</div>
+    <h1 style="font-size:1.9rem">Combattants</h1>
+    <p class="sub">Humains réalistes, styles de jeu distincts.</p>
     <div class="grid" id="charGrid"></div>
-    <button class="btn primary" id="startFromChars">Entrer dans l'arène</button>
+    <button class="btn primary" id="startFromChars">Entrer dans l'arène 3D</button>
     <button class="btn" data-back="home">Retour</button>
   </section>
   <section id="combat" class="screen">
-    <div id="frameWrap"><div id="wrap"><canvas id="game" width="1280" height="720"></canvas></div></div>
-    <div id="stage">Arène</div>
-    <div id="log"></div>
-    <div class="controls">
-      <div class="pad">
-        <button class="hold" data-hold="left" type="button">◀</button>
-        <button class="hold" data-hold="right" type="button">▶</button>
-        <button class="hold" data-hold="jump" type="button">Jump</button>
-        <button class="hold" data-hold="dash" type="button">Dash</button>
+    <div id="frameWrap"><div id="wrap"><canvas id="game" width="1280" height="720"></canvas></div>
+      <div class="topBar">
+        <span class="chip" id="stage">Arène 3D</span>
+        <button class="chip" id="forfeit" type="button">Quitter</button>
       </div>
-      <div class="acts">
-        <button class="hold" data-hold="attack" type="button" style="border-color:#f5d657">Atk</button>
-        <button class="hold" data-hold="heavy" type="button" style="border-color:#fb923c">Smash</button>
-        <button class="hold" data-hold="blast" type="button" style="border-color:#67e8f9">Ki</button>
-        <button class="hold" data-hold="special" type="button" style="border-color:#3ec7f0">Spé</button>
-        <button class="hold" data-hold="transform" type="button" style="border-color:#facc15">Forme</button>
-        <button class="hold" data-hold="guard" type="button" style="border-color:#a5b4fc">Garde</button>
-        <button class="hold" data-hold="ultra" type="button" style="border-color:#ff6b8a">ULTRA</button>
+      <div id="log"></div>
+      <div class="touchHud">
+        <div class="stickZone"><div id="stick"><div id="knob"></div></div></div>
+        <div class="btnZone">
+          <button class="act" data-act="jump" type="button">Jump</button>
+          <button class="act" data-act="dash" type="button">Dash</button>
+          <button class="act guard" data-act="guard" type="button">Garde</button>
+          <button class="act" data-act="attack" type="button">Atk</button>
+          <button class="act smash" data-act="heavy" type="button">Smash</button>
+          <button class="act ki" data-act="blast" type="button">Ki</button>
+          <button class="act spe" data-act="special" type="button">Spé</button>
+          <button class="act forme" data-act="transform" type="button">Forme</button>
+          <button class="act ultra" data-act="ultra" type="button">Ultra</button>
+        </div>
       </div>
     </div>
-    <p class="hintbar">Persos XL · Forme (45 ki) · Atk x3 · Smash · Ki · Ultra</p>
-    <button class="btn" id="forfeit" type="button">Abandonner</button>
   </section>
   <section id="victory" class="screen">
     <div class="brand">VICTOIRE</div>
     <h1 id="winTitle">Gagnant</h1>
-    <div class="reward"><strong style="color:var(--sun)">Prompt créatif</strong><p class="sub" style="margin:6px 0 8px;font-size:.88rem">Victoire = 1 idée originale débloquée (100 au total).</p><p id="rewardText" class="sub">—</p></div>
+    <div class="reward"><strong style="color:var(--sun)">Prompt créatif</strong><p class="sub" style="margin:6px 0 8px;font-size:.88rem">Victoire = 1 idée originale (100 au total).</p><p id="rewardText" class="sub">—</p></div>
     <button class="btn primary" data-back="home" type="button">Menu</button>
   </section>
 </div>
@@ -134,35 +132,63 @@ ${js}
 </script>
 <script>
 const CHARS=[
-{id:'lumo',name:'Lumo',tag:'Alien voyageur · ailes de lumière',colors:{body:'#7dd3fc',accent:'#fef08a',outline:'#0c4a6e'}},
-{id:'pebble',name:'Pebble',tag:'Roc vivant · bouclier mousse',colors:{body:'#a8a29e',accent:'#84cc16',outline:'#292524'}},
-{id:'nori',name:'Nori',tag:'Humaine · wok de ki acrobatique',colors:{body:'#fb7185',accent:'#fdba74',outline:'#7f1d1d'}},
-{id:'capra',name:'Capra',tag:'Chèvre pirate · cornes farceuses',colors:{body:'#c4b5fd',accent:'#f472b6',outline:'#4c1d95'}},
-{id:'mossy',name:'Mossy',tag:'Gardien forestier · runes vivantes',colors:{body:'#4ade80',accent:'#a3e635',outline:'#14532d'}},
-{id:'zib',name:'Zib',tag:'Alien chaos · étincelles roses',colors:{body:'#f9a8d4',accent:'#67e8f9',outline:'#9d174d'}},
-{id:'kira',name:'Kira',tag:'Parkour · poing solaire',colors:{body:'#fde047',accent:'#38bdf8',outline:'#854d0e'}},
-{id:'bolt',name:'Bolt',tag:'Écureuil survolté · queue foudre',colors:{body:'#fdba74',accent:'#facc15',outline:'#9a3412'}}
+{id:'lumo',name:'Aria Vale',tag:'Sprinteuse · combos nets',colors:{body:'#c68642',accent:'#38bdf8',outline:'#3b2314',hair:'#1c1917',cloth:'#0f172a'}},
+{id:'pebble',name:'Kenzo Park',tag:'Tank · smash lourd',colors:{body:'#8d5524',accent:'#f97316',outline:'#2a160a',hair:'#111827',cloth:'#1f2937'}},
+{id:'nori',name:'Maya Cruz',tag:'Rushdown · kicks',colors:{body:'#d4a574',accent:'#fb7185',outline:'#4a2c1a',hair:'#7c2d12',cloth:'#881337'}},
+{id:'capra',name:'Omar Diallo',tag:'Power · présence ring',colors:{body:'#5c3317',accent:'#a78bfa',outline:'#1c0f08',hair:'#0a0a0a',cloth:'#312e81'}},
+{id:'mossy',name:'Soren Blake',tag:'Balanced · contre',colors:{body:'#e0ac69',accent:'#4ade80',outline:'#5c4033',hair:'#365314',cloth:'#14532d'}},
+{id:'zib',name:'Jin Reyes',tag:'Chaos · mix-ups',colors:{body:'#f1c27d',accent:'#f472b6',outline:'#6b4423',hair:'#831843',cloth:'#500724'}},
+{id:'kira',name:'Elena Rossi',tag:'Technique · footsies',colors:{body:'#c68642',accent:'#facc15',outline:'#3f2a14',hair:'#78350f',cloth:'#422006'}},
+{id:'bolt',name:'Ray Nakamura',tag:'Speed · dash cancel',colors:{body:'#ffe0bd',accent:'#38bdf8',outline:'#8b5e3c',hair:'#111827',cloth:'#0c4a6e'}}
 ];
-const PROMPTS=['Inventе un snack qui recharge le ki.','Décris une arène en nuages caramel.','Imagine une danse de victoire ridicule.','Propose un nom de technique inédite.','Écris un haiku sur un smash raté.','Design un stage trampoline gelée.']
-.map(s=>s.replace(/\\u0435/g,'e'));
+const PROMPTS=['Invente un snack qui recharge le ki.','Décris une arène en néons 2026.','Imagine une danse de victoire.','Propose un nom de technique inédite.','Écris un haiku sur un smash raté.','Design un stage holographique.'];
 let me='lumo', moveX=0, fighting=false;
 const $=id=>document.getElementById(id);
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on'); if(id==='home') paintHero();}
-function handleGameMsg(data){if(!data?.type)return; if(data.type==='ready')$('stage').textContent=data.stage||'Arène'; if(data.type==='log')$('log').textContent=(data.log||[]).map(l=>l.msg).slice(0,2).join(' · '); if(data.type==='ended'){fighting=false; const winners=new Set(data.winnerTeams||[]); if(!winners.size){show('home');return;} const names=(data.fighters||[]).filter(f=>winners.has(f.team)).map(f=>f.name).join(' & '); $('winTitle').textContent=names||'Match terminé'; $('rewardText').textContent=PROMPTS[Math.floor(Math.random()*PROMPTS.length)]; show('victory');}}
+function handleGameMsg(data){if(!data?.type)return; if(data.type==='ready')$('stage').textContent=data.stage||'Arène 3D'; if(data.type==='log')$('log').textContent=(data.log||[]).map(l=>l.msg).slice(0,2).join(' · '); if(data.type==='ended'){fighting=false; const winners=new Set(data.winnerTeams||[]); if(!winners.size){show('home');return;} const names=(data.fighters||[]).filter(f=>winners.has(f.team)).map(f=>f.name).join(' & '); $('winTitle').textContent=names||'Match terminé'; $('rewardText').textContent=PROMPTS[Math.floor(Math.random()*PROMPTS.length)]; show('victory');}}
 window.ReactNativeWebView={postMessage(raw){try{handleGameMsg(JSON.parse(raw))}catch{}}};
 function send(msg){window.AKI?.onMessage?.(msg)}
 function sendInput(extra={}){send({type:'input',slot:0,input:{moveX,...extra}})}
 function paintPortrait(canvas,ch){const ctx=canvas.getContext('2d'); window.AKI.drawPortrait(ctx,ch.id,ch.colors,canvas.width)}
-function paintHero(){const c=$('heroCanvas'); const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); const g=ctx.createLinearGradient(0,0,c.width,c.height); g.addColorStop(0,'#0b1d3a'); g.addColorStop(1,'#1e3a5f'); ctx.fillStyle=g; ctx.fillRect(0,0,c.width,c.height); ['lumo','kira','zib','bolt'].forEach((id,i)=>{ctx.save(); ctx.translate(90+i*140,170); ctx.scale(1.6,1.6); const ch=CHARS.find(x=>x.id===id); window.AKI.drawPortrait?null:null; // draw full sprite via temporary
-  // Use drawPortrait into offscreen then blit? Simpler: call onMessage no - use drawPortrait cropped
-  ctx.restore()});
-  // draw four portraits
-  ['lumo','kira','zib','bolt'].forEach((id,i)=>{const off=document.createElement('canvas'); off.width=120; off.height=120; const octx=off.getContext('2d'); const ch=CHARS.find(x=>x.id===id); window.AKI.drawPortrait(octx,ch.id,ch.colors,120); ctx.drawImage(off,40+i*150,70,120,120)})}
+function paintHero(){const c=$('heroCanvas'); const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); const g=ctx.createLinearGradient(0,0,c.width,c.height); g.addColorStop(0,'#050b14'); g.addColorStop(1,'#12304a'); ctx.fillStyle=g; ctx.fillRect(0,0,c.width,c.height); ['lumo','kira','zib','bolt'].forEach((id,i)=>{const off=document.createElement('canvas'); off.width=120; off.height=120; const octx=off.getContext('2d'); const ch=CHARS.find(x=>x.id===id); window.AKI.drawPortrait(octx,ch.id,ch.colors,120); ctx.drawImage(off,40+i*150,70,120,120)})}
 function renderChars(){const grid=$('charGrid'); grid.innerHTML=''; CHARS.forEach(c=>{const b=document.createElement('button'); b.type='button'; b.className='card'+(me===c.id?' on':''); const cv=document.createElement('canvas'); cv.width=180; cv.height=180; b.appendChild(cv); const strong=document.createElement('strong'); strong.textContent=c.name; const small=document.createElement('small'); small.textContent=c.tag; b.appendChild(strong); b.appendChild(small); b.onclick=()=>{me=c.id; renderChars()}; grid.appendChild(b); paintPortrait(cv,c)})}
 function startCombat(){show('combat'); fighting=true; const foe=CHARS.find(c=>c.id!==me)||CHARS[1]; send({type:'start',config:{mode:'1v1',stocks:1,fighters:[{id:'p0',slot:0,team:0,characterId:me,name:CHARS.find(c=>c.id===me).name,stocks:1},{id:'p1',slot:1,team:1,characterId:foe.id,name:foe.name,stocks:1}]}})}
-function bindHold(el,on,off){const s=e=>{e.preventDefault();on()}; const e=ev=>{ev.preventDefault();off()}; el.addEventListener('touchstart',s,{passive:false}); el.addEventListener('touchend',e); el.addEventListener('touchcancel',e); el.addEventListener('mousedown',s); el.addEventListener('mouseup',e); el.addEventListener('mouseleave',e)}
-document.querySelectorAll('[data-hold]').forEach(el=>{const k=el.getAttribute('data-hold'); if(k==='left')bindHold(el,()=>{moveX=-1;sendInput({moveX:-1})},()=>{moveX=0;sendInput({moveX:0})}); else if(k==='right')bindHold(el,()=>{moveX=1;sendInput({moveX:1})},()=>{moveX=0;sendInput({moveX:0})}); else if(k==='guard')bindHold(el,()=>sendInput({guard:true}),()=>sendInput({guard:false})); else bindHold(el,()=>sendInput({[k]:true}),()=>sendInput({[k]:false}))});
-setInterval(()=>{if(!fighting||!$('combat').classList.contains('on'))return; const r=Math.random(); send({type:'input',slot:1,input:{moveX:Math.random()>.5?1:-1,jump:r>.9,attack:r>.82,heavy:r>.96,blast:r>.93,special:r>.95,dash:r>.97,guard:r>.98,ultra:r>.992}})},160);
+
+/* Virtual stick */
+(function(){
+  const stick=$('stick'), knob=$('knob');
+  let active=false, cx=0, cy=0;
+  const setKnob=(x,y)=>{knob.style.left=(49+x)+'px'; knob.style.top=(49+y)+'px'};
+  const read=(e)=>{
+    const t=e.touches?e.touches[0]:e;
+    const r=stick.getBoundingClientRect();
+    const dx=t.clientX-(r.left+r.width/2);
+    const dy=t.clientY-(r.top+r.height/2);
+    const max=42; const len=Math.hypot(dx,dy)||1; const s=Math.min(1,max/len);
+    const x=dx*s, y=dy*s; setKnob(x,y);
+    moveX = Math.abs(x)>12 ? (x>0?1:-1) : 0;
+    sendInput({moveX, jump:y<-28, down:y>28});
+  };
+  const end=()=>{active=false; setKnob(0,0); moveX=0; sendInput({moveX:0,jump:false,down:false})};
+  stick.addEventListener('touchstart',e=>{e.preventDefault();active=true;read(e)},{passive:false});
+  stick.addEventListener('touchmove',e=>{e.preventDefault();if(active)read(e)},{passive:false});
+  stick.addEventListener('touchend',end); stick.addEventListener('touchcancel',end);
+  stick.addEventListener('mousedown',e=>{active=true;read(e)});
+  window.addEventListener('mousemove',e=>{if(active)read(e)});
+  window.addEventListener('mouseup',end);
+})();
+
+function bindAct(el){
+  const k=el.getAttribute('data-act');
+  const on=e=>{e.preventDefault(); el.classList.add('on'); sendInput({[k]:true})};
+  const off=e=>{e.preventDefault(); el.classList.remove('on'); sendInput({[k]:false})};
+  el.addEventListener('touchstart',on,{passive:false});
+  el.addEventListener('touchend',off); el.addEventListener('touchcancel',off);
+  el.addEventListener('mousedown',on); el.addEventListener('mouseup',off); el.addEventListener('mouseleave',off);
+}
+document.querySelectorAll('[data-act]').forEach(bindAct);
+
+setInterval(()=>{if(!fighting||!$('combat').classList.contains('on'))return; const r=Math.random(); send({type:'input',slot:1,input:{moveX:Math.random()>.5?1:-1,jump:r>.9,attack:r>.82,heavy:r>.96,blast:r>.93,special:r>.95,dash:r>.97,guard:r>.98,ultra:r>.992,transform:r>.995}})},160);
 $('goPlay').onclick=startCombat; $('goChars').onclick=()=>{renderChars();show('chars')}; $('startFromChars').onclick=startCombat; $('forfeit').onclick=()=>send({type:'forfeit'});
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>show(b.getAttribute('data-back')));
 paintHero();

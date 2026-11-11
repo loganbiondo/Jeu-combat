@@ -9,6 +9,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
   <script src="../node_modules/socket.io-client/dist/socket.io.min.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "../node_modules/three/build/three.module.js"
+    }
+  }
+  </script>
 </head>
 <body>
   <div id="app">
@@ -19,7 +26,7 @@
       <header class="home-hero">
         <p class="brand-mark">ARENA KI FIGHTERS</p>
         <h1 class="brand-title">Smash doux.<br />Ki explosif.</h1>
-        <p class="brand-sub">Combats 1v1 / 2v2 — local ou en ligne — effets spéciaux à gogo.</p>
+        <p class="brand-sub">Arène 3D 2026 — humains réalistes, tactile, ki & transformations.</p>
         <div class="cta-row">
           <button class="btn primary" data-go="mode">Jouer</button>
           <button class="btn ghost" data-go="shop">Boutique</button>
@@ -138,11 +145,11 @@
       <div class="panel">
         <h2>Commandes & systèmes</h2>
         <ul class="howto-list">
-          <li><strong>Arène Smash</strong> : % de dégâts, knockback, sorties d’écran = perte de stock.</li>
-          <li><strong>Ki</strong> : se remplit en frappant. Regen (I) soigne. Spéciaux / Ultra consomment du ki.</li>
-          <li><strong>Kit combat</strong> : combo jab x3, smash, aerials, ki blast, dash, garde, spéciaux, ultra.</li>
-          <li><strong>Feeling Smash/DBZ</strong> : % + knockback, hitstun, projectiles de ki, charge ultra + cut-in.</li>
-          <li><strong>P1</strong> : move WASD/flèches · J jab · U smash · I ki · K spé · H garde · N dash · L ultra · Espace saut</li>
+          <li><strong>Arène 3D</strong> : barre de vie, murs, caméra cinéma, pas de chute hors ring.</li>
+          <li><strong>Ki</strong> : se remplit en frappant. Forme (T) = transformation. Ultra = finisher.</li>
+          <li><strong>Kit 2026</strong> : jab x3, smash, dash-cancel, ki blast, garde, spéciaux.</li>
+          <li><strong>Tactile</strong> : stick virtuel + boutons (mobile / play).</li>
+          <li><strong>P1</strong> : WASD · J atk · U smash · I ki · K spé · T forme · L ultra · Espace saut</li>
         </ul>
         <button class="btn ghost" data-go="home">Retour</button>
       </div>

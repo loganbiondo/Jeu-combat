@@ -1,7 +1,7 @@
 import { CHARACTERS, getCharacter } from './data/characters.js';
 import { pickRewardPrompt } from './data/prompts.js';
 import { CombatEngine } from './game/engine.js';
-import { Renderer } from './game/renderer.js';
+import { Renderer3D as Renderer } from './game/renderer3d.js';
 import { InputManager } from './game/input.js';
 import { NetClient } from './net/client.js';
 import { pickAd, shouldShowAds } from './shop/ads.js';

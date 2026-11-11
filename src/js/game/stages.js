@@ -5,7 +5,7 @@
 export const STAGES = {
   soft_orbit: {
     id: 'soft_orbit',
-    name: 'Orbite Douce',
+    name: 'Neon Orbit Arena',
     width: 1280,
     height: 720,
     floorY: 560,
@@ -25,7 +25,7 @@ export const STAGES = {
   },
   jelly_dojo: {
     id: 'jelly_dojo',
-    name: 'Dojo Gelée',
+    name: 'Holo Dojo 2026',
     width: 1280,
     height: 720,
     floorY: 560,

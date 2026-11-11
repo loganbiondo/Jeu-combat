@@ -2,7 +2,7 @@
  * Entrée combat pour WebView Expo — menus gérés par React Native.
  */
 import { CombatEngine } from '../../src/js/game/engine.js';
-import { Renderer } from '../../src/js/game/renderer.js';
+import { Renderer3D } from '../../src/js/game/renderer3d.js';
 import { audio } from '../../src/js/game/audio.js';
 import { drawPortrait } from '../../src/js/game/sprites.js';
 
@@ -93,7 +93,7 @@ function startCombat(config) {
     fighters: config.fighters,
     stocks: config.stocks ?? 1
   });
-  renderer = new Renderer(canvas);
+  renderer = new Renderer3D(canvas);
   const fit = () => {
     const w = wrap.clientWidth || window.innerWidth;
     const h = wrap.clientHeight || window.innerHeight;
@@ -137,7 +137,12 @@ function onMessage(raw) {
   }
 }
 
+function onBridgeMessage(e) {
+  // React Native WebView + same-origin play shell only
+  if (e && e.origin && e.origin !== 'null' && e.origin !== window.location.origin) return;
+  onMessage(e?.data);
+}
 document.addEventListener('message', (e) => onMessage(e.data));
-window.addEventListener('message', (e) => onMessage(e.data));
+window.addEventListener('message', onBridgeMessage);
 window.AKI = { startCombat, onMessage, drawPortrait };
 post({ type: 'boot' });

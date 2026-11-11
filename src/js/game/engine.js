@@ -822,7 +822,11 @@ export class CombatEngine {
     // Fast fall
     if (input.down && !f.onGround && f.vy > 0) f.fastFall = true;
 
-    if (input.dash) this.tryDash(f, input.moveX || f.facing);
+    // 2026: dash-cancel window after connected attacks / specials
+    const canCancel = f.actionTimer > 0 && f.actionTimer < 0.16 && (f.action === 'attack' || f.action === 'special');
+    if (input.dash) {
+      if (canCancel || f.actionTimer <= 0) this.tryDash(f, input.moveX || f.facing);
+    }
     if (input.attack) this.tryAttack(f, input);
     if (input.blast) this.tryKiBlast(f);
     if (input.regen || input.heal) this.tryRegen(f);

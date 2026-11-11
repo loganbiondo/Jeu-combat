@@ -221,8 +221,8 @@ export default function App() {
       {screen === 'home' && (
         <ScrollView contentContainerStyle={styles.pad}>
           <Text style={styles.brand}>ARENA KI FIGHTERS</Text>
-          <Text style={styles.title}>Smash doux.{'\n'}Ki explosif.</Text>
-          <Text style={styles.sub}>Teste avec Expo Go — bientôt Play Store.</Text>
+          <Text style={styles.title}>Arène 3D.{'\n'}Humains. Ki.</Text>
+          <Text style={styles.sub}>Combat tactile 2026 — caméra cinéma, transformations.</Text>
           <Btn label="Jouer" onPress={() => setScreen('mode')} primary />
           <Btn label="Boutique" onPress={() => setScreen('shop')} />
           <Btn label="Commandes" onPress={() => setScreen('howto')} />
@@ -426,7 +426,7 @@ export default function App() {
       {screen === 'howto' && (
         <ScrollView contentContainerStyle={styles.pad}>
           <Text style={styles.h2}>Commandes tactiles</Text>
-          <Text style={styles.sub}>◀ ▶ déplacer · Jump · Atk · Spé · ULTRA · Regen</Text>
+          <Text style={styles.sub}>Stick · Jump · Atk · Smash · Ki · Spé · Forme · Garde · Ultra</Text>
           <Text style={styles.sub}>Remplis le ki en frappant, puis ULTRA pour le cut-in spectaculaire.</Text>
           <Text style={styles.sub}>Expo Go = test. Play Store = build EAS plus tard.</Text>
           <Btn label="Retour" onPress={() => setScreen('home')} />
