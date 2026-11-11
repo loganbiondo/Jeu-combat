@@ -117,6 +117,8 @@ export class Renderer {
   drawFighter(f, t) {
     if (!f.alive || f.hp <= 0) return;
     const ctx = this.ctx;
+    const scale = f.drawScale || 1.85;
+    const r = f.radius || 38;
     ctx.save();
     ctx.translate(f.x, f.y);
     if (f.invuln > 0 && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.45;
@@ -126,20 +128,27 @@ export class Renderer {
       ctx.save();
       ctx.globalAlpha = 0.35;
       ctx.strokeStyle = '#67e8f9';
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 5;
       ctx.beginPath();
-      ctx.arc(0, 0, 34, 0, Math.PI * 2);
+      ctx.arc(0, 0, r + 10, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
     }
 
-    // Ki aura when high ki or charging ultra
-    if (f.ki > 70 || f.action === 'charge' || f.action === 'ultra') {
-      const boost = f.action === 'charge' || f.action === 'ultra' ? 1.6 : 1;
-      const pulse = (28 + Math.sin(t * 14) * 6) * boost;
-      const aura = ctx.createRadialGradient(0, 0, 8, 0, 0, pulse);
-      aura.addColorStop(0, f.action === 'ultra' ? 'rgba(251,113,133,0.55)' : 'rgba(254,240,138,0.5)');
-      aura.addColorStop(0.5, 'rgba(56,189,248,0.25)');
+    // Transform / high-ki aura
+    if (f.transformed || f.ki > 70 || f.action === 'charge' || f.action === 'ultra') {
+      const boost = f.transformed ? 2.1 : f.action === 'charge' || f.action === 'ultra' ? 1.6 : 1;
+      const pulse = (34 + Math.sin(t * 14) * 8) * boost;
+      const aura = ctx.createRadialGradient(0, 0, 10, 0, 0, pulse);
+      aura.addColorStop(
+        0,
+        f.transformed
+          ? 'rgba(253,224,71,0.65)'
+          : f.action === 'ultra'
+            ? 'rgba(251,113,133,0.55)'
+            : 'rgba(254,240,138,0.5)'
+      );
+      aura.addColorStop(0.5, f.transformed ? 'rgba(251,146,60,0.3)' : 'rgba(56,189,248,0.25)');
       aura.addColorStop(1, 'rgba(56,189,248,0)');
       ctx.fillStyle = aura;
       ctx.beginPath();
@@ -147,23 +156,36 @@ export class Renderer {
       ctx.fill();
     }
 
-    // Charge lightning arcs
-    if (f.action === 'charge') {
+    // Charge / transform lightning arcs
+    if (f.action === 'charge' || f.transformed) {
       ctx.save();
-      ctx.strokeStyle = '#fef08a';
-      ctx.lineWidth = 2;
-      ctx.globalAlpha = 0.8;
-      for (let i = 0; i < 5; i++) {
+      ctx.strokeStyle = f.colors?.accent || '#fef08a';
+      ctx.lineWidth = f.transformed ? 3 : 2;
+      ctx.globalAlpha = 0.85;
+      for (let i = 0; i < (f.transformed ? 7 : 5); i++) {
         const a = t * 12 + i * 1.2;
         ctx.beginPath();
-        ctx.moveTo(Math.cos(a) * 18, Math.sin(a) * 18);
-        ctx.lineTo(Math.cos(a + 0.4) * 40, Math.sin(a + 0.5) * 40);
+        ctx.moveTo(Math.cos(a) * 22, Math.sin(a) * 22);
+        ctx.lineTo(Math.cos(a + 0.4) * 52, Math.sin(a + 0.5) * 52);
         ctx.stroke();
       }
       ctx.restore();
     }
 
-    ctx.scale(f.facing || 1, 1);
+    // Impact squash / stretch for weighty hits
+    const squash = f.impactSquash || 0;
+    const sx = 1 + squash * 0.35;
+    const sy = 1 - squash * 0.28;
+    ctx.scale((f.facing || 1) * scale * sx, scale * sy);
+
+    if (f.hurtFlash > 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = Math.min(0.85, f.hurtFlash * 3);
+      drawCharacterSprite(ctx, f.characterId || 'lumo', { body: '#fff', accent: '#fff', outline: '#fecaca' }, t, 'hurt');
+      ctx.restore();
+    }
+
     drawCharacterSprite(ctx, f.characterId || 'lumo', f.colors, t, f.action || 'idle');
 
     // Action pose slash overlay
@@ -183,19 +205,27 @@ export class Renderer {
     ctx.restore();
 
     // Name plate
+    const nameY = f.y - r - 18;
     ctx.save();
-    ctx.font = '800 13px "Exo 2", "Trebuchet MS", sans-serif';
+    ctx.font = '800 14px "Exo 2", "Trebuchet MS", sans-serif';
     ctx.textAlign = 'center';
     ctx.lineWidth = 4;
     ctx.strokeStyle = 'rgba(7,17,31,0.75)';
-    ctx.strokeText(f.name, f.x, f.y - 48);
-    ctx.fillStyle = '#f8fafc';
-    ctx.fillText(f.name, f.x, f.y - 48);
+    const label = f.transformed ? `${f.name} ★` : f.name;
+    ctx.strokeText(label, f.x, nameY);
+    ctx.fillStyle = f.transformed ? '#fde047' : '#f8fafc';
+    ctx.fillText(label, f.x, nameY);
+    if (f.transformed && f.transformName) {
+      ctx.font = '700 11px "Exo 2", "Trebuchet MS", sans-serif';
+      ctx.fillStyle = '#fdba74';
+      ctx.strokeText(f.transformName, f.x, nameY + 14);
+      ctx.fillText(f.transformName, f.x, nameY + 14);
+    }
     if (f.comboCount > 1) {
       ctx.fillStyle = '#67e8f9';
       ctx.font = '800 14px "Exo 2", "Trebuchet MS", sans-serif';
-      ctx.strokeText(`${f.comboCount} HITS`, f.x, f.y - 30);
-      ctx.fillText(`${f.comboCount} HITS`, f.x, f.y - 30);
+      ctx.strokeText(`${f.comboCount} HITS`, f.x, nameY + (f.transformed ? 28 : 16));
+      ctx.fillText(`${f.comboCount} HITS`, f.x, nameY + (f.transformed ? 28 : 16));
     }
     ctx.restore();
   }

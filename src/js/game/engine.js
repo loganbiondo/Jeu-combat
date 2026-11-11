@@ -38,7 +38,9 @@ export class Fighter {
     this.vx = 0;
     this.vy = 0;
     this.facing = opts.facing || 1;
-    this.radius = 22;
+    this.baseRadius = 38;
+    this.radius = 38;
+    this.drawScale = 1.85;
     this.onGround = false;
     this.jumps = 2;
     this.percent = 0;
@@ -55,11 +57,14 @@ export class Fighter {
     this.ultraCd = 0;
     this.blastCd = 0;
     this.dashCd = 0;
+    this.transformCd = 0;
     this.actionTimer = 0;
     this.action = 'idle';
     this.shieldTimer = 0;
     this.shielding = false;
     this.hitstun = 0;
+    this.hurtFlash = 0;
+    this.impactSquash = 0;
     this.respawnTimer = 0;
     this.combo = 0;
     this.jabStep = 0;
@@ -72,6 +77,12 @@ export class Fighter {
     this.fastFall = false;
     this.jumpHeld = false;
     this.comboCount = 0;
+    this.baseColors = { ...this.colors };
+    this.baseStats = { ...this.stats };
+    this.transformData = ch.transform || null;
+    this.transformed = false;
+    this.transformTimer = 0;
+    this.transformName = '';
   }
 
   get dead() {
@@ -123,34 +134,56 @@ export class CombatEngine {
     const shield = defender.shieldTimer > 0 ? 0.45 : 1;
     const mitigated = (raw * shield) / (1 + def * 0.04);
     const dmg = mitigated * randRange(0.92, 1.08);
-    defender.percent += dmg * 0.35; // stun meter soft, plus de KO Smash
-    // Fighting game: HP is the real life bar
+    defender.percent += dmg * 0.35; // stun meter soft
     const hpDmg = dmg * (opts.hpMul || 1.15);
     defender.hp = Math.max(0, defender.hp - hpDmg);
-    defender.hitstun = Math.max(defender.hitstun, opts.hitstun || 0.18);
+    const stun = (opts.hitstun || 0.18) * (opts.heavy ? 1.15 : 1);
+    defender.hitstun = Math.max(defender.hitstun, stun);
+    defender.hurtFlash = Math.max(defender.hurtFlash, opts.heavy ? 0.28 : 0.16);
+    defender.impactSquash = opts.heavy ? 0.55 : 0.32;
+    defender.action = 'hurt';
+    defender.actionTimer = Math.max(defender.actionTimer, stun * 0.85);
     defender.combo += 1;
     attacker.combo += 1;
     attacker.ki = clamp(attacker.ki + 8 * (opts.kiGain || 1) * attacker.stats.kiRegen, 0, attacker.maxKi);
 
-    // Tekken/SF style: pushback + light lift, walls catch you (no ring-out)
-    const kb = ((opts.knock || 1) * (10 + dmg * 0.55) * (opts.kbMul || 1)) / defender.stats.weight;
+    // Realistic fighting-game knockback: angled launch + attacker recoil
+    const kb = ((opts.knock || 1) * (11 + dmg * 0.62) * (opts.kbMul || 1)) / defender.stats.weight;
     const dir = opts.dirX != null ? opts.dirX : Math.sign(defender.x - attacker.x) || attacker.facing;
-    const lift = opts.upAir || opts.angle != null ? 1 : 0.35;
-    defender.vx = dir * kb * 22;
-    defender.vy = -kb * 10 * lift * (opts.up || 1);
-    if (defender.vy > -40 && !opts.upAir) defender.vy = Math.min(defender.vy, -30);
+    const angle = opts.angle != null ? opts.angle : opts.heavy ? -0.55 : -0.32;
+    const speed = kb * 26;
+    defender.vx = dir * Math.cos(Math.abs(angle)) * speed;
+    defender.vy = Math.sin(angle) * speed * (opts.up || 1) - (opts.heavy ? 40 : 18);
+    if (!opts.heavy && defender.onGround) defender.vy = Math.min(defender.vy, -55);
     defender.onGround = false;
     defender.fastFall = false;
     defender.jabStep = 0;
     defender.shielding = false;
 
+    // Attacker punch recoil / follow-through
+    attacker.vx += dir * (opts.heavy ? 55 : 28);
+    attacker.impactSquash = Math.max(attacker.impactSquash, opts.heavy ? 0.22 : 0.12);
+
     attacker.comboCount = (attacker.comboCount || 0) + 1;
     if (attacker.comboCount > 1) {
-      this.fx.floatText(attacker.x, attacker.y - 60, `${attacker.comboCount} HIT!`, '#67e8f9');
+      this.fx.floatText(attacker.x, attacker.y - 70, `${attacker.comboCount} HIT!`, '#67e8f9');
     }
 
     const heavy = dmg > 16 || !!opts.heavy;
-    this.fx.onHit(defender.x, defender.y - 10, dmg, heavy);
+    const impactX = (attacker.x + defender.x) / 2 + dir * 8;
+    const impactY = defender.y - defender.radius * 0.35;
+    this.fx.onHit(impactX, impactY, hpDmg, heavy);
+    if (defender.onGround || opts.grounded) {
+      this.fx.burst(defender.x, this.stage.ground.y - 4, {
+        count: heavy ? 16 : 8,
+        speed: 110,
+        paletteName: 'jump',
+        angle: -Math.PI / 2,
+        spread: 1.4,
+        gravity: 180,
+        life: 0.35
+      });
+    }
     audio.hit(heavy);
     this.pushLog(`${attacker.name} → ${defender.name}  -${hpDmg.toFixed(0)} PV`);
 
@@ -259,24 +292,24 @@ export class CombatEngine {
     if (f.pendingHit.delay > 0) return;
     const hit = f.pendingHit;
     f.pendingHit = null;
-    const range = hit.range || 58;
-    const ox = f.x + f.facing * (hit.reach || 28);
-    const oy = f.y + (hit.yOff || -6);
+    const range = (hit.range || 72) * (f.transformed ? 1.12 : 1);
+    const ox = f.x + f.facing * (hit.reach || 42);
+    const oy = f.y + (hit.yOff || -12);
     this.fx.burst(ox, oy, {
-      count: hit.heavy ? 18 : 10,
-      speed: hit.heavy ? 220 : 150,
+      count: hit.heavy ? 22 : 12,
+      speed: hit.heavy ? 260 : 170,
       paletteName: hit.fx || 'hit',
       spread: 1.1,
       angle: f.facing >= 0 ? 0 : Math.PI,
       spark: true
     });
-    this.fx.ring(ox, oy, { maxR: hit.heavy ? 55 : 34, paletteName: hit.fx || 'hit', life: 0.2 });
+    this.fx.ring(ox, oy, { maxR: hit.heavy ? 70 : 42, paletteName: hit.fx || 'hit', life: 0.22 });
     if (hit.move) {
       f.vx += f.facing * hit.move;
     }
     let connected = false;
     for (const e of this.enemiesOf(f)) {
-      if (Math.hypot(e.x - ox, e.y - oy) <= range + e.radius * 0.4) {
+      if (Math.hypot(e.x - ox, e.y - oy) <= range + e.radius * 0.55) {
         if (e.shielding) {
           e.ki = Math.max(0, e.ki - 4);
           this.fx.floatText(e.x, e.y - 40, 'GUARD', '#67e8f9');
@@ -319,24 +352,24 @@ export class CombatEngine {
           knock: 1.15,
           up: 1.35,
           angle: -1.2,
-          range: 62,
-          reach: 18,
-          yOff: -28,
-          hitstun: 0.28,
+          range: 86,
+          reach: 28,
+          yOff: -36,
+          hitstun: 0.3,
           action: 'attack'
         });
         this.pushLog(`${f.name} — aerial haut !`);
       } else if (heavy) {
         this.queueHit(f, {
           startup: 0.1,
-          power: 1.45,
-          knock: 1.4,
+          power: 1.5,
+          knock: 1.45,
           heavy: true,
           angle: -0.55,
-          range: 70,
-          reach: 34,
-          move: 80,
-          hitstun: 0.32,
+          range: 94,
+          reach: 48,
+          move: 100,
+          hitstun: 0.34,
           action: 'attack'
         });
         f.vy = Math.min(f.vy, -40);
@@ -344,12 +377,12 @@ export class CombatEngine {
       } else {
         this.queueHit(f, {
           startup: 0.05,
-          power: 0.85,
-          knock: 0.75,
+          power: 0.9,
+          knock: 0.8,
           angle: -0.9,
-          range: 56,
-          reach: 26,
-          hitstun: 0.22,
+          range: 78,
+          reach: 38,
+          hitstun: 0.24,
           action: 'attack'
         });
       }
@@ -362,15 +395,15 @@ export class CombatEngine {
       f.jabStep = 0;
       this.queueHit(f, {
         startup: 0.14,
-        power: 1.7,
-        knock: 1.65,
+        power: 1.75,
+        knock: 1.7,
         heavy: true,
         angle: -0.5,
-        range: 78,
-        reach: 40,
-        move: 160,
-        hitstun: 0.38,
-        kbMul: 1.15,
+        range: 102,
+        reach: 56,
+        move: 180,
+        hitstun: 0.4,
+        kbMul: 1.2,
         action: 'attack',
         fx: 'solar'
       });
@@ -384,14 +417,14 @@ export class CombatEngine {
       f.jabStep = 0;
       this.queueHit(f, {
         startup: 0.09,
-        power: 1.2,
-        knock: 1.1,
+        power: 1.25,
+        knock: 1.15,
         angle: -1.35,
         up: 1.4,
-        range: 64,
-        reach: 16,
-        yOff: -30,
-        hitstun: 0.3,
+        range: 88,
+        reach: 24,
+        yOff: -40,
+        hitstun: 0.32,
         action: 'attack'
       });
       this.pushLog(`${f.name} — anti-air !`);
@@ -406,25 +439,25 @@ export class CombatEngine {
       f.attackCd = 0.18;
       this.queueHit(f, {
         startup: 0.04,
-        power: 0.7,
-        knock: 0.45,
+        power: 0.75,
+        knock: 0.5,
         angle: -0.3,
-        range: 54,
-        reach: 30,
-        hitstun: 0.18,
+        range: 76,
+        reach: 44,
+        hitstun: 0.2,
         action: 'attack'
       });
     } else if (step === 1) {
       f.attackCd = 0.2;
       this.queueHit(f, {
         startup: 0.05,
-        power: 0.85,
-        knock: 0.55,
+        power: 0.9,
+        knock: 0.6,
         angle: -0.45,
-        range: 58,
-        reach: 32,
-        move: 40,
-        hitstun: 0.2,
+        range: 80,
+        reach: 46,
+        move: 50,
+        hitstun: 0.22,
         action: 'attack'
       });
     } else {
@@ -432,14 +465,14 @@ export class CombatEngine {
       f.jabStep = 0;
       this.queueHit(f, {
         startup: 0.07,
-        power: 1.25,
-        knock: 1.25,
+        power: 1.3,
+        knock: 1.3,
         heavy: true,
         angle: -0.85,
-        range: 68,
-        reach: 36,
-        move: 120,
-        hitstun: 0.3,
+        range: 92,
+        reach: 50,
+        move: 140,
+        hitstun: 0.32,
         action: 'attack',
         fx: 'spark'
       });
@@ -544,9 +577,16 @@ export class CombatEngine {
 
   trySpecial(f, index = 0) {
     if (f.specialCd > 0 || f.hitstun > 0 || f.chargeTimer > 0) return;
-    const techId = f.specials[index] || f.specials[0];
-    const extra = f.bonusTechs[0];
-    const tech = getTechnique(index === 1 && extra ? extra : techId);
+    // Alternate base specials; inject shop bonus as an extra slot after the kit
+    const kit = [...(f.specials || [])];
+    (f.bonusTechs || []).forEach((id) => {
+      if (id && !kit.includes(id)) kit.push(id);
+    });
+    if (!kit.length) return;
+    f._specialCursor = ((f._specialCursor || 0) % kit.length);
+    const pick = index > 0 && kit[index] ? kit[index] : kit[f._specialCursor];
+    f._specialCursor = (f._specialCursor + 1) % kit.length;
+    const tech = getTechnique(pick);
     if (!tech) return;
     if (f.ki < tech.kiCost) {
       this.fx.floatText(f.x, f.y - 40, 'KI?', '#94a3b8');
@@ -664,6 +704,83 @@ export class CombatEngine {
     this.pushLog(`${f.name} se régénère (+${heal.toFixed(0)} PV).`);
   }
 
+  tryTransform(f) {
+    if (!f.transformData || f.transformed || f.transformCd > 0 || f.hitstun > 0 || f.chargeTimer > 0) return;
+    if (f.ki < 45) {
+      this.fx.floatText(f.x, f.y - 50, 'KI?', '#94a3b8');
+      return;
+    }
+    const t = f.transformData;
+    f.ki -= 45;
+    f.transformed = true;
+    f.transformTimer = t.duration || 12;
+    f.transformName = t.name || 'Transformation';
+    f.colors = { ...f.baseColors, ...(t.colors || {}) };
+    f.stats = {
+      ...f.baseStats,
+      atk: f.baseStats.atk * (t.atkMul || 1.3),
+      speed: f.baseStats.speed * (t.speedMul || 1.15),
+      jump: f.baseStats.jump * (t.jumpMul || 1.1),
+      def: f.baseStats.def * 1.08
+    };
+    f.radius = f.baseRadius * 1.12;
+    f.drawScale = 2.15;
+    f.invuln = Math.max(f.invuln, 0.35);
+    f.action = 'charge';
+    f.actionTimer = 0.45;
+    f.transformCd = 2;
+    this.fx.shockwave(f.x, f.y - 20, { maxR: 180, color: f.colors.accent || '#fde047', width: 16 });
+    this.fx.burst(f.x, f.y - 10, {
+      count: 40,
+      speed: 280,
+      paletteName: 'aurora',
+      spark: true,
+      size: 8
+    });
+    this.fx.orbital(f.x, f.y, { count: 8, radius: 50, paletteName: 'solar', life: 0.8 });
+    this.fx.floatText(f.x, f.y - 90, f.transformName.toUpperCase(), '#fde047');
+    this.fx.screenShake(16, 0.4);
+    this.fx.addHitstop(8);
+    this.fx.flashAlpha = 0.45;
+    this.fx.flashColor = f.colors.accent || '#fef08a';
+    audio.ultra();
+    this.pushLog(`${f.name} se transforme — ${f.transformName} !`);
+  }
+
+  endTransform(f, reason = 'fin') {
+    if (!f.transformed) return;
+    f.transformed = false;
+    f.transformTimer = 0;
+    f.colors = { ...f.baseColors };
+    f.stats = { ...f.baseStats };
+    f.radius = f.baseRadius;
+    f.drawScale = 1.85;
+    f.transformCd = 8;
+    this.fx.burst(f.x, f.y, { count: 18, speed: 140, paletteName: 'trail', spark: true });
+    this.fx.floatText(f.x, f.y - 60, reason === 'ki' ? 'KI ÉPUISÉ' : 'FORME OFF', '#94a3b8');
+    this.pushLog(`${f.name} quitte ${f.transformName || 'sa forme'}.`);
+    f.transformName = '';
+  }
+
+  updateTransform(f, dt) {
+    if (!f.transformed) return;
+    f.transformTimer -= dt;
+    f.ki = Math.max(0, f.ki - dt * 4.5);
+    if (Math.random() < 0.25) {
+      this.fx.burst(f.x + randRange(-20, 20), f.y + randRange(-30, 10), {
+        count: 3,
+        speed: 60,
+        paletteName: 'solar',
+        gravity: -40,
+        life: 0.35,
+        size: 3
+      });
+    }
+    if (f.ki <= 0 || f.transformTimer <= 0) {
+      this.endTransform(f, f.ki <= 0 ? 'ki' : 'fin');
+    }
+  }
+
   applyInput(f, input, dt) {
     if (!f.alive || f.dead) return;
     if (f.hitstun > 0 || f.chargeTimer > 0) {
@@ -707,11 +824,9 @@ export class CombatEngine {
 
     if (input.dash) this.tryDash(f, input.moveX || f.facing);
     if (input.attack) this.tryAttack(f, input);
-    if (input.blast || input.regen) {
-      // regen button becomes ki blast in fighter kit; still allow regen via input.heal
-      if (input.heal) this.tryRegen(f);
-      else this.tryKiBlast(f);
-    }
+    if (input.blast) this.tryKiBlast(f);
+    if (input.regen || input.heal) this.tryRegen(f);
+    if (input.transform) this.tryTransform(f);
     if (input.special) this.trySpecial(f, 0);
     if (input.ultra) this.tryUltra(f);
   }
@@ -774,11 +889,14 @@ export class CombatEngine {
       f.ultraCd = Math.max(0, f.ultraCd - sdt);
       f.blastCd = Math.max(0, f.blastCd - sdt);
       f.dashCd = Math.max(0, f.dashCd - sdt);
+      f.transformCd = Math.max(0, f.transformCd - sdt);
       f.jabWindow = Math.max(0, f.jabWindow - sdt);
       f.actionTimer = Math.max(0, f.actionTimer - sdt);
       f.invuln = Math.max(0, f.invuln - sdt);
       f.shieldTimer = Math.max(0, f.shieldTimer - sdt);
       f.hitstun = Math.max(0, f.hitstun - sdt);
+      f.hurtFlash = Math.max(0, f.hurtFlash - sdt);
+      f.impactSquash = Math.max(0, f.impactSquash - sdt * 2.8);
       if (f.hitstun <= 0 && f.jabWindow <= 0) f.comboCount = 0;
 
       if (f.chargeTimer > 0) {
@@ -790,9 +908,12 @@ export class CombatEngine {
       }
 
       this.resolvePendingHit(f, sdt);
+      this.updateTransform(f, sdt);
 
       if (f.actionTimer <= 0 && f.action !== 'idle' && !f.shielding) f.action = 'idle';
-      f.ki = clamp(f.ki + sdt * 4.2 * f.stats.kiRegen, 0, f.maxKi);
+      if (!f.transformed) {
+        f.ki = clamp(f.ki + sdt * 4.2 * f.stats.kiRegen, 0, f.maxKi);
+      }
 
       this.updateSpectacle(f, sdt);
 
@@ -829,7 +950,13 @@ export class CombatEngine {
         action: f.action,
         colors: f.colors,
         invuln: f.invuln,
-        shieldTimer: f.shieldTimer
+        shieldTimer: f.shieldTimer,
+        transformed: f.transformed,
+        transformName: f.transformName,
+        drawScale: f.drawScale,
+        hurtFlash: f.hurtFlash,
+        impactSquash: f.impactSquash,
+        radius: f.radius
       })),
       log: this.log.slice(0, 12)
     };

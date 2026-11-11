@@ -660,8 +660,8 @@ export function drawPortrait(ctx, id, colors, size = 120) {
   ctx.arc(size / 2, size / 2, size * 0.42, 0, Math.PI * 2);
   ctx.stroke();
   ctx.globalAlpha = 1;
-  ctx.translate(size / 2, size * 0.58);
-  ctx.scale(size / 90, size / 90);
+  ctx.translate(size / 2, size * 0.62);
+  ctx.scale(size / 70, size / 70);
   drawCharacterSprite(ctx, id, colors, 0.5, 'idle');
   ctx.restore();
 }

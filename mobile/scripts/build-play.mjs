@@ -114,17 +114,18 @@ ${cssGame}
         <button class="hold" data-hold="heavy" type="button" style="border-color:#fb923c">Smash</button>
         <button class="hold" data-hold="blast" type="button" style="border-color:#67e8f9">Ki</button>
         <button class="hold" data-hold="special" type="button" style="border-color:#3ec7f0">Spé</button>
+        <button class="hold" data-hold="transform" type="button" style="border-color:#facc15">Forme</button>
         <button class="hold" data-hold="guard" type="button" style="border-color:#a5b4fc">Garde</button>
         <button class="hold" data-hold="ultra" type="button" style="border-color:#ff6b8a">ULTRA</button>
       </div>
     </div>
-    <p class="hintbar">Sol + murs · barre de vie · Atk x3 · Smash · Ki · Garde · Spé · Ultra</p>
+    <p class="hintbar">Persos XL · Forme (45 ki) · Atk x3 · Smash · Ki · Ultra</p>
     <button class="btn" id="forfeit" type="button">Abandonner</button>
   </section>
   <section id="victory" class="screen">
     <div class="brand">VICTOIRE</div>
     <h1 id="winTitle">Gagnant</h1>
-    <div class="reward"><strong style="color:var(--sun)">Récompense</strong><p id="rewardText" class="sub">—</p></div>
+    <div class="reward"><strong style="color:var(--sun)">Prompt créatif</strong><p class="sub" style="margin:6px 0 8px;font-size:.88rem">Victoire = 1 idée originale débloquée (100 au total).</p><p id="rewardText" class="sub">—</p></div>
     <button class="btn primary" data-back="home" type="button">Menu</button>
   </section>
 </div>
@@ -147,7 +148,7 @@ const PROMPTS=['Inventе un snack qui recharge le ki.','Décris une arène en nu
 let me='lumo', moveX=0, fighting=false;
 const $=id=>document.getElementById(id);
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on'); if(id==='home') paintHero();}
-function handleGameMsg(data){if(!data?.type)return; if(data.type==='ready')$('stage').textContent=data.stage||'Arène'; if(data.type==='log')$('log').textContent=(data.log||[]).map(l=>l.msg).slice(0,2).join(' · '); if(data.type==='ended'){fighting=false; const winners=new Set(data.winnerTeams||[]); const names=(data.fighters||[]).filter(f=>winners.has(f.team)).map(f=>f.name).join(' & '); $('winTitle').textContent=names||'Match terminé'; $('rewardText').textContent=PROMPTS[Math.floor(Math.random()*PROMPTS.length)]; show('victory');}}
+function handleGameMsg(data){if(!data?.type)return; if(data.type==='ready')$('stage').textContent=data.stage||'Arène'; if(data.type==='log')$('log').textContent=(data.log||[]).map(l=>l.msg).slice(0,2).join(' · '); if(data.type==='ended'){fighting=false; const winners=new Set(data.winnerTeams||[]); if(!winners.size){show('home');return;} const names=(data.fighters||[]).filter(f=>winners.has(f.team)).map(f=>f.name).join(' & '); $('winTitle').textContent=names||'Match terminé'; $('rewardText').textContent=PROMPTS[Math.floor(Math.random()*PROMPTS.length)]; show('victory');}}
 window.ReactNativeWebView={postMessage(raw){try{handleGameMsg(JSON.parse(raw))}catch{}}};
 function send(msg){window.AKI?.onMessage?.(msg)}
 function sendInput(extra={}){send({type:'input',slot:0,input:{moveX,...extra}})}

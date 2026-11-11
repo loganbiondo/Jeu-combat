@@ -185,7 +185,7 @@ function startCombat(fighters, { online = false, host = true } = {}) {
     online,
     fighters,
     host,
-    stocks: 3
+    stocks: 1
   });
   state.renderer = new Renderer(canvas);
   state.renderer.resize();
@@ -228,8 +228,10 @@ function startCombat(fighters, { online = false, host = true } = {}) {
 
     if (!online || host) {
       state.engine.update(dt, inputs);
-      if (online && host && Math.floor(state.engine.time * 20) % 2 === 0) {
-        state.net.sendState(state.engine.snapshot());
+      if (online && host) {
+        if (Math.floor(state.engine.time * 20) % 2 === 0 || state.engine.ended) {
+          state.net.sendState(state.engine.snapshot());
+        }
       }
     } else {
       state.engine.fx.update(dt);
@@ -245,7 +247,10 @@ function startCombat(fighters, { online = false, host = true } = {}) {
     if (state.engine.ended) {
       updateCombatLog();
       if (online && host) {
-        state.net.sendEnd({ winnerTeams: state.engine.winnerTeams });
+        state.net.sendEnd({
+          winnerTeams: state.engine.winnerTeams,
+          fighters: state.engine.snapshot().fighters
+        });
       }
       finishMatch();
       return;
@@ -257,12 +262,19 @@ function startCombat(fighters, { online = false, host = true } = {}) {
 }
 
 async function finishMatch() {
-  stopLoop();
-  const winners = state.engine?.winnerTeams || [];
-  const names = (state.engine?.fighters || [])
+  const engine = state.engine;
+  const winners = engine?.winnerTeams || [];
+  const names = (engine?.fighters || [])
     .filter((f) => winners.includes(f.team))
     .map((f) => f.name)
     .join(' & ');
+  stopLoop();
+
+  if (!winners.length) {
+    await patchSave({ matchesPlayed: (state.save.matchesPlayed || 0) + 1 });
+    showScreen('home');
+    return;
+  }
 
   const reward = pickRewardPrompt(state.save.promptHistory || []);
   const history = [...(state.save.promptHistory || []), reward.index].slice(-100);
@@ -274,7 +286,7 @@ async function finishMatch() {
 
   const goVictory = () => {
     document.getElementById('victory-title').textContent = names || 'Match terminé';
-    document.getElementById('victory-sub').textContent = 'Effets spéciaux déployés. Prompt débloqué !';
+    document.getElementById('victory-sub').textContent = 'Match gagné — idée créative débloquée !';
     document.getElementById('reward-prompt').textContent = reward.text;
     showScreen('victory');
   };
@@ -340,7 +352,7 @@ function bindNet() {
       team: p.team,
       characterId: p.characterId,
       name: p.name,
-      stocks: 3
+      stocks: 1
     }));
     // Host = seat 0 simulates
     const host = state.localSeat === 0;
@@ -368,11 +380,36 @@ function bindNet() {
       f.alive = sf.alive;
       f.action = sf.action;
       f.facing = sf.facing;
+      f.transformed = !!sf.transformed;
+      f.transformName = sf.transformName || '';
+      f.drawScale = sf.drawScale || f.drawScale;
+      f.hurtFlash = sf.hurtFlash || 0;
+      f.impactSquash = sf.impactSquash || 0;
+      if (sf.radius) f.radius = sf.radius;
+      if (sf.colors) f.colors = sf.colors;
     });
     if (snap.log) state.engine.log = snap.log;
     if (snap.ended) {
       state.engine.ended = true;
       state.engine.winnerTeams = snap.winnerTeams;
+    }
+  });
+  state.net.on('match:end', (payload = {}) => {
+    if (!state.engine) return;
+    state.engine.ended = true;
+    state.engine.winnerTeams = payload.winnerTeams || [];
+    if (Array.isArray(payload.fighters)) {
+      payload.fighters.forEach((sf) => {
+        const f = state.engine.fighters.find((x) => x.slot === sf.slot);
+        if (!f) return;
+        Object.assign(f, {
+          hp: sf.hp,
+          alive: sf.alive,
+          stocks: sf.stocks,
+          name: sf.name,
+          team: sf.team
+        });
+      });
     }
   });
   state.net.on('match:peer-left', () => {

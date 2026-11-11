@@ -87,17 +87,18 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
         <button class="hold" data-hold="heavy" type="button" style="border-color:#fb923c">Smash</button>
         <button class="hold" data-hold="blast" type="button" style="border-color:#67e8f9">Ki</button>
         <button class="hold" data-hold="special" type="button" style="border-color:#3ec7f0">Spé</button>
+        <button class="hold" data-hold="transform" type="button" style="border-color:#facc15">Forme</button>
         <button class="hold" data-hold="guard" type="button" style="border-color:#a5b4fc">Garde</button>
         <button class="hold" data-hold="ultra" type="button" style="border-color:#ff6b8a">ULTRA</button>
       </div>
     </div>
-    <p class="hintbar">Sol + murs · barre de vie · Atk x3 · Smash · Ki · Garde · Spé · Ultra</p>
+    <p class="hintbar">Persos XL · Forme (45 ki) · Atk x3 · Smash · Ki · Ultra</p>
     <button class="btn" id="forfeit" type="button">Abandonner</button>
   </section>
   <section id="victory" class="screen">
     <div class="brand">VICTOIRE</div>
     <h1 id="winTitle">Gagnant</h1>
-    <div class="reward"><strong style="color:var(--sun)">Récompense</strong><p id="rewardText" class="sub">—</p></div>
+    <div class="reward"><strong style="color:var(--sun)">Prompt créatif</strong><p class="sub" style="margin:6px 0 8px;font-size:.88rem">Victoire = 1 idée originale débloquée (100 au total).</p><p id="rewardText" class="sub">—</p></div>
     <button class="btn primary" data-back="home" type="button">Menu</button>
   </section>
 </div>
@@ -116,7 +117,15 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       stats: { hp: 100, atk: 12, def: 8, speed: 6.2, weight: 0.9, jump: 14, kiRegen: 1.1 },
       free: true,
       specials: ["solar_hug", "glide_kick"],
-      ultra: "aurora_burst"
+      ultra: "aurora_burst",
+      transform: {
+        name: "Aile Solaire",
+        colors: { body: "#e0f2fe", accent: "#fde047", outline: "#0369a1" },
+        atkMul: 1.35,
+        speedMul: 1.18,
+        jumpMul: 1.12,
+        duration: 14
+      }
     },
     {
       id: "pebble",
@@ -128,7 +137,15 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       stats: { hp: 120, atk: 10, def: 14, speed: 4.4, weight: 1.35, jump: 11, kiRegen: 0.9 },
       free: true,
       specials: ["boulder_roll", "moss_guard"],
-      ultra: "tectonic_clap"
+      ultra: "tectonic_clap",
+      transform: {
+        name: "Golem Magma",
+        colors: { body: "#fb923c", accent: "#fef08a", outline: "#7c2d12" },
+        atkMul: 1.4,
+        speedMul: 1.1,
+        jumpMul: 1.05,
+        duration: 12
+      }
     },
     {
       id: "nori",
@@ -140,7 +157,15 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       stats: { hp: 95, atk: 13, def: 7, speed: 6.8, weight: 0.85, jump: 15, kiRegen: 1.2 },
       free: true,
       specials: ["spice_dash", "wok_spin"],
-      ultra: "banquet_boom"
+      ultra: "banquet_boom",
+      transform: {
+        name: "Chef Inferno",
+        colors: { body: "#fecdd3", accent: "#fb923c", outline: "#9f1239" },
+        atkMul: 1.32,
+        speedMul: 1.22,
+        jumpMul: 1.1,
+        duration: 13
+      }
     },
     {
       id: "capra",
@@ -152,7 +177,15 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       stats: { hp: 105, atk: 14, def: 9, speed: 5.6, weight: 1.05, jump: 13, kiRegen: 1 },
       free: true,
       specials: ["horn_dive", "loot_kick"],
-      ultra: "cannon_bleat"
+      ultra: "cannon_bleat",
+      transform: {
+        name: "Corsaire Temp\xEAte",
+        colors: { body: "#ddd6fe", accent: "#f9a8d4", outline: "#5b21b6" },
+        atkMul: 1.38,
+        speedMul: 1.15,
+        jumpMul: 1.1,
+        duration: 13
+      }
     },
     {
       id: "mossy",
@@ -164,7 +197,15 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       stats: { hp: 110, atk: 11, def: 12, speed: 5, weight: 1.2, jump: 12, kiRegen: 1.15 },
       free: true,
       specials: ["vine_lasso", "leaf_pulse"],
-      ultra: "grove_quake"
+      ultra: "grove_quake",
+      transform: {
+        name: "For\xEAt Sacr\xE9e",
+        colors: { body: "#86efac", accent: "#fde047", outline: "#166534" },
+        atkMul: 1.28,
+        speedMul: 1.12,
+        jumpMul: 1.08,
+        duration: 14
+      }
     },
     {
       id: "zib",
@@ -176,7 +217,15 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       stats: { hp: 90, atk: 15, def: 6, speed: 7.4, weight: 0.75, jump: 16, kiRegen: 1.3 },
       free: true,
       specials: ["spark_prank", "bounce_bomb"],
-      ultra: "giggle_storm"
+      ultra: "giggle_storm",
+      transform: {
+        name: "Chaos Neon",
+        colors: { body: "#fce7f3", accent: "#22d3ee", outline: "#be185d" },
+        atkMul: 1.42,
+        speedMul: 1.28,
+        jumpMul: 1.15,
+        duration: 11
+      }
     },
     {
       id: "kira",
@@ -188,7 +237,15 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       stats: { hp: 100, atk: 13, def: 8, speed: 6.5, weight: 0.95, jump: 14.5, kiRegen: 1.05 },
       free: true,
       specials: ["sun_jab", "rail_flip"],
-      ultra: "daybreak_drive"
+      ultra: "daybreak_drive",
+      transform: {
+        name: "Poing Z\xE9nith",
+        colors: { body: "#fef9c3", accent: "#38bdf8", outline: "#a16207" },
+        atkMul: 1.36,
+        speedMul: 1.2,
+        jumpMul: 1.14,
+        duration: 13
+      }
     },
     {
       id: "bolt",
@@ -200,7 +257,15 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       stats: { hp: 92, atk: 12, def: 7, speed: 7.8, weight: 0.7, jump: 16.5, kiRegen: 1.25 },
       free: true,
       specials: ["nut_missile", "zip_line"],
-      ultra: "thunder_acorn"
+      ultra: "thunder_acorn",
+      transform: {
+        name: "Super Bolt",
+        colors: { body: "#ffedd5", accent: "#facc15", outline: "#c2410c" },
+        atkMul: 1.33,
+        speedMul: 1.35,
+        jumpMul: 1.2,
+        duration: 12
+      }
     },
     {
       id: "quillox",
@@ -212,7 +277,15 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       stats: { hp: 108, atk: 11, def: 10, speed: 5.8, weight: 0.95, jump: 13.5, kiRegen: 1.4 },
       free: false,
       specials: ["plume_spiral", "soft_regen"],
-      ultra: "feather_nova"
+      ultra: "feather_nova",
+      transform: {
+        name: "Plume Cosmique",
+        colors: { body: "#ccfbf1", accent: "#c4b5fd", outline: "#0f766e" },
+        atkMul: 1.3,
+        speedMul: 1.16,
+        jumpMul: 1.12,
+        duration: 14
+      }
     },
     {
       id: "ironpaw",
@@ -224,7 +297,15 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       stats: { hp: 125, atk: 16, def: 13, speed: 4.8, weight: 1.45, jump: 11.5, kiRegen: 0.85 },
       free: false,
       specials: ["steel_pounce", "ki_shield"],
-      ultra: "meteor_claw"
+      ultra: "meteor_claw",
+      transform: {
+        name: "Armure M\xE9t\xE9ore",
+        colors: { body: "#cbd5e1", accent: "#fb923c", outline: "#0f172a" },
+        atkMul: 1.45,
+        speedMul: 1.12,
+        jumpMul: 1.06,
+        duration: 12
+      }
     },
     {
       id: "velvet",
@@ -236,7 +317,15 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       stats: { hp: 98, atk: 14, def: 8, speed: 6.9, weight: 0.88, jump: 15, kiRegen: 1.18 },
       free: false,
       specials: ["velvet_warp", "ki_drain"],
-      ultra: "midnight_bloom"
+      ultra: "midnight_bloom",
+      transform: {
+        name: "Nyx Absolue",
+        colors: { body: "#f5d0fe", accent: "#818cf8", outline: "#701a75" },
+        atkMul: 1.4,
+        speedMul: 1.24,
+        jumpMul: 1.12,
+        duration: 12
+      }
     }
   ];
   var SKINS = {
@@ -698,10 +787,10 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       ground: { x: 60, y: 560, w: 1160, h: 48 },
       platforms: [],
       spawns: [
-        { x: 320, y: 500 },
-        { x: 960, y: 500 },
-        { x: 400, y: 500 },
-        { x: 880, y: 500 }
+        { x: 300, y: 520 },
+        { x: 980, y: 520 },
+        { x: 380, y: 520 },
+        { x: 900, y: 520 }
       ],
       sky: ["#0b1d3a", "#1e3a5f", "#3b82c4"],
       accent: "#f9a8d4",
@@ -718,10 +807,10 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       ground: { x: 80, y: 560, w: 1120, h: 48 },
       platforms: [],
       spawns: [
-        { x: 340, y: 500 },
-        { x: 940, y: 500 },
-        { x: 420, y: 500 },
-        { x: 860, y: 500 }
+        { x: 320, y: 520 },
+        { x: 960, y: 520 },
+        { x: 400, y: 520 },
+        { x: 880, y: 520 }
       ],
       sky: ["#1a1028", "#3b1d4a", "#7c3a5c"],
       accent: "#67e8f9",
@@ -1223,22 +1312,34 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
     }
     onHit(x, y, damage, heavy = false) {
       this.burst(x, y, {
-        count: heavy ? 32 : 14,
-        speed: heavy ? 320 : 180,
+        count: heavy ? 38 : 18,
+        speed: heavy ? 360 : 210,
         paletteName: "hit",
         spark: true,
-        size: heavy ? 7 : 4,
-        gravity: 120
+        size: heavy ? 8 : 5,
+        gravity: 140
       });
-      this.ring(x, y, { maxR: heavy ? 90 : 40, paletteName: "hit", width: heavy ? 5 : 3 });
-      if (heavy) this.shockwave(x, y, { maxR: 110, color: "#fde047", width: 8 });
-      this.floatText(x, y - 20, `${Math.round(damage)}%`, heavy ? "#fb7185" : "#fef08a");
-      this.screenShake(heavy ? 14 : 5, heavy ? 0.3 : 0.12);
-      this.addHitstop(heavy ? 7 : 3);
-      if (heavy) {
-        this.flashAlpha = 0.28;
-        this.flashColor = "#ffffff";
+      for (let i = 0; i < (heavy ? 6 : 3); i++) {
+        const a = -0.4 + Math.random() * 0.8 + (Math.random() > 0.5 ? Math.PI : 0);
+        this.burst(x + Math.cos(a) * 8, y + Math.sin(a) * 8, {
+          count: 4,
+          speed: heavy ? 420 : 260,
+          paletteName: "hit",
+          spark: true,
+          angle: a,
+          spread: 0.15,
+          life: 0.18,
+          size: 3,
+          gravity: 0
+        });
       }
+      this.ring(x, y, { maxR: heavy ? 100 : 48, paletteName: "hit", width: heavy ? 6 : 3.5 });
+      if (heavy) this.shockwave(x, y, { maxR: 130, color: "#fde047", width: 10 });
+      this.floatText(x, y - 24, `-${Math.round(damage)}`, heavy ? "#fb7185" : "#fef08a");
+      this.screenShake(heavy ? 18 : 7, heavy ? 0.34 : 0.14);
+      this.addHitstop(heavy ? 10 : 5);
+      this.flashAlpha = heavy ? 0.34 : 0.16;
+      this.flashColor = "#ffffff";
     }
     onKO(x, y) {
       this.burst(x, y, { count: 60, speed: 400, paletteName: "ko", gravity: 50, life: 1, size: 9, spark: true });
@@ -1756,7 +1857,9 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       this.vx = 0;
       this.vy = 0;
       this.facing = opts.facing || 1;
-      this.radius = 22;
+      this.baseRadius = 38;
+      this.radius = 38;
+      this.drawScale = 1.85;
       this.onGround = false;
       this.jumps = 2;
       this.percent = 0;
@@ -1773,11 +1876,14 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       this.ultraCd = 0;
       this.blastCd = 0;
       this.dashCd = 0;
+      this.transformCd = 0;
       this.actionTimer = 0;
       this.action = "idle";
       this.shieldTimer = 0;
       this.shielding = false;
       this.hitstun = 0;
+      this.hurtFlash = 0;
+      this.impactSquash = 0;
       this.respawnTimer = 0;
       this.combo = 0;
       this.jabStep = 0;
@@ -1790,6 +1896,12 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       this.fastFall = false;
       this.jumpHeld = false;
       this.comboCount = 0;
+      this.baseColors = { ...this.colors };
+      this.baseStats = { ...this.stats };
+      this.transformData = ch.transform || null;
+      this.transformed = false;
+      this.transformTimer = 0;
+      this.transformName = "";
     }
     get dead() {
       return this.stocks <= 0;
@@ -1840,26 +1952,47 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       defender.percent += dmg * 0.35;
       const hpDmg = dmg * (opts.hpMul || 1.15);
       defender.hp = Math.max(0, defender.hp - hpDmg);
-      defender.hitstun = Math.max(defender.hitstun, opts.hitstun || 0.18);
+      const stun = (opts.hitstun || 0.18) * (opts.heavy ? 1.15 : 1);
+      defender.hitstun = Math.max(defender.hitstun, stun);
+      defender.hurtFlash = Math.max(defender.hurtFlash, opts.heavy ? 0.28 : 0.16);
+      defender.impactSquash = opts.heavy ? 0.55 : 0.32;
+      defender.action = "hurt";
+      defender.actionTimer = Math.max(defender.actionTimer, stun * 0.85);
       defender.combo += 1;
       attacker.combo += 1;
       attacker.ki = clamp(attacker.ki + 8 * (opts.kiGain || 1) * attacker.stats.kiRegen, 0, attacker.maxKi);
-      const kb = (opts.knock || 1) * (10 + dmg * 0.55) * (opts.kbMul || 1) / defender.stats.weight;
+      const kb = (opts.knock || 1) * (11 + dmg * 0.62) * (opts.kbMul || 1) / defender.stats.weight;
       const dir = opts.dirX != null ? opts.dirX : Math.sign(defender.x - attacker.x) || attacker.facing;
-      const lift = opts.upAir || opts.angle != null ? 1 : 0.35;
-      defender.vx = dir * kb * 22;
-      defender.vy = -kb * 10 * lift * (opts.up || 1);
-      if (defender.vy > -40 && !opts.upAir) defender.vy = Math.min(defender.vy, -30);
+      const angle = opts.angle != null ? opts.angle : opts.heavy ? -0.55 : -0.32;
+      const speed = kb * 26;
+      defender.vx = dir * Math.cos(Math.abs(angle)) * speed;
+      defender.vy = Math.sin(angle) * speed * (opts.up || 1) - (opts.heavy ? 40 : 18);
+      if (!opts.heavy && defender.onGround) defender.vy = Math.min(defender.vy, -55);
       defender.onGround = false;
       defender.fastFall = false;
       defender.jabStep = 0;
       defender.shielding = false;
+      attacker.vx += dir * (opts.heavy ? 55 : 28);
+      attacker.impactSquash = Math.max(attacker.impactSquash, opts.heavy ? 0.22 : 0.12);
       attacker.comboCount = (attacker.comboCount || 0) + 1;
       if (attacker.comboCount > 1) {
-        this.fx.floatText(attacker.x, attacker.y - 60, `${attacker.comboCount} HIT!`, "#67e8f9");
+        this.fx.floatText(attacker.x, attacker.y - 70, `${attacker.comboCount} HIT!`, "#67e8f9");
       }
       const heavy = dmg > 16 || !!opts.heavy;
-      this.fx.onHit(defender.x, defender.y - 10, dmg, heavy);
+      const impactX = (attacker.x + defender.x) / 2 + dir * 8;
+      const impactY = defender.y - defender.radius * 0.35;
+      this.fx.onHit(impactX, impactY, hpDmg, heavy);
+      if (defender.onGround || opts.grounded) {
+        this.fx.burst(defender.x, this.stage.ground.y - 4, {
+          count: heavy ? 16 : 8,
+          speed: 110,
+          paletteName: "jump",
+          angle: -Math.PI / 2,
+          spread: 1.4,
+          gravity: 180,
+          life: 0.35
+        });
+      }
       audio.hit(heavy);
       this.pushLog(`${attacker.name} \u2192 ${defender.name}  -${hpDmg.toFixed(0)} PV`);
       if (defender.hp <= 0) {
@@ -1952,24 +2085,24 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       if (f.pendingHit.delay > 0) return;
       const hit = f.pendingHit;
       f.pendingHit = null;
-      const range = hit.range || 58;
-      const ox = f.x + f.facing * (hit.reach || 28);
-      const oy = f.y + (hit.yOff || -6);
+      const range = (hit.range || 72) * (f.transformed ? 1.12 : 1);
+      const ox = f.x + f.facing * (hit.reach || 42);
+      const oy = f.y + (hit.yOff || -12);
       this.fx.burst(ox, oy, {
-        count: hit.heavy ? 18 : 10,
-        speed: hit.heavy ? 220 : 150,
+        count: hit.heavy ? 22 : 12,
+        speed: hit.heavy ? 260 : 170,
         paletteName: hit.fx || "hit",
         spread: 1.1,
         angle: f.facing >= 0 ? 0 : Math.PI,
         spark: true
       });
-      this.fx.ring(ox, oy, { maxR: hit.heavy ? 55 : 34, paletteName: hit.fx || "hit", life: 0.2 });
+      this.fx.ring(ox, oy, { maxR: hit.heavy ? 70 : 42, paletteName: hit.fx || "hit", life: 0.22 });
       if (hit.move) {
         f.vx += f.facing * hit.move;
       }
       let connected = false;
       for (const e of this.enemiesOf(f)) {
-        if (Math.hypot(e.x - ox, e.y - oy) <= range + e.radius * 0.4) {
+        if (Math.hypot(e.x - ox, e.y - oy) <= range + e.radius * 0.55) {
           if (e.shielding) {
             e.ki = Math.max(0, e.ki - 4);
             this.fx.floatText(e.x, e.y - 40, "GUARD", "#67e8f9");
@@ -2006,24 +2139,24 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
             knock: 1.15,
             up: 1.35,
             angle: -1.2,
-            range: 62,
-            reach: 18,
-            yOff: -28,
-            hitstun: 0.28,
+            range: 86,
+            reach: 28,
+            yOff: -36,
+            hitstun: 0.3,
             action: "attack"
           });
           this.pushLog(`${f.name} \u2014 aerial haut !`);
         } else if (heavy) {
           this.queueHit(f, {
             startup: 0.1,
-            power: 1.45,
-            knock: 1.4,
+            power: 1.5,
+            knock: 1.45,
             heavy: true,
             angle: -0.55,
-            range: 70,
-            reach: 34,
-            move: 80,
-            hitstun: 0.32,
+            range: 94,
+            reach: 48,
+            move: 100,
+            hitstun: 0.34,
             action: "attack"
           });
           f.vy = Math.min(f.vy, -40);
@@ -2031,12 +2164,12 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
         } else {
           this.queueHit(f, {
             startup: 0.05,
-            power: 0.85,
-            knock: 0.75,
+            power: 0.9,
+            knock: 0.8,
             angle: -0.9,
-            range: 56,
-            reach: 26,
-            hitstun: 0.22,
+            range: 78,
+            reach: 38,
+            hitstun: 0.24,
             action: "attack"
           });
         }
@@ -2047,15 +2180,15 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
         f.jabStep = 0;
         this.queueHit(f, {
           startup: 0.14,
-          power: 1.7,
-          knock: 1.65,
+          power: 1.75,
+          knock: 1.7,
           heavy: true,
           angle: -0.5,
-          range: 78,
-          reach: 40,
-          move: 160,
-          hitstun: 0.38,
-          kbMul: 1.15,
+          range: 102,
+          reach: 56,
+          move: 180,
+          hitstun: 0.4,
+          kbMul: 1.2,
           action: "attack",
           fx: "solar"
         });
@@ -2068,14 +2201,14 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
         f.jabStep = 0;
         this.queueHit(f, {
           startup: 0.09,
-          power: 1.2,
-          knock: 1.1,
+          power: 1.25,
+          knock: 1.15,
           angle: -1.35,
           up: 1.4,
-          range: 64,
-          reach: 16,
-          yOff: -30,
-          hitstun: 0.3,
+          range: 88,
+          reach: 24,
+          yOff: -40,
+          hitstun: 0.32,
           action: "attack"
         });
         this.pushLog(`${f.name} \u2014 anti-air !`);
@@ -2088,25 +2221,25 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
         f.attackCd = 0.18;
         this.queueHit(f, {
           startup: 0.04,
-          power: 0.7,
-          knock: 0.45,
+          power: 0.75,
+          knock: 0.5,
           angle: -0.3,
-          range: 54,
-          reach: 30,
-          hitstun: 0.18,
+          range: 76,
+          reach: 44,
+          hitstun: 0.2,
           action: "attack"
         });
       } else if (step === 1) {
         f.attackCd = 0.2;
         this.queueHit(f, {
           startup: 0.05,
-          power: 0.85,
-          knock: 0.55,
+          power: 0.9,
+          knock: 0.6,
           angle: -0.45,
-          range: 58,
-          reach: 32,
-          move: 40,
-          hitstun: 0.2,
+          range: 80,
+          reach: 46,
+          move: 50,
+          hitstun: 0.22,
           action: "attack"
         });
       } else {
@@ -2114,14 +2247,14 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
         f.jabStep = 0;
         this.queueHit(f, {
           startup: 0.07,
-          power: 1.25,
-          knock: 1.25,
+          power: 1.3,
+          knock: 1.3,
           heavy: true,
           angle: -0.85,
-          range: 68,
-          reach: 36,
-          move: 120,
-          hitstun: 0.3,
+          range: 92,
+          reach: 50,
+          move: 140,
+          hitstun: 0.32,
           action: "attack",
           fx: "spark"
         });
@@ -2221,9 +2354,15 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
     }
     trySpecial(f, index = 0) {
       if (f.specialCd > 0 || f.hitstun > 0 || f.chargeTimer > 0) return;
-      const techId = f.specials[index] || f.specials[0];
-      const extra = f.bonusTechs[0];
-      const tech = getTechnique(index === 1 && extra ? extra : techId);
+      const kit = [...f.specials || []];
+      (f.bonusTechs || []).forEach((id) => {
+        if (id && !kit.includes(id)) kit.push(id);
+      });
+      if (!kit.length) return;
+      f._specialCursor = (f._specialCursor || 0) % kit.length;
+      const pick = index > 0 && kit[index] ? kit[index] : kit[f._specialCursor];
+      f._specialCursor = (f._specialCursor + 1) % kit.length;
+      const tech = getTechnique(pick);
       if (!tech) return;
       if (f.ki < tech.kiCost) {
         this.fx.floatText(f.x, f.y - 40, "KI?", "#94a3b8");
@@ -2326,6 +2465,80 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       audio.regen();
       this.pushLog(`${f.name} se r\xE9g\xE9n\xE8re (+${heal.toFixed(0)} PV).`);
     }
+    tryTransform(f) {
+      if (!f.transformData || f.transformed || f.transformCd > 0 || f.hitstun > 0 || f.chargeTimer > 0) return;
+      if (f.ki < 45) {
+        this.fx.floatText(f.x, f.y - 50, "KI?", "#94a3b8");
+        return;
+      }
+      const t = f.transformData;
+      f.ki -= 45;
+      f.transformed = true;
+      f.transformTimer = t.duration || 12;
+      f.transformName = t.name || "Transformation";
+      f.colors = { ...f.baseColors, ...t.colors || {} };
+      f.stats = {
+        ...f.baseStats,
+        atk: f.baseStats.atk * (t.atkMul || 1.3),
+        speed: f.baseStats.speed * (t.speedMul || 1.15),
+        jump: f.baseStats.jump * (t.jumpMul || 1.1),
+        def: f.baseStats.def * 1.08
+      };
+      f.radius = f.baseRadius * 1.12;
+      f.drawScale = 2.15;
+      f.invuln = Math.max(f.invuln, 0.35);
+      f.action = "charge";
+      f.actionTimer = 0.45;
+      f.transformCd = 2;
+      this.fx.shockwave(f.x, f.y - 20, { maxR: 180, color: f.colors.accent || "#fde047", width: 16 });
+      this.fx.burst(f.x, f.y - 10, {
+        count: 40,
+        speed: 280,
+        paletteName: "aurora",
+        spark: true,
+        size: 8
+      });
+      this.fx.orbital(f.x, f.y, { count: 8, radius: 50, paletteName: "solar", life: 0.8 });
+      this.fx.floatText(f.x, f.y - 90, f.transformName.toUpperCase(), "#fde047");
+      this.fx.screenShake(16, 0.4);
+      this.fx.addHitstop(8);
+      this.fx.flashAlpha = 0.45;
+      this.fx.flashColor = f.colors.accent || "#fef08a";
+      audio.ultra();
+      this.pushLog(`${f.name} se transforme \u2014 ${f.transformName} !`);
+    }
+    endTransform(f, reason = "fin") {
+      if (!f.transformed) return;
+      f.transformed = false;
+      f.transformTimer = 0;
+      f.colors = { ...f.baseColors };
+      f.stats = { ...f.baseStats };
+      f.radius = f.baseRadius;
+      f.drawScale = 1.85;
+      f.transformCd = 8;
+      this.fx.burst(f.x, f.y, { count: 18, speed: 140, paletteName: "trail", spark: true });
+      this.fx.floatText(f.x, f.y - 60, reason === "ki" ? "KI \xC9PUIS\xC9" : "FORME OFF", "#94a3b8");
+      this.pushLog(`${f.name} quitte ${f.transformName || "sa forme"}.`);
+      f.transformName = "";
+    }
+    updateTransform(f, dt) {
+      if (!f.transformed) return;
+      f.transformTimer -= dt;
+      f.ki = Math.max(0, f.ki - dt * 4.5);
+      if (Math.random() < 0.25) {
+        this.fx.burst(f.x + randRange(-20, 20), f.y + randRange(-30, 10), {
+          count: 3,
+          speed: 60,
+          paletteName: "solar",
+          gravity: -40,
+          life: 0.35,
+          size: 3
+        });
+      }
+      if (f.ki <= 0 || f.transformTimer <= 0) {
+        this.endTransform(f, f.ki <= 0 ? "ki" : "fin");
+      }
+    }
     applyInput(f, input, dt) {
       if (!f.alive || f.dead) return;
       if (f.hitstun > 0 || f.chargeTimer > 0) {
@@ -2360,10 +2573,9 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       if (input.down && !f.onGround && f.vy > 0) f.fastFall = true;
       if (input.dash) this.tryDash(f, input.moveX || f.facing);
       if (input.attack) this.tryAttack(f, input);
-      if (input.blast || input.regen) {
-        if (input.heal) this.tryRegen(f);
-        else this.tryKiBlast(f);
-      }
+      if (input.blast) this.tryKiBlast(f);
+      if (input.regen || input.heal) this.tryRegen(f);
+      if (input.transform) this.tryTransform(f);
       if (input.special) this.trySpecial(f, 0);
       if (input.ultra) this.tryUltra(f);
     }
@@ -2418,11 +2630,14 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
         f.ultraCd = Math.max(0, f.ultraCd - sdt);
         f.blastCd = Math.max(0, f.blastCd - sdt);
         f.dashCd = Math.max(0, f.dashCd - sdt);
+        f.transformCd = Math.max(0, f.transformCd - sdt);
         f.jabWindow = Math.max(0, f.jabWindow - sdt);
         f.actionTimer = Math.max(0, f.actionTimer - sdt);
         f.invuln = Math.max(0, f.invuln - sdt);
         f.shieldTimer = Math.max(0, f.shieldTimer - sdt);
         f.hitstun = Math.max(0, f.hitstun - sdt);
+        f.hurtFlash = Math.max(0, f.hurtFlash - sdt);
+        f.impactSquash = Math.max(0, f.impactSquash - sdt * 2.8);
         if (f.hitstun <= 0 && f.jabWindow <= 0) f.comboCount = 0;
         if (f.chargeTimer > 0) {
           f.chargeTimer -= sdt;
@@ -2432,8 +2647,11 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
           continue;
         }
         this.resolvePendingHit(f, sdt);
+        this.updateTransform(f, sdt);
         if (f.actionTimer <= 0 && f.action !== "idle" && !f.shielding) f.action = "idle";
-        f.ki = clamp(f.ki + sdt * 4.2 * f.stats.kiRegen, 0, f.maxKi);
+        if (!f.transformed) {
+          f.ki = clamp(f.ki + sdt * 4.2 * f.stats.kiRegen, 0, f.maxKi);
+        }
         this.updateSpectacle(f, sdt);
         const wasGround = f.onGround;
         const input = inputsBySlot[f.slot] || { moveX: 0 };
@@ -2467,7 +2685,13 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
           action: f.action,
           colors: f.colors,
           invuln: f.invuln,
-          shieldTimer: f.shieldTimer
+          shieldTimer: f.shieldTimer,
+          transformed: f.transformed,
+          transformName: f.transformName,
+          drawScale: f.drawScale,
+          hurtFlash: f.hurtFlash,
+          impactSquash: f.impactSquash,
+          radius: f.radius
         })),
         log: this.log.slice(0, 12)
       };
@@ -3057,8 +3281,8 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
     ctx.arc(size / 2, size / 2, size * 0.42, 0, Math.PI * 2);
     ctx.stroke();
     ctx.globalAlpha = 1;
-    ctx.translate(size / 2, size * 0.58);
-    ctx.scale(size / 90, size / 90);
+    ctx.translate(size / 2, size * 0.62);
+    ctx.scale(size / 70, size / 70);
     drawCharacterSprite(ctx, id, colors, 0.5, "idle");
     ctx.restore();
   }
@@ -3168,8 +3392,11 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
       }
     }
     drawFighter(f, t) {
+      var _a;
       if (!f.alive || f.hp <= 0) return;
       const ctx = this.ctx;
+      const scale = f.drawScale || 1.85;
+      const r = f.radius || 38;
       ctx.save();
       ctx.translate(f.x, f.y);
       if (f.invuln > 0 && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.45;
@@ -3177,39 +3404,52 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
         ctx.save();
         ctx.globalAlpha = 0.35;
         ctx.strokeStyle = "#67e8f9";
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 5;
         ctx.beginPath();
-        ctx.arc(0, 0, 34, 0, Math.PI * 2);
+        ctx.arc(0, 0, r + 10, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
       }
-      if (f.ki > 70 || f.action === "charge" || f.action === "ultra") {
-        const boost = f.action === "charge" || f.action === "ultra" ? 1.6 : 1;
-        const pulse = (28 + Math.sin(t * 14) * 6) * boost;
-        const aura = ctx.createRadialGradient(0, 0, 8, 0, 0, pulse);
-        aura.addColorStop(0, f.action === "ultra" ? "rgba(251,113,133,0.55)" : "rgba(254,240,138,0.5)");
-        aura.addColorStop(0.5, "rgba(56,189,248,0.25)");
+      if (f.transformed || f.ki > 70 || f.action === "charge" || f.action === "ultra") {
+        const boost = f.transformed ? 2.1 : f.action === "charge" || f.action === "ultra" ? 1.6 : 1;
+        const pulse = (34 + Math.sin(t * 14) * 8) * boost;
+        const aura = ctx.createRadialGradient(0, 0, 10, 0, 0, pulse);
+        aura.addColorStop(
+          0,
+          f.transformed ? "rgba(253,224,71,0.65)" : f.action === "ultra" ? "rgba(251,113,133,0.55)" : "rgba(254,240,138,0.5)"
+        );
+        aura.addColorStop(0.5, f.transformed ? "rgba(251,146,60,0.3)" : "rgba(56,189,248,0.25)");
         aura.addColorStop(1, "rgba(56,189,248,0)");
         ctx.fillStyle = aura;
         ctx.beginPath();
         ctx.arc(0, 0, pulse, 0, Math.PI * 2);
         ctx.fill();
       }
-      if (f.action === "charge") {
+      if (f.action === "charge" || f.transformed) {
         ctx.save();
-        ctx.strokeStyle = "#fef08a";
-        ctx.lineWidth = 2;
-        ctx.globalAlpha = 0.8;
-        for (let i = 0; i < 5; i++) {
+        ctx.strokeStyle = ((_a = f.colors) == null ? void 0 : _a.accent) || "#fef08a";
+        ctx.lineWidth = f.transformed ? 3 : 2;
+        ctx.globalAlpha = 0.85;
+        for (let i = 0; i < (f.transformed ? 7 : 5); i++) {
           const a = t * 12 + i * 1.2;
           ctx.beginPath();
-          ctx.moveTo(Math.cos(a) * 18, Math.sin(a) * 18);
-          ctx.lineTo(Math.cos(a + 0.4) * 40, Math.sin(a + 0.5) * 40);
+          ctx.moveTo(Math.cos(a) * 22, Math.sin(a) * 22);
+          ctx.lineTo(Math.cos(a + 0.4) * 52, Math.sin(a + 0.5) * 52);
           ctx.stroke();
         }
         ctx.restore();
       }
-      ctx.scale(f.facing || 1, 1);
+      const squash = f.impactSquash || 0;
+      const sx = 1 + squash * 0.35;
+      const sy = 1 - squash * 0.28;
+      ctx.scale((f.facing || 1) * scale * sx, scale * sy);
+      if (f.hurtFlash > 0) {
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        ctx.globalAlpha = Math.min(0.85, f.hurtFlash * 3);
+        drawCharacterSprite(ctx, f.characterId || "lumo", { body: "#fff", accent: "#fff", outline: "#fecaca" }, t, "hurt");
+        ctx.restore();
+      }
       drawCharacterSprite(ctx, f.characterId || "lumo", f.colors, t, f.action || "idle");
       if (f.action === "attack" || f.action === "special" || f.action === "ultra") {
         ctx.globalAlpha = 0.9;
@@ -3224,19 +3464,27 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
         ctx.fill();
       }
       ctx.restore();
+      const nameY = f.y - r - 18;
       ctx.save();
-      ctx.font = '800 13px "Exo 2", "Trebuchet MS", sans-serif';
+      ctx.font = '800 14px "Exo 2", "Trebuchet MS", sans-serif';
       ctx.textAlign = "center";
       ctx.lineWidth = 4;
       ctx.strokeStyle = "rgba(7,17,31,0.75)";
-      ctx.strokeText(f.name, f.x, f.y - 48);
-      ctx.fillStyle = "#f8fafc";
-      ctx.fillText(f.name, f.x, f.y - 48);
+      const label = f.transformed ? `${f.name} \u2605` : f.name;
+      ctx.strokeText(label, f.x, nameY);
+      ctx.fillStyle = f.transformed ? "#fde047" : "#f8fafc";
+      ctx.fillText(label, f.x, nameY);
+      if (f.transformed && f.transformName) {
+        ctx.font = '700 11px "Exo 2", "Trebuchet MS", sans-serif';
+        ctx.fillStyle = "#fdba74";
+        ctx.strokeText(f.transformName, f.x, nameY + 14);
+        ctx.fillText(f.transformName, f.x, nameY + 14);
+      }
       if (f.comboCount > 1) {
         ctx.fillStyle = "#67e8f9";
         ctx.font = '800 14px "Exo 2", "Trebuchet MS", sans-serif';
-        ctx.strokeText(`${f.comboCount} HITS`, f.x, f.y - 30);
-        ctx.fillText(`${f.comboCount} HITS`, f.x, f.y - 30);
+        ctx.strokeText(`${f.comboCount} HITS`, f.x, nameY + (f.transformed ? 28 : 16));
+        ctx.fillText(`${f.comboCount} HITS`, f.x, nameY + (f.transformed ? 28 : 16));
       }
       ctx.restore();
     }
@@ -3353,7 +3601,9 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
         heavy: press("heavy"),
         special: press("special"),
         ultra: press("ultra"),
-        blast: press("blast") || press("regen"),
+        blast: press("blast"),
+        regen: press("regen"),
+        transform: press("transform"),
         dash: press("dash"),
         guard: !!cur.guard,
         heal: press("heal")
@@ -3398,7 +3648,7 @@ box-shadow:0 8px 24px rgba(0,0,0,.25)}
     engine = new CombatEngine({
       mode: config.mode || "1v1",
       fighters: config.fighters,
-      stocks: (_a = config.stocks) != null ? _a : 3
+      stocks: (_a = config.stocks) != null ? _a : 1
     });
     renderer = new Renderer(canvas);
     const fit = () => {
@@ -3466,7 +3716,7 @@ const PROMPTS=['Inventе un snack qui recharge le ki.','Décris une arène en nu
 let me='lumo', moveX=0, fighting=false;
 const $=id=>document.getElementById(id);
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on'); if(id==='home') paintHero();}
-function handleGameMsg(data){if(!data?.type)return; if(data.type==='ready')$('stage').textContent=data.stage||'Arène'; if(data.type==='log')$('log').textContent=(data.log||[]).map(l=>l.msg).slice(0,2).join(' · '); if(data.type==='ended'){fighting=false; const winners=new Set(data.winnerTeams||[]); const names=(data.fighters||[]).filter(f=>winners.has(f.team)).map(f=>f.name).join(' & '); $('winTitle').textContent=names||'Match terminé'; $('rewardText').textContent=PROMPTS[Math.floor(Math.random()*PROMPTS.length)]; show('victory');}}
+function handleGameMsg(data){if(!data?.type)return; if(data.type==='ready')$('stage').textContent=data.stage||'Arène'; if(data.type==='log')$('log').textContent=(data.log||[]).map(l=>l.msg).slice(0,2).join(' · '); if(data.type==='ended'){fighting=false; const winners=new Set(data.winnerTeams||[]); if(!winners.size){show('home');return;} const names=(data.fighters||[]).filter(f=>winners.has(f.team)).map(f=>f.name).join(' & '); $('winTitle').textContent=names||'Match terminé'; $('rewardText').textContent=PROMPTS[Math.floor(Math.random()*PROMPTS.length)]; show('victory');}}
 window.ReactNativeWebView={postMessage(raw){try{handleGameMsg(JSON.parse(raw))}catch{}}};
 function send(msg){window.AKI?.onMessage?.(msg)}
 function sendInput(extra={}){send({type:'input',slot:0,input:{moveX,...extra}})}

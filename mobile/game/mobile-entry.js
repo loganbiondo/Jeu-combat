@@ -40,7 +40,9 @@ function edgeInputs() {
       heavy: press('heavy'),
       special: press('special'),
       ultra: press('ultra'),
-      blast: press('blast') || press('regen'),
+      blast: press('blast'),
+      regen: press('regen'),
+      transform: press('transform'),
       dash: press('dash'),
       guard: !!cur.guard,
       heal: press('heal')
@@ -89,7 +91,7 @@ function startCombat(config) {
   engine = new CombatEngine({
     mode: config.mode || '1v1',
     fighters: config.fighters,
-    stocks: config.stocks ?? 3
+    stocks: config.stocks ?? 1
   });
   renderer = new Renderer(canvas);
   const fit = () => {

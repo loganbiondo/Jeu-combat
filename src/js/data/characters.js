@@ -10,7 +10,15 @@ export const CHARACTERS = [
     stats: { hp: 100, atk: 12, def: 8, speed: 6.2, weight: 0.9, jump: 14, kiRegen: 1.1 },
     free: true,
     specials: ['solar_hug', 'glide_kick'],
-    ultra: 'aurora_burst'
+    ultra: 'aurora_burst',
+    transform: {
+      name: 'Aile Solaire',
+      colors: { body: '#e0f2fe', accent: '#fde047', outline: '#0369a1' },
+      atkMul: 1.35,
+      speedMul: 1.18,
+      jumpMul: 1.12,
+      duration: 14
+    }
   },
   {
     id: 'pebble',
@@ -22,7 +30,15 @@ export const CHARACTERS = [
     stats: { hp: 120, atk: 10, def: 14, speed: 4.4, weight: 1.35, jump: 11, kiRegen: 0.9 },
     free: true,
     specials: ['boulder_roll', 'moss_guard'],
-    ultra: 'tectonic_clap'
+    ultra: 'tectonic_clap',
+    transform: {
+      name: 'Golem Magma',
+      colors: { body: '#fb923c', accent: '#fef08a', outline: '#7c2d12' },
+      atkMul: 1.4,
+      speedMul: 1.1,
+      jumpMul: 1.05,
+      duration: 12
+    }
   },
   {
     id: 'nori',
@@ -34,7 +50,15 @@ export const CHARACTERS = [
     stats: { hp: 95, atk: 13, def: 7, speed: 6.8, weight: 0.85, jump: 15, kiRegen: 1.2 },
     free: true,
     specials: ['spice_dash', 'wok_spin'],
-    ultra: 'banquet_boom'
+    ultra: 'banquet_boom',
+    transform: {
+      name: 'Chef Inferno',
+      colors: { body: '#fecdd3', accent: '#fb923c', outline: '#9f1239' },
+      atkMul: 1.32,
+      speedMul: 1.22,
+      jumpMul: 1.1,
+      duration: 13
+    }
   },
   {
     id: 'capra',
@@ -46,7 +70,15 @@ export const CHARACTERS = [
     stats: { hp: 105, atk: 14, def: 9, speed: 5.6, weight: 1.05, jump: 13, kiRegen: 1.0 },
     free: true,
     specials: ['horn_dive', 'loot_kick'],
-    ultra: 'cannon_bleat'
+    ultra: 'cannon_bleat',
+    transform: {
+      name: 'Corsaire Tempête',
+      colors: { body: '#ddd6fe', accent: '#f9a8d4', outline: '#5b21b6' },
+      atkMul: 1.38,
+      speedMul: 1.15,
+      jumpMul: 1.1,
+      duration: 13
+    }
   },
   {
     id: 'mossy',
@@ -58,7 +90,15 @@ export const CHARACTERS = [
     stats: { hp: 110, atk: 11, def: 12, speed: 5.0, weight: 1.2, jump: 12, kiRegen: 1.15 },
     free: true,
     specials: ['vine_lasso', 'leaf_pulse'],
-    ultra: 'grove_quake'
+    ultra: 'grove_quake',
+    transform: {
+      name: 'Forêt Sacrée',
+      colors: { body: '#86efac', accent: '#fde047', outline: '#166534' },
+      atkMul: 1.28,
+      speedMul: 1.12,
+      jumpMul: 1.08,
+      duration: 14
+    }
   },
   {
     id: 'zib',
@@ -70,7 +110,15 @@ export const CHARACTERS = [
     stats: { hp: 90, atk: 15, def: 6, speed: 7.4, weight: 0.75, jump: 16, kiRegen: 1.3 },
     free: true,
     specials: ['spark_prank', 'bounce_bomb'],
-    ultra: 'giggle_storm'
+    ultra: 'giggle_storm',
+    transform: {
+      name: 'Chaos Neon',
+      colors: { body: '#fce7f3', accent: '#22d3ee', outline: '#be185d' },
+      atkMul: 1.42,
+      speedMul: 1.28,
+      jumpMul: 1.15,
+      duration: 11
+    }
   },
   {
     id: 'kira',
@@ -82,7 +130,15 @@ export const CHARACTERS = [
     stats: { hp: 100, atk: 13, def: 8, speed: 6.5, weight: 0.95, jump: 14.5, kiRegen: 1.05 },
     free: true,
     specials: ['sun_jab', 'rail_flip'],
-    ultra: 'daybreak_drive'
+    ultra: 'daybreak_drive',
+    transform: {
+      name: 'Poing Zénith',
+      colors: { body: '#fef9c3', accent: '#38bdf8', outline: '#a16207' },
+      atkMul: 1.36,
+      speedMul: 1.2,
+      jumpMul: 1.14,
+      duration: 13
+    }
   },
   {
     id: 'bolt',
@@ -94,7 +150,15 @@ export const CHARACTERS = [
     stats: { hp: 92, atk: 12, def: 7, speed: 7.8, weight: 0.7, jump: 16.5, kiRegen: 1.25 },
     free: true,
     specials: ['nut_missile', 'zip_line'],
-    ultra: 'thunder_acorn'
+    ultra: 'thunder_acorn',
+    transform: {
+      name: 'Super Bolt',
+      colors: { body: '#ffedd5', accent: '#facc15', outline: '#c2410c' },
+      atkMul: 1.33,
+      speedMul: 1.35,
+      jumpMul: 1.2,
+      duration: 12
+    }
   },
   {
     id: 'quillox',
@@ -106,7 +170,15 @@ export const CHARACTERS = [
     stats: { hp: 108, atk: 11, def: 10, speed: 5.8, weight: 0.95, jump: 13.5, kiRegen: 1.4 },
     free: false,
     specials: ['plume_spiral', 'soft_regen'],
-    ultra: 'feather_nova'
+    ultra: 'feather_nova',
+    transform: {
+      name: 'Plume Cosmique',
+      colors: { body: '#ccfbf1', accent: '#c4b5fd', outline: '#0f766e' },
+      atkMul: 1.3,
+      speedMul: 1.16,
+      jumpMul: 1.12,
+      duration: 14
+    }
   },
   {
     id: 'ironpaw',
@@ -118,7 +190,15 @@ export const CHARACTERS = [
     stats: { hp: 125, atk: 16, def: 13, speed: 4.8, weight: 1.45, jump: 11.5, kiRegen: 0.85 },
     free: false,
     specials: ['steel_pounce', 'ki_shield'],
-    ultra: 'meteor_claw'
+    ultra: 'meteor_claw',
+    transform: {
+      name: 'Armure Météore',
+      colors: { body: '#cbd5e1', accent: '#fb923c', outline: '#0f172a' },
+      atkMul: 1.45,
+      speedMul: 1.12,
+      jumpMul: 1.06,
+      duration: 12
+    }
   },
   {
     id: 'velvet',
@@ -130,7 +210,15 @@ export const CHARACTERS = [
     stats: { hp: 98, atk: 14, def: 8, speed: 6.9, weight: 0.88, jump: 15, kiRegen: 1.18 },
     free: false,
     specials: ['velvet_warp', 'ki_drain'],
-    ultra: 'midnight_bloom'
+    ultra: 'midnight_bloom',
+    transform: {
+      name: 'Nyx Absolue',
+      colors: { body: '#f5d0fe', accent: '#818cf8', outline: '#701a75' },
+      atkMul: 1.4,
+      speedMul: 1.24,
+      jumpMul: 1.12,
+      duration: 12
+    }
   }
 ];
 

@@ -10,7 +10,9 @@ const KEY_MAPS = [
     heavy: ['KeyU', 'KeyB'],
     special: ['KeyK', 'KeyX'],
     ultra: ['KeyL', 'KeyC'],
-    blast: ['KeyI', 'KeyV'],
+    blast: ['KeyI'],
+    regen: ['KeyV'],
+    transform: ['KeyT'],
     guard: ['KeyH', 'ShiftLeft'],
     dash: ['KeyN', 'ShiftRight'],
     jump: ['Space']
@@ -22,10 +24,12 @@ const KEY_MAPS = [
     up: ['Digit8', 'Numpad8'],
     down: ['Digit5', 'Numpad5'],
     attack: ['KeyO'],
-    heavy: ['KeyU'],
+    heavy: ['KeyY'],
     special: ['KeyP'],
     ultra: ['BracketLeft'],
     blast: ['BracketRight'],
+    regen: ['Backslash'],
+    transform: ['KeyM'],
     guard: ['Semicolon'],
     dash: ['Quote'],
     jump: ['Numpad0']
@@ -82,7 +86,9 @@ export class InputManager {
     let heavy = this.anyPressed(map.heavy || []);
     let special = this.anyPressed(map.special);
     let ultra = this.anyPressed(map.ultra);
-    let blast = this.anyPressed(map.blast || map.regen || []);
+    let blast = this.anyPressed(map.blast || []);
+    let regen = this.anyPressed(map.regen || []);
+    let transform = this.anyPressed(map.transform || []);
     let guard = this.anyDown(map.guard || []);
     let dash = this.anyPressed(map.dash || []);
 
@@ -101,7 +107,9 @@ export class InputManager {
       special = special || edge(1);
       ultra = ultra || edge(3);
       blast = blast || edge(5);
-      heavy = heavy || edge(7);
+      regen = regen || edge(7);
+      transform = transform || edge(8);
+      heavy = heavy || edge(9);
       guard = guard || btn(4) || btn(6);
       dash = dash || edge(10) || edge(11);
       this.padPrev[slot] = {
@@ -120,10 +128,24 @@ export class InputManager {
     }
 
     if (slot >= 2 && !pad) {
-      return { moveX: 0, jump: false, attack: false, special: false, ultra: false, blast: false, guard: false, dash: false, heavy: false, up: false, down: false };
+      return {
+        moveX: 0,
+        jump: false,
+        attack: false,
+        special: false,
+        ultra: false,
+        blast: false,
+        regen: false,
+        transform: false,
+        guard: false,
+        dash: false,
+        heavy: false,
+        up: false,
+        down: false
+      };
     }
 
     const moveX = (right ? 1 : 0) - (left ? 1 : 0);
-    return { left, right, up, down, jump, attack, heavy, special, ultra, blast, guard, dash, moveX };
+    return { left, right, up, down, jump, attack, heavy, special, ultra, blast, regen, transform, guard, dash, moveX };
   }
 }

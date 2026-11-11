@@ -130,7 +130,13 @@ export default function App() {
     return () => clearInterval(id);
   }, [screen, webReady, slotCount]);
 
-  const finishToVictory = async (names: string) => {
+  const finishToVictory = async (names: string, forfeited = false) => {
+    if (forfeited) {
+      setVictoryTitle('Abandon');
+      setReward('Pas de prompt — le match a été annulé.');
+      setScreen('home');
+      return;
+    }
     const picked = pickPrompt(save.promptHistory);
     const next = {
       ...save,
@@ -168,11 +174,12 @@ export default function App() {
       }
       if (data.type === 'ended') {
         const winners = new Set(data.winnerTeams || []);
+        const forfeited = !winners.size;
         const names = (data.fighters || [])
           .filter((f: { team: number }) => winners.has(f.team))
           .map((f: { name: string }) => f.name)
           .join(' & ');
-        finishToVictory(names);
+        finishToVictory(names, forfeited);
       }
     } catch {
       /* ignore */
@@ -351,11 +358,12 @@ export default function App() {
               <Hold label="Smash" accent="#fb923c" onPressIn={() => sendInput({ heavy: true })} onPressOut={() => sendInput({ heavy: false })} />
               <Hold label="Ki" accent="#67e8f9" onPressIn={() => sendInput({ blast: true })} onPressOut={() => sendInput({ blast: false })} />
               <Hold label="Spé" accent="#38bdf8" onPressIn={() => sendInput({ special: true })} onPressOut={() => sendInput({ special: false })} />
+              <Hold label="Forme" accent="#facc15" onPressIn={() => sendInput({ transform: true })} onPressOut={() => sendInput({ transform: false })} />
               <Hold label="Garde" accent="#a5b4fc" onPressIn={() => sendInput({ guard: true })} onPressOut={() => sendInput({ guard: false })} />
               <Hold label="ULTRA" accent="#fb7185" onPressIn={() => sendInput({ ultra: true })} onPressOut={() => sendInput({ ultra: false })} />
             </View>
           </View>
-          <Text style={styles.muted}>Atk x3 combo · Smash lance · Ki projectile</Text>
+          <Text style={styles.muted}>Atk x3 · Smash · Ki · Forme (45 ki) · Ultra</Text>
           <Btn label="Abandonner" onPress={() => postToGame({ type: 'forfeit' })} />
         </View>
       )}
@@ -383,7 +391,8 @@ export default function App() {
           <Text style={styles.brand}>Victoire</Text>
           <Text style={styles.title}>{victoryTitle}</Text>
           <View style={styles.reward}>
-            <Text style={styles.rewardTitle}>Récompense</Text>
+            <Text style={styles.rewardTitle}>Prompt créatif</Text>
+            <Text style={styles.muted}>Victoire = 1 idée originale (sur 100).</Text>
             <Text style={styles.sub}>{reward}</Text>
           </View>
           <Btn label="Menu" onPress={() => setScreen('home')} primary />

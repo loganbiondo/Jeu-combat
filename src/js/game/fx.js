@@ -521,22 +521,35 @@ export class FXSystem {
 
   onHit(x, y, damage, heavy = false) {
     this.burst(x, y, {
-      count: heavy ? 32 : 14,
-      speed: heavy ? 320 : 180,
+      count: heavy ? 38 : 18,
+      speed: heavy ? 360 : 210,
       paletteName: 'hit',
       spark: true,
-      size: heavy ? 7 : 4,
-      gravity: 120
+      size: heavy ? 8 : 5,
+      gravity: 140
     });
-    this.ring(x, y, { maxR: heavy ? 90 : 40, paletteName: 'hit', width: heavy ? 5 : 3 });
-    if (heavy) this.shockwave(x, y, { maxR: 110, color: '#fde047', width: 8 });
-    this.floatText(x, y - 20, `${Math.round(damage)}%`, heavy ? '#fb7185' : '#fef08a');
-    this.screenShake(heavy ? 14 : 5, heavy ? 0.3 : 0.12);
-    this.addHitstop(heavy ? 7 : 3);
-    if (heavy) {
-      this.flashAlpha = 0.28;
-      this.flashColor = '#ffffff';
+    // Impact streaks (more “real” punch weight)
+    for (let i = 0; i < (heavy ? 6 : 3); i++) {
+      const a = -0.4 + Math.random() * 0.8 + (Math.random() > 0.5 ? Math.PI : 0);
+      this.burst(x + Math.cos(a) * 8, y + Math.sin(a) * 8, {
+        count: 4,
+        speed: heavy ? 420 : 260,
+        paletteName: 'hit',
+        spark: true,
+        angle: a,
+        spread: 0.15,
+        life: 0.18,
+        size: 3,
+        gravity: 0
+      });
     }
+    this.ring(x, y, { maxR: heavy ? 100 : 48, paletteName: 'hit', width: heavy ? 6 : 3.5 });
+    if (heavy) this.shockwave(x, y, { maxR: 130, color: '#fde047', width: 10 });
+    this.floatText(x, y - 24, `-${Math.round(damage)}`, heavy ? '#fb7185' : '#fef08a');
+    this.screenShake(heavy ? 18 : 7, heavy ? 0.34 : 0.14);
+    this.addHitstop(heavy ? 10 : 5);
+    this.flashAlpha = heavy ? 0.34 : 0.16;
+    this.flashColor = '#ffffff';
   }
 
   onKO(x, y) {
