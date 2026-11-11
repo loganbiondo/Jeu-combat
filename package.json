@@ -1,0 +1,59 @@
+{
+  "name": "arena-ki-fighters",
+  "version": "1.0.0",
+  "description": "Jeu de combat téléchargeable — arène Smash + ki style Dragon Ball (Electron)",
+  "main": "electron/main.js",
+  "author": "Arena Ki Fighters",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "server": "node server/index.js",
+    "dev": "concurrently -k \"npm run server\" \"electron .\"",
+    "smoke": "node scripts/smoke-combat.mjs",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "stripe": "^17.7.0",
+    "three": "^0.170.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "electron": "^34.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.arenakifighters.app",
+    "productName": "Arena Ki Fighters",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "src/**/*",
+      "server/**/*",
+      "package.json"
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Game"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ]
+    }
+  }
+}

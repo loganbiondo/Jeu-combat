@@ -1,0 +1,93 @@
+[
+  {
+    "id": "adfree",
+    "type": "adfree",
+    "name": "Mode Sans Pub",
+    "description": "Supprime toutes les publicités entre les combats et sur l'accueil.",
+    "priceCents": 499,
+    "currency": "eur",
+    "icon": "✦"
+  },
+  {
+    "id": "char_quillox",
+    "type": "character",
+    "characterId": "quillox",
+    "name": "Personnage : Quillox",
+    "description": "Alien plumeux, projectiles tourbillonnants et régénération accélérée.",
+    "priceCents": 299,
+    "currency": "eur",
+    "icon": "✧"
+  },
+  {
+    "id": "char_ironpaw",
+    "type": "character",
+    "characterId": "ironpaw",
+    "name": "Personnage : Ironpaw",
+    "description": "Super-félin blindé, smashs lourds et bouclier de ki.",
+    "priceCents": 299,
+    "currency": "eur",
+    "icon": "✧"
+  },
+  {
+    "id": "char_velvet",
+    "type": "character",
+    "characterId": "velvet",
+    "name": "Personnage : Velvet Nyx",
+    "description": "Anti-héroïne élégante, téléports courts et drains de ki.",
+    "priceCents": 349,
+    "currency": "eur",
+    "icon": "✧"
+  },
+  {
+    "id": "skin_lumo_aurora",
+    "type": "skin",
+    "characterId": "lumo",
+    "skinId": "aurora",
+    "name": "Skin Lumo — Aurore",
+    "description": "Palette boréale pour Lumo le voyageur doux.",
+    "priceCents": 149,
+    "currency": "eur",
+    "icon": "◈"
+  },
+  {
+    "id": "skin_pebble_magma",
+    "type": "skin",
+    "characterId": "pebble",
+    "skinId": "magma",
+    "name": "Skin Pebble — Magma",
+    "description": "Roches chauffées à blanc pour Pebble.",
+    "priceCents": 149,
+    "currency": "eur",
+    "icon": "◈"
+  },
+  {
+    "id": "tech_spiral_nova",
+    "type": "technique",
+    "techniqueId": "spiral_nova",
+    "name": "Technique : Nova Spirale",
+    "description": "Débloque un ultra coup de ki utilisable par tous les gentils.",
+    "priceCents": 199,
+    "currency": "eur",
+    "icon": "✸"
+  },
+  {
+    "id": "tech_shadow_bloom",
+    "type": "technique",
+    "techniqueId": "shadow_bloom",
+    "name": "Technique : Floraison d'Ombre",
+    "description": "Zone ralentissante + knockback pour les personnages rusés.",
+    "priceCents": 199,
+    "currency": "eur",
+    "icon": "✸"
+  },
+  {
+    "id": "bundle_starters",
+    "type": "bundle",
+    "grants": ["char_quillox", "skin_lumo_aurora", "adfree"],
+    "name": "Pack Étoile Douce",
+    "description": "Quillox + skin Aurore + mode sans pub.",
+    "priceCents": 799,
+    "currency": "eur",
+    "icon": "★"
+  }
+]

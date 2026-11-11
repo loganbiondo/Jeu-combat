@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arena Ki Fighters</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
+  <script src="../node_modules/socket.io-client/dist/socket.io.min.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "../node_modules/three/build/three.module.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <!-- HOME -->
+    <section id="screen-home" class="screen active">
+      <div class="home-bg"></div>
+      <div class="home-fx" aria-hidden="true"></div>
+      <header class="home-hero">
+        <p class="brand-mark">ARENA KI FIGHTERS</p>
+        <h1 class="brand-title">Smash doux.<br />Ki explosif.</h1>
+        <p class="brand-sub">Arène 3D 2026 — humains réalistes, tactile, ki & transformations.</p>
+        <div class="cta-row">
+          <button class="btn primary" data-go="mode">Jouer</button>
+          <button class="btn ghost" data-go="shop">Boutique</button>
+          <button class="btn ghost" data-go="howto">Commandes</button>
+        </div>
+      </header>
+      <aside id="home-ad" class="ad-banner hidden">
+        <div class="ad-label">Publicité</div>
+        <div class="ad-body">
+          <strong id="home-ad-title">—</strong>
+          <span id="home-ad-text">—</span>
+        </div>
+        <button class="btn tiny" id="home-ad-cta">OK</button>
+      </aside>
+    </section>
+
+    <!-- MODE -->
+    <section id="screen-mode" class="screen">
+      <div class="panel">
+        <h2>Choisir le mode</h2>
+        <div class="mode-grid">
+          <button class="mode-card" data-setup="local-1v1"><span>Local</span><strong>1v1</strong><em>Même écran</em></button>
+          <button class="mode-card" data-setup="local-2v2"><span>Local</span><strong>2v2</strong><em>2–4 manettes</em></button>
+          <button class="mode-card" data-setup="online-1v1"><span>En ligne</span><strong>1v1</strong><em>Matchmaking</em></button>
+          <button class="mode-card" data-setup="online-2v2"><span>En ligne</span><strong>2v2</strong><em>Matchmaking</em></button>
+        </div>
+        <button class="btn ghost" data-go="home">Retour</button>
+      </div>
+    </section>
+
+    <!-- SELECT -->
+    <section id="screen-select" class="screen">
+      <div class="panel wide">
+        <h2>Sélection des combattants</h2>
+        <p id="select-hint" class="hint">Choisis un personnage original pour chaque slot.</p>
+        <div id="slot-tabs" class="slot-tabs"></div>
+        <div id="char-grid" class="char-grid"></div>
+        <div class="select-footer">
+          <button class="btn ghost" data-go="mode">Retour</button>
+          <button class="btn primary" id="btn-start-match">Lancer le combat</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- QUEUE -->
+    <section id="screen-queue" class="screen">
+      <div class="panel">
+        <h2>Recherche de match…</h2>
+        <div class="queue-pulse"></div>
+        <p id="queue-status">Connexion au serveur…</p>
+        <button class="btn ghost" id="btn-cancel-queue">Annuler</button>
+      </div>
+    </section>
+
+    <!-- COMBAT -->
+    <section id="screen-combat" class="screen">
+      <div class="combat-layout">
+        <div id="game-stage" class="game-stage">
+          <canvas id="game-canvas" width="1280" height="720"></canvas>
+        </div>
+        <aside class="combat-side">
+          <h3>Journal des coups</h3>
+          <ul id="combat-log"></ul>
+          <div class="combat-help">
+            <p>P1: WASD · J atk · U smash · K spé · L ultra · I ki · T forme · V soin</p>
+            <p>P2: 8456 · O/Y/P · M forme · Manettes OK</p>
+          </div>
+          <button class="btn ghost tiny" id="btn-forfeit">Abandonner</button>
+        </aside>
+      </div>
+    </section>
+
+    <!-- INTERSTITIAL AD -->
+    <section id="screen-ad" class="screen">
+      <div class="panel ad-panel">
+        <div class="ad-label">Publicité</div>
+        <h2 id="ad-title">Pub</h2>
+        <p id="ad-body">—</p>
+        <div class="ad-fx" aria-hidden="true"></div>
+        <button class="btn primary" id="btn-skip-ad" disabled>Passer (3)</button>
+        <button class="btn ghost tiny" data-go="shop">Mode sans pub</button>
+      </div>
+    </section>
+
+    <!-- VICTORY + REWARD -->
+    <section id="screen-victory" class="screen">
+      <div class="panel victory-panel">
+        <p class="eyebrow">Victoire</p>
+        <h2 id="victory-title">Gagnant</h2>
+        <p id="victory-sub">Combat terminé</p>
+        <div class="reward-box">
+          <h3>Prompt créatif</h3>
+          <p class="reward-hint">Victoire = 1 idée originale débloquée (collection de 100).</p>
+          <p id="reward-prompt">—</p>
+        </div>
+        <div class="cta-row">
+          <button class="btn primary" id="btn-rematch">Retour menu</button>
+          <button class="btn ghost" data-go="shop">Boutique</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SHOP -->
+    <section id="screen-shop" class="screen">
+      <div class="panel wide">
+        <h2>Boutique</h2>
+        <p class="hint">Paiement bureau via Stripe Checkout (sandbox si aucune clé API).</p>
+        <div id="shop-grid" class="shop-grid"></div>
+        <div class="select-footer">
+          <p id="shop-status" class="hint"></p>
+          <button class="btn ghost" data-go="home">Retour</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOWTO -->
+    <section id="screen-howto" class="screen">
+      <div class="panel">
+        <h2>Commandes & systèmes</h2>
+        <ul class="howto-list">
+          <li><strong>Arène 3D</strong> : barre de vie, murs, caméra cinéma, pas de chute hors ring.</li>
+          <li><strong>Ki</strong> : se remplit en frappant. Forme (T) = transformation. Ultra = finisher.</li>
+          <li><strong>Kit 2026</strong> : jab x3, smash, dash-cancel, ki blast, garde, spéciaux.</li>
+          <li><strong>Tactile</strong> : stick virtuel + boutons (mobile / play).</li>
+          <li><strong>P1</strong> : WASD · J atk · U smash · I ki · K spé · T forme · L ultra · Espace saut</li>
+        </ul>
+        <button class="btn ghost" data-go="home">Retour</button>
+      </div>
+    </section>
+  </div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

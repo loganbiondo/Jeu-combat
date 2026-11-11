@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "Arena Ki Fighters",
+    "slug": "arena-ki-fighters",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "arenakifighters",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#07111f"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.arenakifighters.app"
+    },
+    "android": {
+      "package": "com.arenakifighters.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#07111f",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "replace-after-eas-init"
+      }
+    }
+  }
+}
