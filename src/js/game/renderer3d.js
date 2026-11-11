@@ -213,15 +213,18 @@ export class Renderer3D {
   }
 
   resize() {
-    // Measure the layout container outside the HUD host so we don't lock to our own pixels
+    // Prefer dedicated stage column (not the whole combat grid with sidebar)
     const layout =
       this._layoutParent ||
+      document.getElementById('game-stage') ||
+      document.getElementById('wrap') ||
       this._hudHost?.parentElement ||
       this.canvas.parentElement;
     if (!layout) return;
+    // If hudHost is nested in layout, measure layout (stage/wrap), never hudHost itself
     const rect = layout.getBoundingClientRect();
-    const availW = rect.width || layout.clientWidth || 1280;
-    const availH = rect.height || layout.clientHeight || 720;
+    const availW = Math.max(1, rect.width || layout.clientWidth || 1280);
+    const availH = Math.max(1, rect.height || layout.clientHeight || 720);
     const scale = Math.min(availW / 1280, availH / 720);
     const w = `${1280 * scale}px`;
     const h = `${720 * scale}px`;
@@ -419,8 +422,11 @@ export class Renderer3D {
 
   paintOverlay(engine) {
     if (!this._hudHost && this.canvas.parentElement) {
+      // Stage/wrap is the size source; hudHost nests inside it
+      const stage =
+        this.canvas.closest('#game-stage, #wrap, .game-stage') || this.canvas.parentElement;
+      this._layoutParent = stage;
       const parent = this.canvas.parentElement;
-      this._layoutParent = parent;
       const host = document.createElement('div');
       host.className = 'hud3d-host';
       host.style.cssText = 'position:relative;display:inline-block;line-height:0;max-width:100%;max-height:100%';

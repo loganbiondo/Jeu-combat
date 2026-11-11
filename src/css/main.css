@@ -265,14 +265,21 @@ html, body {
   gap: 12px;
   align-items: stretch;
 }
+.game-stage {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-height: calc(100vh - 56px);
+}
 #game-canvas {
   width: 100%;
   height: auto;
-  max-height: calc(100vh - 56px);
+  max-height: 100%;
   background: #0b1d3a;
   border-radius: 16px;
   border: 1px solid var(--stroke);
-  justify-self: center;
 }
 .combat-side {
   background: var(--panel);

@@ -24414,11 +24414,11 @@ void main() {
     }
     resize() {
       var _a;
-      const layout = this._layoutParent || ((_a = this._hudHost) == null ? void 0 : _a.parentElement) || this.canvas.parentElement;
+      const layout = this._layoutParent || document.getElementById("game-stage") || document.getElementById("wrap") || ((_a = this._hudHost) == null ? void 0 : _a.parentElement) || this.canvas.parentElement;
       if (!layout) return;
       const rect = layout.getBoundingClientRect();
-      const availW = rect.width || layout.clientWidth || 1280;
-      const availH = rect.height || layout.clientHeight || 720;
+      const availW = Math.max(1, rect.width || layout.clientWidth || 1280);
+      const availH = Math.max(1, rect.height || layout.clientHeight || 720);
       const scale = Math.min(availW / 1280, availH / 720);
       const w = `${1280 * scale}px`;
       const h = `${720 * scale}px`;
@@ -24599,8 +24599,9 @@ void main() {
     paintOverlay(engine2) {
       var _a;
       if (!this._hudHost && this.canvas.parentElement) {
+        const stage = this.canvas.closest("#game-stage, #wrap, .game-stage") || this.canvas.parentElement;
+        this._layoutParent = stage;
         const parent = this.canvas.parentElement;
-        this._layoutParent = parent;
         const host = document.createElement("div");
         host.className = "hud3d-host";
         host.style.cssText = "position:relative;display:inline-block;line-height:0;max-width:100%;max-height:100%";
