@@ -13,6 +13,18 @@ npx expo start          # scanne le QR avec Expo Go
 
 Détails : [mobile/README.md](mobile/README.md)
 
+## Neon Serpent 3.0
+
+Arène serpent néon, dans le navigateur : bloom, nova, mutations, boss Léviathan, boutique et salles.
+
+```bash
+npm run serpent
+# http://127.0.0.1:4173
+npm run smoke:serpent
+```
+
+Avec le serveur de match (`npm run server`), le jeu est aussi sur `http://localhost:3847/serpent/` et les salles se synchronisent.
+
 ## Desktop (Electron)
 
 ## Fonctionnalités

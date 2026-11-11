@@ -3,6 +3,7 @@
  * Modes: 1v1 et 2v2.
  */
 const http = require('http');
+const path = require('path');
 const express = require('express');
 const { Server } = require('socket.io');
 const { randomUUID } = require('crypto');
@@ -13,6 +14,8 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: '*' }
 });
+
+app.use('/serpent', express.static(path.join(__dirname, '..', 'serpent')));
 
 app.get('/health', (_req, res) => {
   res.json({ ok: true, queues: Object.fromEntries([...queues.entries()].map(([k, v]) => [k, v.length])) });
@@ -26,6 +29,48 @@ const queues = new Map([
 
 /** @type {Map<string, object>} */
 const rooms = new Map();
+
+/** @type {Map<string, Set<string>>} */
+const serpentRooms = new Map();
+
+function serpentCode(value) {
+  return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+}
+
+function finite(value, min, max) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  return Math.max(min, Math.min(max, n));
+}
+
+function sanitizeSnap(payload) {
+  const x = finite(payload.x, -4000, 4000);
+  const y = finite(payload.y, -4000, 4000);
+  const angle = finite(payload.a, -20, 20);
+  if (x == null || y == null || angle == null) return null;
+  const raw = Array.isArray(payload.pts) ? payload.pts : [];
+  const pts = [];
+  for (let i = 0; i + 1 < raw.length && pts.length < 48; i += 2) {
+    const px = finite(raw[i], -4000, 4000);
+    const py = finite(raw[i + 1], -4000, 4000);
+    if (px == null || py == null) continue;
+    pts.push(Math.round(px), Math.round(py));
+  }
+  return {
+    x: Math.round(x),
+    y: Math.round(y),
+    a: angle,
+    alive: payload.alive !== false,
+    score: finite(payload.score, 0, 999999) || 0,
+    kills: finite(payload.kills, 0, 9999) || 0,
+    length: finite(payload.length, 1, 400) || 12,
+    shields: finite(payload.shields, 0, 3) || 0,
+    width: finite(payload.width, 4, 80) || 16,
+    boost: !!payload.boost,
+    skin: String(payload.skin || 'ion').replace(/[^\w-]/g, '').slice(0, 16) || 'ion',
+    pts
+  };
+}
 
 function seatCount(mode) {
   return mode === '2v2' ? 4 : 2;
@@ -161,10 +206,66 @@ io.on('connection', (socket) => {
     rooms.delete(roomId);
   });
 
+  socket.on('serpent:join', (payload = {}) => {
+    const code = serpentCode(payload.room) || 'WORLD';
+    if (socket.data.serpentRoom) {
+      socket.leave(`serpent:${socket.data.serpentRoom}`);
+      const prev = serpentRooms.get(socket.data.serpentRoom);
+      if (prev) prev.delete(socket.id);
+    }
+    let set = serpentRooms.get(code);
+    if (!set) serpentRooms.set(code, (set = new Set()));
+    if (set.size >= 8 && !set.has(socket.id)) {
+      socket.emit('serpent:full');
+      return;
+    }
+    socket.join(`serpent:${code}`);
+    socket.data.serpentRoom = code;
+    socket.data.serpentName = String(payload.name || 'Joueur').replace(/[<>&"'`]/g, '').slice(0, 16) || 'Joueur';
+    set.add(socket.id);
+    socket.emit('serpent:joined', { room: code, id: socket.id, players: set.size });
+  });
+
+  socket.on('serpent:snap', (payload = {}) => {
+    const code = socket.data.serpentRoom;
+    if (!code) return;
+    const now = Date.now();
+    if (now - (socket.data.serpentSnapAt || 0) < 70) return;
+    socket.data.serpentSnapAt = now;
+    const snap = sanitizeSnap(payload);
+    if (!snap) return;
+    snap.id = socket.id;
+    snap.name = socket.data.serpentName;
+    socket.to(`serpent:${code}`).emit('serpent:peer', snap);
+  });
+
+  socket.on('serpent:died', (payload = {}) => {
+    const code = socket.data.serpentRoom;
+    if (!code) return;
+    const killer = String(payload.killer || '').replace(/[^\w-]/g, '').slice(0, 32);
+    socket.to(`serpent:${code}`).emit('serpent:died', { id: socket.id, killer });
+  });
+
+  socket.on('serpent:leave', () => {
+    const code = socket.data.serpentRoom;
+    if (!code) return;
+    socket.leave(`serpent:${code}`);
+    const set = serpentRooms.get(code);
+    if (set) set.delete(socket.id);
+    socket.to(`serpent:${code}`).emit('serpent:left', { id: socket.id });
+    socket.data.serpentRoom = null;
+  });
+
   socket.on('disconnect', () => {
     for (const q of queues.values()) {
       const idx = q.findIndex((p) => p.socket.id === socket.id);
       if (idx >= 0) q.splice(idx, 1);
+    }
+    const serpentRoom = socket.data.serpentRoom;
+    if (serpentRoom && serpentRooms.has(serpentRoom)) {
+      serpentRooms.get(serpentRoom).delete(socket.id);
+      socket.to(`serpent:${serpentRoom}`).emit('serpent:left', { id: socket.id });
+      if (serpentRooms.get(serpentRoom).size === 0) serpentRooms.delete(serpentRoom);
     }
     const roomId = socket.data.roomId;
     if (roomId && rooms.has(roomId)) {

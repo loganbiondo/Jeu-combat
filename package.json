@@ -10,6 +10,8 @@
     "server": "node server/index.js",
     "dev": "concurrently -k \"npm run server\" \"electron .\"",
     "smoke": "node scripts/smoke-combat.mjs",
+    "smoke:serpent": "node scripts/smoke-serpent.mjs",
+    "serpent": "node scripts/serve-serpent.mjs",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },

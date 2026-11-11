@@ -109,6 +109,9 @@ html, body {
 
 .btn {
   font-family: var(--font-display);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
   font-weight: 700;
   border: 2px solid transparent;
   border-radius: 999px;
