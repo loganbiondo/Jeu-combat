@@ -56,6 +56,13 @@ ipcMain.handle('shop:verify', async (_e, sessionId) => {
 });
 
 ipcMain.handle('app:open-external', async (_e, url) => {
-  await shell.openExternal(url);
+  let parsed;
+  try {
+    parsed = new URL(String(url || ''));
+  } catch {
+    return false;
+  }
+  if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+  await shell.openExternal(parsed.toString());
   return true;
 });

@@ -91,8 +91,10 @@ io.on('connection', (socket) => {
 
   socket.on('queue:join', (payload = {}) => {
     const mode = payload.mode === '2v2' ? '2v2' : '1v1';
-    const name = String(payload.name || 'Combattant').slice(0, 24);
-    const characterId = String(payload.characterId || 'lumo');
+    const name = String(payload.name || 'Combattant')
+      .replace(/[<>&"'`]/g, '')
+      .slice(0, 24) || 'Combattant';
+    const characterId = String(payload.characterId || 'lumo').replace(/[^\w-]/g, '').slice(0, 32) || 'lumo';
     // Remove from any queue first
     for (const q of queues.values()) {
       const idx = q.findIndex((p) => p.socket.id === socket.id);
@@ -129,8 +131,20 @@ io.on('connection', (socket) => {
 
   socket.on('match:state', (payload = {}) => {
     const roomId = socket.data.roomId;
-    if (!roomId) return;
-    // Host seat 0 broadcasts authoritative-ish snapshot for simplicity
+    const room = rooms.get(roomId);
+    if (!roomId || !room) return;
+    // Only seat 0 (host) may broadcast state snapshots
+    const me = room.players.find((p) => p.id === socket.data.playerId);
+    if (!me || me.seat !== 0) return;
+    if (payload && Array.isArray(payload.log)) {
+      payload = {
+        ...payload,
+        log: payload.log.slice(0, 40).map((l) => ({
+          t: String(l?.t ?? '').slice(0, 12),
+          msg: String(l?.msg ?? '').slice(0, 160)
+        }))
+      };
+    }
     socket.to(roomId).emit('match:state', payload);
   });
 

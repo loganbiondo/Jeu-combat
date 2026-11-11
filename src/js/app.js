@@ -161,13 +161,27 @@ function fighterConfigsFromSelections() {
   });
 }
 
+function sanitizeLogEntries(entries) {
+  if (!Array.isArray(entries)) return [];
+  return entries.slice(0, 40).map((l) => ({
+    t: String(l?.t ?? '').slice(0, 12),
+    msg: String(l?.msg ?? '').slice(0, 160)
+  }));
+}
+
 function updateCombatLog() {
   const ul = document.getElementById('combat-log');
-  if (!state.engine) return;
-  ul.innerHTML = state.engine.log
-    .slice(0, 20)
-    .map((l) => `<li><span class="t">${l.t}s</span>${l.msg}</li>`)
-    .join('');
+  if (!ul || !state.engine) return;
+  ul.replaceChildren();
+  for (const l of state.engine.log.slice(0, 20)) {
+    const li = document.createElement('li');
+    const t = document.createElement('span');
+    t.className = 't';
+    t.textContent = `${l.t}s`;
+    li.appendChild(t);
+    li.appendChild(document.createTextNode(String(l.msg ?? '')));
+    ul.appendChild(li);
+  }
 }
 
 function stopLoop() {
@@ -388,10 +402,10 @@ function bindNet() {
       if (sf.radius) f.radius = sf.radius;
       if (sf.colors) f.colors = sf.colors;
     });
-    if (snap.log) state.engine.log = snap.log;
+    if (snap.log) state.engine.log = sanitizeLogEntries(snap.log);
     if (snap.ended) {
       state.engine.ended = true;
-      state.engine.winnerTeams = snap.winnerTeams;
+      state.engine.winnerTeams = Array.isArray(snap.winnerTeams) ? snap.winnerTeams : [];
     }
   });
   state.net.on('match:end', (payload = {}) => {
