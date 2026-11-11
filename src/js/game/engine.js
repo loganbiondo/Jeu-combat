@@ -108,7 +108,11 @@ export class CombatEngine {
     this.fusionBannerText = '';
     if (config.fusionReady) {
       for (const f of this.fighters) {
-        if (f.canFusion) f.fusionMeter = f.maxFusionMeter;
+        if (f.canFusion) {
+          f.fusionMeter = f.maxFusionMeter;
+          f.stocks = Math.max(f.stocks, 5);
+          f.invuln = Math.max(f.invuln, 1.5);
+        }
       }
     }
     this.pushLog('Le combat commence ! Remplis la jauge Fusion Grok (F).');
@@ -450,8 +454,8 @@ export class CombatEngine {
     f.specials = [...FUSION_GROK.specials];
     f.ultraId = FUSION_GROK.ultra;
     f.radius = 26;
-    f.invuln = Math.max(f.invuln, 0.8);
-    this.fusionBanner = 2.2;
+    f.invuln = Math.max(f.invuln, 2.4);
+    this.fusionBanner = 3.6;
     this.fusionBannerText = 'FUSION GROK !';
     this.fx.cutIn(f, 'FUSION GROK');
     this.fx.shockwave(f.x, f.y, { maxR: 260, color: '#f5d657', width: 16 });
