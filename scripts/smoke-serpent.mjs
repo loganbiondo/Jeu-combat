@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { ARENA_R, createMatch, levelOf } from '../serpent/js/engine.js';
-import { challengeFor, starsForRun } from '../serpent/js/content.js';
+import { challengeFor, normalizeOwned, ownKey, starsForRun } from '../serpent/js/content.js';
 
 const step = (match, seconds, input) => {
   const frames = Math.max(1, Math.round(seconds / 0.05));
@@ -36,6 +36,21 @@ wall.player.y = 0;
 wall.step(0.016, { angle: 0, boost: false, nova: false });
 assert.equal(wall.player.alive, false, 'le mur tue sans bouclier');
 assert.equal(wall.phase, 'dying');
+
+const crawl = createMatch({ seed: 21, countdown: false, noOrbs: true });
+crawl.snakes = [crawl.player];
+crawl.player.shields = 0;
+crawl.player.perks.clear();
+crawl.player.ghostT = 0;
+crawl.player.x = ARENA_R - 80;
+crawl.player.y = 0;
+crawl.player.angle = 0;
+crawl.player.steer = 0;
+for (let i = 0; i < 40 && crawl.player.alive; i++) {
+  crawl.step(0.05, { angle: 0, boost: false, nova: false });
+}
+assert.equal(crawl.player.alive, false, 'avancer dans le mur tue');
+assert.equal(crawl.phase, 'dying');
 
 const body = createMatch({ seed: 8, countdown: false, noOrbs: true });
 const bot = body.snakes.find((s) => !s.isPlayer);
@@ -109,6 +124,10 @@ assert.notEqual(a.orbs[0].x, c.orbs[0].x);
 const ch = challengeFor('2026-11-11');
 assert.deepEqual(ch, challengeFor('2026-11-11'));
 assert.ok(ch.target > 0);
+assert.notEqual(ownKey('skin', 'ion'), ownKey('trail', 'ion'));
+assert.notEqual(ownKey('trail', 'none'), ownKey('hat', 'none'));
+const migrated = normalizeOwned(['ion', 'none', 'shatter', 'ribbon', 'skin:pulse']);
+assert.deepEqual(migrated, ['skin:ion', 'death:shatter', 'trail:ribbon', 'skin:pulse']);
 assert.equal(starsForRun(60, 1, false), 4);
 assert.equal(starsForRun(60, 1, true), 8);
 

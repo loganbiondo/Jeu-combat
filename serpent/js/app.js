@@ -2,7 +2,7 @@ import { createMatch } from './engine.js';
 import { createRenderer } from './renderer.js';
 import { sound } from './audio.js';
 import { cleanName, loadSave, pushBoard, todayKey, writeSave, yesterdayKey } from './store.js';
-import { challengeFor, challengeText, itemSlot, shopSections, skinById, starsForRun } from './content.js';
+import { challengeFor, challengeText, ownKey, shopSections, skinById, starsForRun } from './content.js';
 import { t } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
@@ -86,7 +86,7 @@ function renderSkins() {
   const row = $('skin-picker');
   row.textContent = '';
   for (const skin of ['ion', 'pulse', 'venom', 'solar', 'void', 'ember', 'pearl', 'prism'].map((id) => skinById(id))) {
-    const locked = !!skin.stars && !save.owned.includes(skin.id);
+    const locked = !!skin.stars && !save.owned.includes(ownKey('skin', skin.id));
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = `skin${locked ? ' locked' : ''}`;
@@ -141,7 +141,8 @@ function renderShop() {
       name.textContent = item.name || t(save.lang, labelKey || item.id);
       const actions = document.createElement('div');
       actions.className = 'shop-actions';
-      const owned = item.stars === 0 || save.owned.includes(item.id) || (item.id === 'x2' && save.x2);
+      const key = ownKey(section.id, item.id);
+      const owned = item.stars === 0 || save.owned.includes(key) || (item.id === 'x2' && save.x2);
       const price = document.createElement('span');
       price.className = 'price';
       price.textContent = owned ? '' : `★ ${item.stars}`;
@@ -165,11 +166,11 @@ function renderShop() {
             return;
           }
           save.stars -= item.stars;
-          if (!save.owned.includes(item.id)) save.owned.push(item.id);
+          if (item.id !== 'x2' && !save.owned.includes(key)) save.owned.push(key);
           if (item.id === 'x2') save.x2 = true;
           sound.play('power');
         } else sound.play('click');
-        equip(item.id);
+        equip(section.id, item.id);
         writeSave(save);
         renderShop();
         refreshMenu();
@@ -182,13 +183,12 @@ function renderShop() {
   }
 }
 
-function equip(id) {
-  const slot = itemSlot(id);
+function equip(slot, id) {
   if (slot === 'skin') save.skin = id;
   else if (slot === 'trail') save.trail = id;
   else if (slot === 'hat') save.hat = id;
   else if (slot === 'death') save.death = id;
-  else if (slot === 'x2') save.x2 = true;
+  else if (slot === 'boost') save.x2 = true;
 }
 
 function renderBoard() {
@@ -685,7 +685,7 @@ canvas.addEventListener('pointerdown', (event) => {
   canvas.setPointerCapture(event.pointerId);
   pointer = { x: event.clientX, y: event.clientY };
   input.pointer = performance.now();
-  input.boostHold = true;
+  input.boostHold = event.pointerType === 'mouse';
   sound.unlock();
 });
 canvas.addEventListener('pointermove', (event) => {

@@ -363,15 +363,22 @@ export class Match {
   applyWall(snake) {
     if (!snake.alive || snake.ghostT > 0) return;
     const d = hypot(snake.x, snake.y);
-    if (d < ARENA_R - 30) return;
-    const nx = snake.x / (d || 1);
-    const ny = snake.y / (d || 1);
-    const limit = ARENA_R - 36;
-    if (d > limit) {
-      snake.x = nx * limit;
-      snake.y = ny * limit;
+    const edge = ARENA_R - 14;
+    if (d <= edge) return;
+    const nx = snake.x / d;
+    const ny = snake.y / d;
+    this.hit(snake, { type: 'wall' });
+    if (snake.alive) {
+      const back = edge - 56;
+      snake.x = nx * back;
+      snake.y = ny * back;
+      const inward = Math.atan2(-ny, -nx);
+      snake.angle = inward;
+      snake.steer = inward;
+    } else {
+      snake.x = nx * edge;
+      snake.y = ny * edge;
     }
-    if (d > ARENA_R - 8) this.hit(snake, { type: 'wall' });
   }
 
   buildHash() {

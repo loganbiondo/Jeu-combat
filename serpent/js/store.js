@@ -1,5 +1,7 @@
 /** Sauvegarde locale de Neon Serpent 3.0. */
 
+import { normalizeOwned } from './content.js';
+
 const KEY = 'neon-serpent-3';
 
 export function todayKey(date = new Date()) {
@@ -36,7 +38,7 @@ export function defaultSave() {
     bestLevel: 1,
     streak: 0,
     lastDaily: '',
-    owned: ['ion', 'pulse', 'none', 'shatter'],
+    owned: ['skin:ion', 'skin:pulse', 'death:shatter'],
     today: { date: todayKey(), progress: 0, done: false },
     board: []
   };
@@ -50,7 +52,7 @@ export function loadSave() {
     const parsed = JSON.parse(raw);
     const save = { ...base, ...parsed, today: { ...base.today, ...(parsed.today || {}) } };
     save.name = cleanName(save.name);
-    save.owned = Array.isArray(save.owned) ? save.owned : base.owned;
+    save.owned = normalizeOwned(Array.isArray(save.owned) ? save.owned : base.owned);
     save.board = Array.isArray(save.board) ? save.board.slice(0, 10) : [];
     if (save.today.date !== todayKey()) {
       save.today = { date: todayKey(), progress: 0, done: false };

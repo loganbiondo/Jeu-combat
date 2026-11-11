@@ -130,11 +130,43 @@ export function shopSections() {
   ];
 }
 
-export function itemSlot(id) {
-  if (id === 'x2') return 'x2';
-  if (SKINS.some((s) => s.id === id)) return 'skin';
-  if (TRAILS.some((s) => s.id === id)) return 'trail';
-  if (HATS.some((s) => s.id === id)) return 'hat';
-  if (DEATHS.some((s) => s.id === id)) return 'death';
-  return null;
+export function ownKey(slot, id) {
+  return `${slot}:${id}`;
+}
+
+const LEGACY_SLOT = {
+  ion: 'skin',
+  pulse: 'skin',
+  venom: 'skin',
+  solar: 'skin',
+  void: 'skin',
+  ember: 'skin',
+  pearl: 'skin',
+  prism: 'skin',
+  ribbon: 'trail',
+  pixel: 'trail',
+  fire: 'trail',
+  crown: 'hat',
+  halo: 'hat',
+  horns: 'hat',
+  shatter: 'death',
+  supernova: 'death',
+  blackhole: 'death',
+  glitch: 'death'
+};
+
+export function normalizeOwned(list) {
+  const out = [];
+  for (const raw of list || []) {
+    const id = String(raw);
+    if (id.includes(':')) {
+      if (!out.includes(id)) out.push(id);
+      continue;
+    }
+    const slot = LEGACY_SLOT[id];
+    if (!slot) continue;
+    const key = ownKey(slot, id);
+    if (!out.includes(key)) out.push(key);
+  }
+  return out;
 }
