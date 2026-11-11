@@ -2,6 +2,7 @@ import { getCharacter, SKINS } from '../data/characters.js';
 import { getTechnique } from '../data/techniques.js';
 import { getStage } from './stages.js';
 import { FXSystem } from './fx.js';
+import { audio } from './audio.js';
 
 function clamp(v, a, b) {
   return Math.max(a, Math.min(b, v));
@@ -126,6 +127,13 @@ export class CombatEngine {
 
     const heavy = dmg > 18 || !!opts.heavy;
     this.fx.onHit(defender.x, defender.y - 10, dmg, heavy);
+    audio.hit(heavy);
+    // Finisher spark when target is launched hard
+    if (defender.percent > 100 && heavy) {
+      this.fx.shockwave(defender.x, defender.y, { maxR: 130, color: '#fb7185', width: 10 });
+      this.fx.floatText(defender.x, defender.y - 55, 'FINISHER!', '#fb7185');
+      audio.special();
+    }
     this.pushLog(
       `${attacker.name} frappe ${defender.name} — ${dmg.toFixed(1)} dmg (${defender.percent.toFixed(0)}%)`
     );
@@ -164,6 +172,7 @@ export class CombatEngine {
   ko(f) {
     if (!f.alive) return;
     this.fx.onKO(f.x, f.y);
+    audio.ko();
     this.pushLog(`KO ! ${f.name} sort de l'arène !`);
     f.stocks -= 1;
     f.alive = false;
@@ -207,6 +216,7 @@ export class CombatEngine {
       this.pushLog(`Victoire : ${names || 'personne'} !`);
       this.fx.burst(640, 300, { count: 60, speed: 300, paletteName: 'aurora', gravity: 40, size: 0.9 });
       this.fx.screenShake(10, 0.4);
+      audio.win();
     }
   }
 
@@ -228,6 +238,7 @@ export class CombatEngine {
       spark: true
     });
     this.fx.ring(f.x + f.facing * 30, f.y - 6, { maxR: 36, paletteName: 'hit', life: 0.2 });
+    audio.hit(false);
     for (const e of this.enemiesOf(f)) {
       if (dist(f, e) < 58) {
         this.applyDamage(f, e, this.damageRoll(f, 1.0), { knock: 1.0, kiGain: 1 });
@@ -304,6 +315,7 @@ export class CombatEngine {
 
     const hit = this.resolveTechHits(f, tech);
     this.fx.castTechnique(tech, f, hit);
+    audio.special();
     this.pushLog(`${f.name} utilise ${tech.name} !`);
   }
 
@@ -325,6 +337,7 @@ export class CombatEngine {
     f.vy = Math.min(f.vy, 0);
     this.fx.chargeUp(f, 1.5);
     this.fx.cutIn(f, tech.name);
+    audio.charge();
     this.pushLog(`${f.name} charge l'ULTRA ${tech.name}…`);
   }
 
@@ -334,15 +347,38 @@ export class CombatEngine {
     f.pendingUltra = null;
     f.action = 'ultra';
     f.actionTimer = 0.7;
-    f.spectacleTimer = 0.5;
-    f.spectacleHits = 3;
+    f.spectacleTimer = 0.55;
+    f.spectacleHits = 4;
 
-    if (tech.fx === 'beam' || tech.fx === 'dive' || tech.fx === 'trail') {
-      f.vx = f.facing * 380;
+    // Phase 2: rush / beam / meteor according to FX family
+    if (tech.fx === 'beam' || tech.fx === 'dive' || tech.fx === 'trail' || tech.fx === 'daybreak') {
+      f.vx = f.facing * 420;
+      for (let i = 0; i < 6; i++) this.fx.afterImage(f);
+    }
+    if (tech.fx === 'meteor' || tech.fx === 'quake') {
+      f.vy = -200;
+      f.vx = f.facing * 120;
     }
 
-    const hit = this.resolveTechHits(f, tech, 30);
+    // Bonus power if any foe is already high %
+    const juicy = this.enemiesOf(f).some((e) => e.percent >= 80);
+    const rangeBonus = juicy ? 50 : 30;
+    const hit = this.resolveTechHits(f, tech, rangeBonus);
+    if (juicy && hit.length) {
+      hit.forEach((e) => {
+        this.applyDamage(f, e, this.damageRoll(f, 0.55, tech), {
+          knock: tech.knock * 1.15,
+          heavy: true,
+          up: 1.25,
+          hitstun: 0.45
+        });
+      });
+      this.fx.floatText(f.x, f.y - 90, 'SUPER FINISHER', '#fde047');
+      this.fx.shockwave(f.x, f.y, { maxR: 200, color: '#fde047', width: 14 });
+    }
+
     this.fx.castTechnique(tech, f, hit);
+    audio.ultra();
     this.pushLog(`${f.name} déclenche l'ULTRA ${tech.name} !!`);
   }
 
@@ -353,6 +389,7 @@ export class CombatEngine {
     f.hp = clamp(f.hp + heal, 0, f.maxHp);
     f.percent = Math.max(0, f.percent - heal * 0.5);
     this.fx.onKiRegen(f);
+    audio.regen();
     this.pushLog(`${f.name} se régénère (+${heal.toFixed(0)} PV).`);
   }
 
@@ -372,6 +409,7 @@ export class CombatEngine {
       f.jumps -= 1;
       f.onGround = false;
       this.fx.onJump(f.x, f.y);
+      audio.jump();
     }
     if (input.attack) this.tryAttack(f);
     if (input.special) this.trySpecial(f, 0);

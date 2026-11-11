@@ -9,6 +9,7 @@
     "start": "electron .",
     "server": "node server/index.js",
     "dev": "concurrently -k \"npm run server\" \"electron .\"",
+    "smoke": "node scripts/smoke-combat.mjs",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },

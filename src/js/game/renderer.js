@@ -34,12 +34,17 @@ export class Renderer {
 
     // Nebula wash
     ctx.save();
-    ctx.globalAlpha = 0.25;
+    ctx.globalAlpha = 0.28;
     const neb = ctx.createRadialGradient(900, 160, 20, 900, 160, 320);
-    neb.addColorStop(0, '#f9a8d4');
+    neb.addColorStop(0, stage.accent || '#f9a8d4');
     neb.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = neb;
     ctx.fillRect(0, 0, 1280, 500);
+    const neb2 = ctx.createRadialGradient(220, 420, 10, 220, 420, 260);
+    neb2.addColorStop(0, 'rgba(56,189,248,0.35)');
+    neb2.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = neb2;
+    ctx.fillRect(0, 200, 600, 400);
     ctx.restore();
 
     for (const s of this.stars) {
@@ -54,7 +59,7 @@ export class Renderer {
     // Soft planet
     ctx.save();
     ctx.globalAlpha = 0.35;
-    ctx.fillStyle = '#67e8f9';
+    ctx.fillStyle = stage.accent || '#67e8f9';
     ctx.beginPath();
     ctx.arc(1100, 120, 70, 0, Math.PI * 2);
     ctx.fill();
@@ -63,23 +68,24 @@ export class Renderer {
 
   drawStage(stage) {
     const ctx = this.ctx;
+    const top = stage.platformTop || '#fef3c7';
+    const bot = stage.platformBot || '#f59e0b';
     const plats = [stage.ground, ...stage.platforms];
     for (const p of plats) {
       ctx.save();
       const g = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
-      g.addColorStop(0, '#fef3c7');
-      g.addColorStop(1, '#f59e0b');
+      g.addColorStop(0, top);
+      g.addColorStop(1, bot);
       ctx.fillStyle = g;
-      ctx.strokeStyle = '#78350f';
+      ctx.strokeStyle = 'rgba(15,23,42,0.65)';
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.roundRect(p.x, p.y, p.w, p.h, 8);
       ctx.fill();
       ctx.stroke();
-      // glow edge
-      ctx.shadowColor = '#fde047';
-      ctx.shadowBlur = 12;
-      ctx.strokeStyle = 'rgba(253,224,71,0.5)';
+      ctx.shadowColor = top;
+      ctx.shadowBlur = 14;
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
       ctx.stroke();
       ctx.restore();
     }
@@ -197,10 +203,15 @@ export class Renderer {
     ctx.fillStyle = f.percent > 100 ? '#fb7185' : '#fde047';
     ctx.font = 'bold 16px "Trebuchet MS", sans-serif';
     ctx.fillText(`${f.percent.toFixed(0)}%`, f.x, f.y - 24);
+    if (f.combo > 1 && (f.action === 'attack' || f.action === 'special' || f.action === 'ultra' || f.spectacleTimer > 0)) {
+      ctx.fillStyle = '#67e8f9';
+      ctx.font = 'bold 11px "Trebuchet MS", sans-serif';
+      ctx.fillText(`x${f.combo}`, f.x, f.y - 52);
+    }
     ctx.restore();
   }
 
-  drawHUD(fighters, mode) {
+  drawHUD(fighters, mode, stageName = 'Arène') {
     const ctx = this.ctx;
     const slots = fighters.slice().sort((a, b) => a.slot - b.slot);
     slots.forEach((f, i) => {
@@ -210,9 +221,9 @@ export class Renderer {
     });
     ctx.save();
     ctx.font = 'bold 14px "Trebuchet MS", sans-serif';
-    ctx.fillStyle = 'rgba(226,232,240,0.7)';
+    ctx.fillStyle = 'rgba(226,232,240,0.75)';
     ctx.textAlign = 'center';
-    ctx.fillText(mode.toUpperCase() + ' — Orbite Douce', 640, 18);
+    ctx.fillText(`${mode.toUpperCase()} — ${stageName}`, 640, 18);
     ctx.restore();
   }
 
@@ -282,7 +293,7 @@ export class Renderer {
 
     engine.fx.draw(ctx);
     for (const f of engine.fighters) this.drawFighter(f, engine.time);
-    this.drawHUD(engine.fighters, engine.mode);
+    this.drawHUD(engine.fighters, engine.mode, engine.stage?.name || 'Arène');
 
     ctx.restore();
   }

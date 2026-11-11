@@ -5,7 +5,10 @@ Jeu de combat **téléchargeable** (Electron) — arène type **Smash** + jauge 
 ## Fonctionnalités
 
 - Personnages **100 % originaux** (humains, animaux, supers, gentils, méchants, aliens tout doux)
-- Techniques spéciales & ultras avec FX distincts
+- Techniques spéciales & ultras avec FX distincts + **attaques spectaculaires** (cut-in, charge, beams, météores, projectiles, slow-mo)
+- **Super Finisher** quand l’adversaire est déjà haut %
+- Audio synthétisé (hits, ki, ultra, KO, victoire)
+- Stages : Orbite Douce, Rails de Gelée
 - Combats **1v1 / 2v2**, **local** (clavier + manettes) ou **en ligne** (Socket.io)
 - Dégâts = stats + aléatoire, barres de vie + % Smash, stocks
 - Ki : se remplit en frappant → regen PV ou coups puissants
@@ -17,6 +20,7 @@ Jeu de combat **téléchargeable** (Electron) — arène type **Smash** + jauge 
 
 ```bash
 npm install
+npm run smoke    # test moteur headless
 npm run server   # terminal 1 — matchmaking :3847
 npm start        # terminal 2 — appli Electron
 ```

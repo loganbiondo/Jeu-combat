@@ -64,15 +64,17 @@ function tryMatch(mode) {
         sock.join(roomId);
         sock.data.roomId = roomId;
         sock.data.playerId = pl.id;
+        sock.emit('match:found', {
+          roomId,
+          mode,
+          seed: room.seed,
+          youAre: pl.id,
+          yourSeat: pl.seat,
+          players: players.map(({ id, name, characterId, seat, team }) => ({
+            id, name, characterId, seat, team
+          }))
+        });
       }
-    });
-    io.to(roomId).emit('match:found', {
-      roomId,
-      mode,
-      seed: room.seed,
-      players: players.map(({ id, name, characterId, seat, team }) => ({
-        id, name, characterId, seat, team
-      }))
     });
     setTimeout(() => {
       const r = rooms.get(roomId);

@@ -5,6 +5,7 @@ import { Renderer } from './game/renderer.js';
 import { InputManager } from './game/input.js';
 import { NetClient } from './net/client.js';
 import { pickAd, shouldShowAds } from './shop/ads.js';
+import { audio } from './game/audio.js';
 
 const DEFAULT_SERVER = 'http://localhost:3847';
 
@@ -329,10 +330,8 @@ function bindNet() {
   state.net.on('match:found', (d) => {
     document.getElementById('queue-status').textContent = `Match trouvé (${d.roomId}) — préparation…`;
     state.matchMeta = d;
-    const self = d.players.find((p) => p.characterId === state.selections[0].characterId) || d.players[0];
-    // Identify local seat by matching socket assignment later via name+char; use first unmatched heuristic
-    state.localSeat = self?.seat ?? 0;
-    state.localPlayerId = self?.id;
+    state.localPlayerId = d.youAre || d.players?.[0]?.id;
+    state.localSeat = d.yourSeat ?? d.players?.find((p) => p.id === state.localPlayerId)?.seat ?? 0;
   });
   state.net.on('match:start', () => {
     const fighters = (state.matchMeta?.players || []).map((p) => ({
@@ -487,12 +486,24 @@ function renderShop() {
 }
 
 function bindUI() {
+  document.body.addEventListener(
+    'pointerdown',
+    () => {
+      audio.ensure();
+    },
+    { once: true }
+  );
+
   document.querySelectorAll('[data-go]').forEach((btn) => {
-    btn.addEventListener('click', () => showScreen(btn.getAttribute('data-go')));
+    btn.addEventListener('click', () => {
+      audio.ui();
+      showScreen(btn.getAttribute('data-go'));
+    });
   });
 
   document.querySelectorAll('[data-setup]').forEach((btn) => {
     btn.addEventListener('click', () => {
+      audio.ui();
       const key = btn.getAttribute('data-setup');
       const [net, mode] = key.split('-');
       state.setup = { online: net === 'online', mode };
