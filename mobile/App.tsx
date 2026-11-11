@@ -99,12 +99,12 @@ export default function App() {
       team: setup.mode === '2v2' ? (slot < 2 ? 0 : 1) : slot,
       characterId,
       name: CHARACTERS.find((c) => c.id === characterId)?.name || characterId,
-      stocks: 3
+      stocks: 1
     }));
     // Simple CPU for other slots: game still runs; player controls slot 0
     postToGame({
       type: 'start',
-      config: { mode: setup.mode, fighters, stocks: 3 }
+      config: { mode: setup.mode, fighters, stocks: 1 }
     });
   }, [screen, webReady, selections, setup.mode, slotCount]);
 

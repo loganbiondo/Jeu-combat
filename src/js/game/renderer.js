@@ -115,8 +115,7 @@ export class Renderer {
   }
 
   drawFighter(f, t) {
-    if (!f.alive && f.stocks > 0) return;
-    if (f.stocks <= 0) return;
+    if (!f.alive || f.hp <= 0) return;
     const ctx = this.ctx;
     ctx.save();
     ctx.translate(f.x, f.y);
@@ -192,14 +191,11 @@ export class Renderer {
     ctx.strokeText(f.name, f.x, f.y - 48);
     ctx.fillStyle = '#f8fafc';
     ctx.fillText(f.name, f.x, f.y - 48);
-    ctx.fillStyle = f.percent > 100 ? '#fb7185' : '#fde047';
-    ctx.font = '800 18px "Exo 2", "Trebuchet MS", sans-serif';
-    ctx.strokeText(`${f.percent.toFixed(0)}%`, f.x, f.y - 30);
-    ctx.fillText(`${f.percent.toFixed(0)}%`, f.x, f.y - 30);
-    if (f.combo > 1 && (f.action === 'attack' || f.action === 'special' || f.action === 'ultra' || f.spectacleTimer > 0)) {
+    if (f.comboCount > 1) {
       ctx.fillStyle = '#67e8f9';
-      ctx.font = 'bold 11px "Trebuchet MS", sans-serif';
-      ctx.fillText(`x${f.combo}`, f.x, f.y - 52);
+      ctx.font = '800 14px "Exo 2", "Trebuchet MS", sans-serif';
+      ctx.strokeText(`${f.comboCount} HITS`, f.x, f.y - 30);
+      ctx.fillText(`${f.comboCount} HITS`, f.x, f.y - 30);
     }
     ctx.restore();
   }
@@ -253,17 +249,9 @@ export class Renderer {
     ctx.fillStyle = kiG;
     ctx.fillRect(x + 14, y + 44, 180 * (f.ki / 100), 8);
 
-    // Stocks
-    for (let s = 0; s < f.stocks; s++) {
-      ctx.fillStyle = f.colors?.body || '#fff';
-      ctx.beginPath();
-      ctx.arc(x + 220 + s * 16, y + 36, 6, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    ctx.fillStyle = '#fde047';
-    ctx.font = 'bold 18px "Trebuchet MS", sans-serif';
-    ctx.fillText(`${f.percent?.toFixed?.(0) ?? 0}%`, x + 210, y + 22);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 13px "Trebuchet MS", sans-serif';
+    ctx.fillText(`${Math.max(0, Math.round(f.hp))} PV`, x + 210, y + 40);
     ctx.restore();
   }
 
@@ -277,12 +265,23 @@ export class Renderer {
     this.drawBackground(engine.stage, engine.time);
     this.drawStage(engine.stage);
 
-    // Soft blast zone hint
-    ctx.save();
-    ctx.strokeStyle = 'rgba(251,113,133,0.25)';
-    ctx.setLineDash([8, 8]);
-    ctx.strokeRect(20, 20, 1240, 680);
-    ctx.restore();
+    // Walls (Tekken/SF cage)
+    const walls = engine.stage.walls;
+    if (walls) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(15,23,42,0.45)';
+      ctx.fillRect(0, 0, walls.left - 10, 720);
+      ctx.fillRect(walls.right + 10, 0, 1280 - walls.right - 10, 720);
+      ctx.strokeStyle = 'rgba(125,211,252,0.35)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(walls.left - 8, 120);
+      ctx.lineTo(walls.left - 8, engine.stage.ground.y);
+      ctx.moveTo(walls.right + 8, 120);
+      ctx.lineTo(walls.right + 8, engine.stage.ground.y);
+      ctx.stroke();
+      ctx.restore();
+    }
 
     engine.fx.draw(ctx);
     for (const f of engine.fighters) this.drawFighter(f, engine.time);

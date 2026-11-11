@@ -46,7 +46,8 @@ export class Fighter {
     this.maxHp = this.stats.hp;
     this.ki = 30;
     this.maxKi = 100;
-    this.stocks = opts.stocks ?? 3;
+    this.stocks = opts.stocks ?? 1; // 1 = un round (HP)
+    this.roundsWon = 0;
     this.alive = true;
     this.invuln = 0;
     this.attackCd = 0;
@@ -95,11 +96,12 @@ export class CombatEngine {
         x: spawn.x,
         y: spawn.y,
         facing: i % 2 === 0 ? 1 : -1,
-        stocks: config.stocks ?? 3
+        stocks: config.stocks ?? 1
       });
     });
     this.host = config.host !== false;
-    this.pushLog('Le combat commence ! Effets spéciaux prêts.');
+    this.round = 1;
+    this.pushLog('Round 1 — Combat style DBZ / Tekken / SF !');
   }
 
   pushLog(msg) {
@@ -121,21 +123,22 @@ export class CombatEngine {
     const shield = defender.shieldTimer > 0 ? 0.45 : 1;
     const mitigated = (raw * shield) / (1 + def * 0.04);
     const dmg = mitigated * randRange(0.92, 1.08);
-    defender.percent += dmg;
-    defender.hp = Math.max(0, defender.hp - dmg * 0.55);
+    defender.percent += dmg * 0.35; // stun meter soft, plus de KO Smash
+    // Fighting game: HP is the real life bar
+    const hpDmg = dmg * (opts.hpMul || 1.15);
+    defender.hp = Math.max(0, defender.hp - hpDmg);
     defender.hitstun = Math.max(defender.hitstun, opts.hitstun || 0.18);
     defender.combo += 1;
     attacker.combo += 1;
     attacker.ki = clamp(attacker.ki + 8 * (opts.kiGain || 1) * attacker.stats.kiRegen, 0, attacker.maxKi);
 
-    // Smash-like knockback: base + scaling with %
-    const kb =
-      ((opts.knock || 1) * (18 + defender.percent * 0.92) * (opts.kbMul || 1)) /
-      defender.stats.weight;
+    // Tekken/SF style: pushback + light lift, walls catch you (no ring-out)
+    const kb = ((opts.knock || 1) * (10 + dmg * 0.55) * (opts.kbMul || 1)) / defender.stats.weight;
     const dir = opts.dirX != null ? opts.dirX : Math.sign(defender.x - attacker.x) || attacker.facing;
-    const angle = opts.angle != null ? opts.angle : -0.75;
-    defender.vx = dir * Math.cos(Math.abs(angle)) * kb * 14;
-    defender.vy = Math.sin(angle) * kb * 16 * (opts.up || 1);
+    const lift = opts.upAir || opts.angle != null ? 1 : 0.35;
+    defender.vx = dir * kb * 22;
+    defender.vy = -kb * 10 * lift * (opts.up || 1);
+    if (defender.vy > -40 && !opts.upAir) defender.vy = Math.min(defender.vy, -30);
     defender.onGround = false;
     defender.fastFall = false;
     defender.jabStep = 0;
@@ -149,14 +152,11 @@ export class CombatEngine {
     const heavy = dmg > 16 || !!opts.heavy;
     this.fx.onHit(defender.x, defender.y - 10, dmg, heavy);
     audio.hit(heavy);
-    if (defender.percent > 100 && heavy) {
-      this.fx.shockwave(defender.x, defender.y, { maxR: 130, color: '#fb7185', width: 10 });
-      this.fx.floatText(defender.x, defender.y - 55, 'LAUNCH!', '#fb7185');
-      audio.special();
+    this.pushLog(`${attacker.name} → ${defender.name}  -${hpDmg.toFixed(0)} PV`);
+
+    if (defender.hp <= 0) {
+      this.ko(defender);
     }
-    this.pushLog(
-      `${attacker.name} → ${defender.name}  ${dmg.toFixed(0)}  (${defender.percent.toFixed(0)}%)`
-    );
     return dmg;
   }
 
@@ -165,28 +165,41 @@ export class CombatEngine {
   }
 
   resolvePhysics(f, dt) {
-    const g = f.fastFall ? 2600 : 1650;
+    const g = f.fastFall ? 2400 : 1750;
     if (!f.shielding) f.vy += g * dt;
     f.x += f.vx * dt;
     f.y += f.vy * dt;
-    f.vx *= f.onGround ? (f.shielding ? 0.6 : 0.78) : 0.985;
+    f.vx *= f.onGround ? (f.shielding ? 0.55 : 0.8) : 0.98;
 
     f.onGround = false;
-    for (const p of this.platforms()) {
-      const withinX = f.x + f.radius * 0.5 > p.x && f.x - f.radius * 0.5 < p.x + p.w;
-      const feet = f.y + f.radius;
-      if (withinX && f.vy >= 0 && feet >= p.y && feet <= p.y + p.h + 18 && f.y < p.y + 10) {
-        f.y = p.y - f.radius;
-        f.vy = 0;
-        f.onGround = true;
-        f.jumps = 2;
-        f.fastFall = false;
-      }
+    const floor = this.stage.ground;
+    const feet = f.y + f.radius;
+    if (f.vy >= 0 && feet >= floor.y && feet <= floor.y + floor.h + 24) {
+      f.y = floor.y - f.radius;
+      f.vy = 0;
+      f.onGround = true;
+      f.jumps = 2;
+      f.fastFall = false;
+    }
+    if (f.y < 90) {
+      f.y = 90;
+      f.vy = Math.max(0, f.vy);
     }
 
-    const b = this.stage.blast;
-    if (f.x < b.left || f.x > b.right || f.y < b.top || f.y > b.bottom) {
-      this.ko(f);
+    const walls = this.stage.walls || { left: 80, right: 1200 };
+    if (f.x < walls.left) {
+      f.x = walls.left;
+      if (f.vx < 0) {
+        f.vx *= -0.35;
+        this.fx.burst(f.x, f.y, { count: 8, speed: 120, paletteName: 'hit', spark: true });
+      }
+    }
+    if (f.x > walls.right) {
+      f.x = walls.right;
+      if (f.vx > 0) {
+        f.vx *= -0.35;
+        this.fx.burst(f.x, f.y, { count: 8, speed: 120, paletteName: 'hit', spark: true });
+      }
     }
   }
 
@@ -194,48 +207,33 @@ export class CombatEngine {
     if (!f.alive) return;
     this.fx.onKO(f.x, f.y);
     audio.ko();
-    this.pushLog(`KO ! ${f.name} sort de l'arène !`);
-    f.stocks -= 1;
+    this.pushLog(`K.O. ! ${f.name} est a terre !`);
     f.alive = false;
-    f.percent = 0;
-    f.hp = f.maxHp;
-    f.ki = 25;
+    f.stocks = 0;
     f.vx = 0;
     f.vy = 0;
-    f.respawnTimer = 1.6;
-    f.invuln = 2.2;
-    if (f.stocks <= 0) {
-      this.pushLog(`${f.name} est éliminé.`);
-      this.checkWinner();
-    }
+    f.action = 'idle';
+    f.hitstun = 2;
+    this.checkWinner();
   }
 
-  respawn(f) {
-    const spawn = this.stage.spawns[f.slot % this.stage.spawns.length];
-    f.x = spawn.x;
-    f.y = spawn.y - 40;
-    f.vx = 0;
-    f.vy = 0;
-    f.alive = true;
-    f.action = 'idle';
-    this.fx.burst(f.x, f.y, { count: 20, speed: 160, paletteName: 'aurora' });
-    this.fx.ring(f.x, f.y, { maxR: 70, paletteName: 'aurora' });
-    this.pushLog(`${f.name} réapparaît !`);
+  respawn() {
+    /* arena fighter: no respawn mid-round */
   }
 
   checkWinner() {
     const livingTeams = new Set(
-      this.fighters.filter((f) => f.stocks > 0).map((f) => f.team)
+      this.fighters.filter((f) => f.alive && f.hp > 0).map((f) => f.team)
     );
     if (livingTeams.size <= 1) {
       this.ended = true;
-      this.winnerTeams = [...livingTeams];
+      this.winnerTeams = livingTeams.size ? [...livingTeams] : [this.fighters[0].team];
       const names = this.fighters
-        .filter((f) => livingTeams.has(f.team))
+        .filter((f) => this.winnerTeams.includes(f.team))
         .map((f) => f.name)
         .join(' & ');
-      this.pushLog(`Victoire : ${names || 'personne'} !`);
-      this.fx.burst(640, 300, { count: 60, speed: 300, paletteName: 'aurora', gravity: 40, size: 0.9 });
+      this.pushLog(`Victoire : ${names} !`);
+      this.fx.burst(640, 300, { count: 60, speed: 300, paletteName: 'aurora', gravity: 40, life: 0.9 });
       this.fx.screenShake(10, 0.4);
       audio.win();
     }
@@ -676,20 +674,26 @@ export class CombatEngine {
     this.tryGuard(f, !!input.guard);
     if (f.shielding) return;
 
-    // Movement — snappier ground, air drift
-    if (input.moveX) {
-      const spd = f.stats.speed * (f.onGround ? 78 : 62);
-      const accel = f.onGround ? 14 : 9;
-      f.vx += input.moveX * spd * dt * accel;
-      f.vx = clamp(f.vx, -spd, spd);
-      if (f.onGround || Math.abs(input.moveX) > 0) f.facing = Math.sign(input.moveX) || f.facing;
-      if (Math.abs(f.vx) > 220 && Math.random() < 0.25) this.fx.afterImage(f);
+    // Face nearest foe when idle (SF/Tekken habit)
+    if (!input.moveX && f.onGround && f.actionTimer <= 0) {
+      const foe = this.enemiesOf(f).sort((a, b) => Math.abs(a.x - f.x) - Math.abs(b.x - f.x))[0];
+      if (foe) f.facing = Math.sign(foe.x - f.x) || f.facing;
     }
 
-    // Short hop / full hop
+    // Grounded footsies movement
+    if (input.moveX) {
+      const spd = f.stats.speed * (f.onGround ? 72 : 48);
+      const accel = f.onGround ? 16 : 7;
+      f.vx += input.moveX * spd * dt * accel;
+      f.vx = clamp(f.vx, -spd, spd);
+      f.facing = Math.sign(input.moveX) || f.facing;
+      if (Math.abs(f.vx) > 220 && Math.random() < 0.2) this.fx.afterImage(f);
+    }
+
+    // Jump (SF-style, less floaty than Smash)
     if (input.jump && f.jumps > 0 && !f.jumpHeld) {
       const short = !!input.shortHop;
-      f.vy = -f.stats.jump * (short ? 30 : 44);
+      f.vy = -f.stats.jump * (short ? 26 : 36);
       f.jumps -= 1;
       f.onGround = false;
       f.fastFall = false;
@@ -763,12 +767,7 @@ export class CombatEngine {
     });
 
     for (const f of this.fighters) {
-      if (f.stocks <= 0) continue;
-      if (!f.alive) {
-        f.respawnTimer -= sdt;
-        if (f.respawnTimer <= 0) this.respawn(f);
-        continue;
-      }
+      if (!f.alive || f.hp <= 0) continue;
 
       f.attackCd = Math.max(0, f.attackCd - sdt);
       f.specialCd = Math.max(0, f.specialCd - sdt);
