@@ -34,18 +34,25 @@
     .btn.primary { background: linear-gradient(120deg, #38bdf8, #fde047); color: #0b1220; border: 0; }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .card {
-      border: 2px solid #334155; border-radius: 14px; padding: 10px; background: rgba(15,23,42,.75); text-align: left;
+      border: 2px solid #334155; border-radius: 14px; padding: 10px; background: rgba(15,23,42,.75); text-align: left; color: inherit;
     }
     .card.on { border-color: var(--sun); }
     .swatch { height: 42px; border-radius: 10px; margin-bottom: 6px; }
     .card strong { display: block; }
     .card small { color: var(--muted); }
-    #combat { padding: 8px; gap: 6px; }
+    #combat { padding: 8px; gap: 6px; overflow: hidden; }
     #frameWrap {
-      flex: 1; min-height: 40vh; border-radius: 14px; overflow: hidden;
+      flex: 1; min-height: 38vh; border-radius: 14px; overflow: hidden;
       border: 1px solid rgba(125,211,252,.35); background: #0b1d3a;
+      position: relative;
     }
-    iframe { width: 100%; height: 100%; border: 0; }
+    
+  html,body{margin:0;height:100%;background:#07111f;overflow:hidden}
+  #wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+  canvas{background:#0b1d3a;max-width:100%;max-height:100%}
+
+    #wrap { width: 100%; height: 100%; display:flex; align-items:center; justify-content:center; }
+    canvas { max-width: 100%; max-height: 100%; background:#0b1d3a; }
     #stage { text-align: center; color: var(--muted); font-size: .8rem; font-weight: 700; }
     #log { font-size: .7rem; color: #94a3b8; white-space: nowrap; overflow: auto; min-height: 1.2em; }
     .controls { display: flex; justify-content: space-between; gap: 8px; }
@@ -65,7 +72,7 @@
     <section id="home" class="screen on">
       <div class="brand">ARENA KI FIGHTERS</div>
       <h1>Smash doux.<br/>Ki explosif.</h1>
-      <p>Jouable dans ton navigateur téléphone. Remplis le ki puis lance ULTRA.</p>
+      <p>Jouable sur téléphone. Remplis le ki puis lance ULTRA.</p>
       <button class="btn primary" id="goPlay">Jouer 1v1 vs IA</button>
       <button class="btn" id="goChars">Choisir mon perso</button>
     </section>
@@ -79,23 +86,25 @@
     </section>
 
     <section id="combat" class="screen">
-      <div id="frameWrap"><iframe id="gameFrame" title="combat"></iframe></div>
+      <div id="frameWrap">
+        <div id="wrap"><canvas id="game" width="1280" height="720"></canvas></div>
+      </div>
       <div id="stage">Arène</div>
       <div id="log"></div>
       <div class="controls">
         <div class="pad">
-          <button class="hold" data-hold="left">◀</button>
-          <button class="hold" data-hold="right">▶</button>
-          <button class="hold" data-hold="jump">Jump</button>
+          <button class="hold" data-hold="left" type="button">◀</button>
+          <button class="hold" data-hold="right" type="button">▶</button>
+          <button class="hold" data-hold="jump" type="button">Jump</button>
         </div>
         <div class="acts">
-          <button class="hold" data-hold="attack" style="border-color:#fde047">Atk</button>
-          <button class="hold" data-hold="special" style="border-color:#38bdf8">Spé</button>
-          <button class="hold" data-hold="ultra" style="border-color:#fb7185">ULTRA</button>
-          <button class="hold" data-hold="regen" style="border-color:#4ade80">Regen</button>
+          <button class="hold" data-hold="attack" type="button" style="border-color:#fde047">Atk</button>
+          <button class="hold" data-hold="special" type="button" style="border-color:#38bdf8">Spé</button>
+          <button class="hold" data-hold="ultra" type="button" style="border-color:#fb7185">ULTRA</button>
+          <button class="hold" data-hold="regen" type="button" style="border-color:#4ade80">Regen</button>
         </div>
       </div>
-      <button class="btn" id="forfeit">Abandonner</button>
+      <button class="btn" id="forfeit" type="button">Abandonner</button>
     </section>
 
     <section id="victory" class="screen">
@@ -105,10 +114,2505 @@
         <strong style="color:var(--sun)">Récompense</strong>
         <p id="rewardText">—</p>
       </div>
-      <button class="btn primary" data-back="home">Menu</button>
+      <button class="btn primary" data-back="home" type="button">Menu</button>
     </section>
   </div>
 
+  <script>
+"use strict";
+(() => {
+  // ../src/js/data/characters.js
+  var CHARACTERS = [
+    {
+      id: "lumo",
+      name: "Lumo",
+      role: "gentil",
+      species: "alien",
+      tagline: "Voyageur tout doux aux ailes de lumi\xE8re",
+      colors: { body: "#7dd3fc", accent: "#fef08a", outline: "#0c4a6e" },
+      stats: { hp: 100, atk: 12, def: 8, speed: 6.2, weight: 0.9, jump: 14, kiRegen: 1.1 },
+      free: true,
+      specials: ["solar_hug", "glide_kick"],
+      ultra: "aurora_burst"
+    },
+    {
+      id: "pebble",
+      name: "Pebble",
+      role: "gentil",
+      species: "animal",
+      tagline: "Roc ronronnant, bouclier vivant",
+      colors: { body: "#a8a29e", accent: "#84cc16", outline: "#292524" },
+      stats: { hp: 120, atk: 10, def: 14, speed: 4.4, weight: 1.35, jump: 11, kiRegen: 0.9 },
+      free: true,
+      specials: ["boulder_roll", "moss_guard"],
+      ultra: "tectonic_clap"
+    },
+    {
+      id: "nori",
+      name: "Nori",
+      role: "gentil",
+      species: "humain",
+      tagline: "Cuisini\xE8re acrobatique au wok de ki",
+      colors: { body: "#fb7185", accent: "#fdba74", outline: "#7f1d1d" },
+      stats: { hp: 95, atk: 13, def: 7, speed: 6.8, weight: 0.85, jump: 15, kiRegen: 1.2 },
+      free: true,
+      specials: ["spice_dash", "wok_spin"],
+      ultra: "banquet_boom"
+    },
+    {
+      id: "capra",
+      name: "Capra",
+      role: "m\xE9chant",
+      species: "animal",
+      tagline: "Ch\xE8vre pirate au rire farceur",
+      colors: { body: "#c4b5fd", accent: "#f472b6", outline: "#4c1d95" },
+      stats: { hp: 105, atk: 14, def: 9, speed: 5.6, weight: 1.05, jump: 13, kiRegen: 1 },
+      free: true,
+      specials: ["horn_dive", "loot_kick"],
+      ultra: "cannon_bleat"
+    },
+    {
+      id: "mossy",
+      name: "Mossy",
+      role: "gentil",
+      species: "super",
+      tagline: "Gardien forestier qui pousse des boucliers vivants",
+      colors: { body: "#4ade80", accent: "#a3e635", outline: "#14532d" },
+      stats: { hp: 110, atk: 11, def: 12, speed: 5, weight: 1.2, jump: 12, kiRegen: 1.15 },
+      free: true,
+      specials: ["vine_lasso", "leaf_pulse"],
+      ultra: "grove_quake"
+    },
+    {
+      id: "zib",
+      name: "Zib",
+      role: "m\xE9chant",
+      species: "alien",
+      tagline: "Petit chaos rose, farces \xE9lectriques",
+      colors: { body: "#f9a8d4", accent: "#67e8f9", outline: "#9d174d" },
+      stats: { hp: 90, atk: 15, def: 6, speed: 7.4, weight: 0.75, jump: 16, kiRegen: 1.3 },
+      free: true,
+      specials: ["spark_prank", "bounce_bomb"],
+      ultra: "giggle_storm"
+    },
+    {
+      id: "kira",
+      name: "Kira",
+      role: "gentil",
+      species: "humain",
+      tagline: "Championne de parkour au poing solaire",
+      colors: { body: "#fde047", accent: "#38bdf8", outline: "#854d0e" },
+      stats: { hp: 100, atk: 13, def: 8, speed: 6.5, weight: 0.95, jump: 14.5, kiRegen: 1.05 },
+      free: true,
+      specials: ["sun_jab", "rail_flip"],
+      ultra: "daybreak_drive"
+    },
+    {
+      id: "bolt",
+      name: "Bolt",
+      role: "super",
+      species: "animal",
+      tagline: "\xC9cureuil survolt\xE9, trails d\u2019\xE9tincelles",
+      colors: { body: "#fdba74", accent: "#facc15", outline: "#9a3412" },
+      stats: { hp: 92, atk: 12, def: 7, speed: 7.8, weight: 0.7, jump: 16.5, kiRegen: 1.25 },
+      free: true,
+      specials: ["nut_missile", "zip_line"],
+      ultra: "thunder_acorn"
+    },
+    {
+      id: "quillox",
+      name: "Quillox",
+      role: "gentil",
+      species: "alien",
+      tagline: "Plumes tourbillonnantes, r\xE9g\xE9n\xE9ration douce",
+      colors: { body: "#99f6e4", accent: "#e9d5ff", outline: "#115e59" },
+      stats: { hp: 108, atk: 11, def: 10, speed: 5.8, weight: 0.95, jump: 13.5, kiRegen: 1.4 },
+      free: false,
+      specials: ["plume_spiral", "soft_regen"],
+      ultra: "feather_nova"
+    },
+    {
+      id: "ironpaw",
+      name: "Ironpaw",
+      role: "super",
+      species: "animal",
+      tagline: "F\xE9lin blind\xE9 au smash \xE9crasant",
+      colors: { body: "#94a3b8", accent: "#f97316", outline: "#1e293b" },
+      stats: { hp: 125, atk: 16, def: 13, speed: 4.8, weight: 1.45, jump: 11.5, kiRegen: 0.85 },
+      free: false,
+      specials: ["steel_pounce", "ki_shield"],
+      ultra: "meteor_claw"
+    },
+    {
+      id: "velvet",
+      name: "Velvet Nyx",
+      role: "m\xE9chant",
+      species: "humain",
+      tagline: "Anti-h\xE9ro\xEFne au t\xE9l\xE9port velours",
+      colors: { body: "#e879f9", accent: "#1e1b4b", outline: "#4a044e" },
+      stats: { hp: 98, atk: 14, def: 8, speed: 6.9, weight: 0.88, jump: 15, kiRegen: 1.18 },
+      free: false,
+      specials: ["velvet_warp", "ki_drain"],
+      ultra: "midnight_bloom"
+    }
+  ];
+  var SKINS = {
+    lumo: {
+      aurora: { body: "#a5b4fc", accent: "#86efac", outline: "#312e81", label: "Aurore" }
+    },
+    pebble: {
+      magma: { body: "#fb923c", accent: "#fef08a", outline: "#7c2d12", label: "Magma" }
+    }
+  };
+  function getCharacter(id) {
+    return CHARACTERS.find((c) => c.id === id) || CHARACTERS[0];
+  }
+
+  // ../src/js/data/techniques.js
+  var TECHNIQUES = {
+    solar_hug: {
+      id: "solar_hug",
+      name: "\xC9treinte Solaire",
+      kind: "special",
+      kiCost: 28,
+      power: 1.35,
+      knock: 1.2,
+      heal: 0,
+      range: 90,
+      cooldown: 1.4,
+      fx: "solar",
+      desc: "Vague chaude qui pousse et soigne un peu soi-m\xEAme"
+    },
+    glide_kick: {
+      id: "glide_kick",
+      name: "Frappe Planante",
+      kind: "special",
+      kiCost: 18,
+      power: 1.15,
+      knock: 1.4,
+      range: 70,
+      cooldown: 1,
+      fx: "trail",
+      desc: "Dash a\xE9rien suivi d\u2019un kick lumineux"
+    },
+    aurora_burst: {
+      id: "aurora_burst",
+      name: "Explosion Aurore",
+      kind: "ultra",
+      kiCost: 90,
+      power: 2.4,
+      knock: 2.1,
+      range: 160,
+      cooldown: 6,
+      fx: "aurora",
+      desc: "Nova bor\xE9ale plein \xE9cran"
+    },
+    boulder_roll: {
+      id: "boulder_roll",
+      name: "Rouleau Roc",
+      kind: "special",
+      kiCost: 22,
+      power: 1.25,
+      knock: 1.5,
+      range: 100,
+      cooldown: 1.3,
+      fx: "rock",
+      desc: "Charge roulante qui brise la garde"
+    },
+    moss_guard: {
+      id: "moss_guard",
+      name: "Garde Mousse",
+      kind: "special",
+      kiCost: 20,
+      power: 0.4,
+      knock: 0.3,
+      heal: 12,
+      range: 40,
+      cooldown: 2,
+      fx: "heal",
+      desc: "Bouclier v\xE9g\xE9tal + r\xE9g\xE9n\xE9ration"
+    },
+    tectonic_clap: {
+      id: "tectonic_clap",
+      name: "Claquement Tectonique",
+      kind: "ultra",
+      kiCost: 85,
+      power: 2.2,
+      knock: 2.3,
+      range: 140,
+      cooldown: 6,
+      fx: "quake",
+      desc: "Onde de choc terrestre"
+    },
+    spice_dash: {
+      id: "spice_dash",
+      name: "Dash \xC9pic\xE9",
+      kind: "special",
+      kiCost: 16,
+      power: 1.1,
+      knock: 1.1,
+      range: 110,
+      cooldown: 0.9,
+      fx: "ember",
+      desc: "Acc\xE9l\xE9ration br\xFBlante en ligne droite"
+    },
+    wok_spin: {
+      id: "wok_spin",
+      name: "Wok Tourbillon",
+      kind: "special",
+      kiCost: 24,
+      power: 1.3,
+      knock: 1.35,
+      range: 80,
+      cooldown: 1.2,
+      fx: "spin",
+      desc: "Tournoiement qui multiplie les hits"
+    },
+    banquet_boom: {
+      id: "banquet_boom",
+      name: "Banquet Boum",
+      kind: "ultra",
+      kiCost: 88,
+      power: 2.3,
+      knock: 1.9,
+      range: 150,
+      cooldown: 6,
+      fx: "feast",
+      desc: "Explosion festive de ki piquant"
+    },
+    horn_dive: {
+      id: "horn_dive",
+      name: "Plongeon Cornu",
+      kind: "special",
+      kiCost: 20,
+      power: 1.4,
+      knock: 1.6,
+      range: 95,
+      cooldown: 1.2,
+      fx: "dive",
+      desc: "Plong\xE9e diagonale cornue"
+    },
+    loot_kick: {
+      id: "loot_kick",
+      name: "Coup de Butin",
+      kind: "special",
+      kiCost: 18,
+      power: 1.2,
+      knock: 1.25,
+      range: 75,
+      cooldown: 1,
+      fx: "spark",
+      desc: "Kick qui vole un peu de ki"
+    },
+    cannon_bleat: {
+      id: "cannon_bleat",
+      name: "Canon B\xEAlement",
+      kind: "ultra",
+      kiCost: 90,
+      power: 2.5,
+      knock: 2,
+      range: 180,
+      cooldown: 6.5,
+      fx: "beam",
+      desc: "Laser sonore farceur"
+    },
+    vine_lasso: {
+      id: "vine_lasso",
+      name: "Lasso de Lianes",
+      kind: "special",
+      kiCost: 22,
+      power: 1.05,
+      knock: 0.9,
+      range: 130,
+      cooldown: 1.4,
+      fx: "vine",
+      desc: "Attrape et rapproche l\u2019adversaire"
+    },
+    leaf_pulse: {
+      id: "leaf_pulse",
+      name: "Pulsation Feuille",
+      kind: "special",
+      kiCost: 18,
+      power: 1,
+      knock: 1,
+      heal: 8,
+      range: 100,
+      cooldown: 1.3,
+      fx: "leaf",
+      desc: "Onde verte soignante"
+    },
+    grove_quake: {
+      id: "grove_quake",
+      name: "S\xE9isme du Bosquet",
+      kind: "ultra",
+      kiCost: 86,
+      power: 2.15,
+      knock: 2.2,
+      range: 155,
+      cooldown: 6,
+      fx: "grove",
+      desc: "Racines explosives"
+    },
+    spark_prank: {
+      id: "spark_prank",
+      name: "Farce \xC9tincelle",
+      kind: "special",
+      kiCost: 15,
+      power: 1.05,
+      knock: 1.15,
+      range: 85,
+      cooldown: 0.85,
+      fx: "spark",
+      desc: "D\xE9charges rigolotes"
+    },
+    bounce_bomb: {
+      id: "bounce_bomb",
+      name: "Bombe Rebond",
+      kind: "special",
+      kiCost: 26,
+      power: 1.45,
+      knock: 1.7,
+      range: 120,
+      cooldown: 1.5,
+      fx: "bomb",
+      desc: "Projectile rebondissant"
+    },
+    giggle_storm: {
+      id: "giggle_storm",
+      name: "Temp\xEAte Rieuse",
+      kind: "ultra",
+      kiCost: 92,
+      power: 2.35,
+      knock: 1.85,
+      range: 170,
+      cooldown: 6.2,
+      fx: "storm",
+      desc: "Orage rose de projectiles"
+    },
+    sun_jab: {
+      id: "sun_jab",
+      name: "Jab Solaire",
+      kind: "special",
+      kiCost: 14,
+      power: 1.1,
+      knock: 1.05,
+      range: 70,
+      cooldown: 0.8,
+      fx: "solar",
+      desc: "Encha\xEEnement de jabs brillants"
+    },
+    rail_flip: {
+      id: "rail_flip",
+      name: "Flip Rail",
+      kind: "special",
+      kiCost: 20,
+      power: 1.25,
+      knock: 1.4,
+      range: 90,
+      cooldown: 1.1,
+      fx: "trail",
+      desc: "Flip a\xE9rien + smash"
+    },
+    daybreak_drive: {
+      id: "daybreak_drive",
+      name: "Drive Aube",
+      kind: "ultra",
+      kiCost: 88,
+      power: 2.45,
+      knock: 2.05,
+      range: 160,
+      cooldown: 6,
+      fx: "beam",
+      desc: "Rush solaire per\xE7ant"
+    },
+    nut_missile: {
+      id: "nut_missile",
+      name: "Missile Gland",
+      kind: "special",
+      kiCost: 17,
+      power: 1.2,
+      knock: 1.2,
+      range: 140,
+      cooldown: 1,
+      fx: "missile",
+      desc: "Projectile rapide en courbe"
+    },
+    zip_line: {
+      id: "zip_line",
+      name: "Zip \xC9clair",
+      kind: "special",
+      kiCost: 19,
+      power: 1.15,
+      knock: 1.3,
+      range: 120,
+      cooldown: 1,
+      fx: "spark",
+      desc: "T\xE9l\xE9port court sur \xE9tincelles"
+    },
+    thunder_acorn: {
+      id: "thunder_acorn",
+      name: "Gland Tonnerre",
+      kind: "ultra",
+      kiCost: 90,
+      power: 2.4,
+      knock: 2.15,
+      range: 150,
+      cooldown: 6,
+      fx: "storm",
+      desc: "Foudre concentr\xE9e"
+    },
+    plume_spiral: {
+      id: "plume_spiral",
+      name: "Spirale Plume",
+      kind: "special",
+      kiCost: 21,
+      power: 1.2,
+      knock: 1.25,
+      range: 100,
+      cooldown: 1.2,
+      fx: "spiral",
+      desc: "Tornade de plumes"
+    },
+    soft_regen: {
+      id: "soft_regen",
+      name: "R\xE9g\xE9n\xE9ration Douce",
+      kind: "special",
+      kiCost: 30,
+      power: 0,
+      knock: 0,
+      heal: 22,
+      range: 0,
+      cooldown: 2.5,
+      fx: "heal",
+      desc: "Soin massif fa\xE7on DBZ"
+    },
+    feather_nova: {
+      id: "feather_nova",
+      name: "Nova Plumeuse",
+      kind: "ultra",
+      kiCost: 85,
+      power: 2.2,
+      knock: 1.95,
+      range: 165,
+      cooldown: 6,
+      fx: "aurora",
+      desc: "Explosion de plumes brillantes"
+    },
+    steel_pounce: {
+      id: "steel_pounce",
+      name: "Bond d\u2019Acier",
+      kind: "special",
+      kiCost: 24,
+      power: 1.5,
+      knock: 1.75,
+      range: 95,
+      cooldown: 1.4,
+      fx: "metal",
+      desc: "Pounce blind\xE9"
+    },
+    ki_shield: {
+      id: "ki_shield",
+      name: "Bouclier de Ki",
+      kind: "special",
+      kiCost: 25,
+      power: 0.3,
+      knock: 0.5,
+      heal: 6,
+      range: 50,
+      cooldown: 2.2,
+      fx: "shield",
+      desc: "R\xE9duit les d\xE9g\xE2ts re\xE7us un instant"
+    },
+    meteor_claw: {
+      id: "meteor_claw",
+      name: "Griffe M\xE9t\xE9ore",
+      kind: "ultra",
+      kiCost: 95,
+      power: 2.6,
+      knock: 2.4,
+      range: 145,
+      cooldown: 6.5,
+      fx: "meteor",
+      desc: "Frappe orbitale d\xE9vastatrice"
+    },
+    velvet_warp: {
+      id: "velvet_warp",
+      name: "Warp Velours",
+      kind: "special",
+      kiCost: 22,
+      power: 1.15,
+      knock: 1.1,
+      range: 150,
+      cooldown: 1.3,
+      fx: "warp",
+      desc: "T\xE9l\xE9port + coup derri\xE8re"
+    },
+    ki_drain: {
+      id: "ki_drain",
+      name: "Drain de Ki",
+      kind: "special",
+      kiCost: 18,
+      power: 0.9,
+      knock: 0.8,
+      range: 85,
+      cooldown: 1.2,
+      fx: "drain",
+      desc: "Vole du ki \xE0 la cible"
+    },
+    midnight_bloom: {
+      id: "midnight_bloom",
+      name: "Floraison de Minuit",
+      kind: "ultra",
+      kiCost: 90,
+      power: 2.35,
+      knock: 2,
+      range: 160,
+      cooldown: 6,
+      fx: "bloom",
+      desc: "Fleurs d\u2019ombre explosives"
+    },
+    // Boutique
+    spiral_nova: {
+      id: "spiral_nova",
+      name: "Nova Spirale",
+      kind: "ultra",
+      kiCost: 80,
+      power: 2.1,
+      knock: 2,
+      range: 155,
+      cooldown: 5.5,
+      fx: "spiral",
+      shop: true,
+      desc: "Ultra bonus pour les gentils"
+    },
+    shadow_bloom: {
+      id: "shadow_bloom",
+      name: "Floraison d\u2019Ombre",
+      kind: "special",
+      kiCost: 28,
+      power: 1.35,
+      knock: 1.5,
+      range: 120,
+      cooldown: 1.6,
+      fx: "bloom",
+      shop: true,
+      desc: "Zone ralentissante + knockback"
+    }
+  };
+  function getTechnique(id) {
+    return TECHNIQUES[id] || null;
+  }
+
+  // ../src/js/game/stages.js
+  var STAGES = {
+    soft_orbit: {
+      id: "soft_orbit",
+      name: "Orbite Douce",
+      width: 1280,
+      height: 720,
+      blast: { left: -80, right: 1360, top: -120, bottom: 820 },
+      ground: { x: 240, y: 520, w: 800, h: 40 },
+      platforms: [
+        { x: 360, y: 380, w: 180, h: 18 },
+        { x: 740, y: 380, w: 180, h: 18 },
+        { x: 550, y: 260, w: 180, h: 18 }
+      ],
+      spawns: [
+        { x: 380, y: 460 },
+        { x: 900, y: 460 },
+        { x: 480, y: 340 },
+        { x: 800, y: 340 }
+      ],
+      sky: ["#0b1d3a", "#1e3a5f", "#3b82c4"],
+      accent: "#f9a8d4",
+      platformTop: "#fef3c7",
+      platformBot: "#f59e0b"
+    },
+    jelly_rails: {
+      id: "jelly_rails",
+      name: "Rails de Gel\xE9e",
+      width: 1280,
+      height: 720,
+      blast: { left: -100, right: 1380, top: -140, bottom: 840 },
+      ground: { x: 180, y: 540, w: 920, h: 36 },
+      platforms: [
+        { x: 220, y: 400, w: 160, h: 16 },
+        { x: 900, y: 400, w: 160, h: 16 },
+        { x: 480, y: 320, w: 320, h: 16 },
+        { x: 560, y: 200, w: 160, h: 16 }
+      ],
+      spawns: [
+        { x: 300, y: 480 },
+        { x: 980, y: 480 },
+        { x: 420, y: 280 },
+        { x: 860, y: 280 }
+      ],
+      sky: ["#1a0b2e", "#3b1d5c", "#7c3aed"],
+      accent: "#67e8f9",
+      platformTop: "#f5d0fe",
+      platformBot: "#c026d3"
+    }
+  };
+  var STAGE_IDS = Object.keys(STAGES);
+  function getStage(id) {
+    if (id && STAGES[id]) return STAGES[id];
+    const pick = STAGE_IDS[Math.floor(Math.random() * STAGE_IDS.length)];
+    return STAGES[pick];
+  }
+
+  // ../src/js/game/fx.js
+  var FX_PALETTES = {
+    solar: ["#fde047", "#fb923c", "#fff7ed", "#facc15"],
+    aurora: ["#a5b4fc", "#67e8f9", "#86efac", "#e9d5ff"],
+    rock: ["#a8a29e", "#78716c", "#fbbf24", "#d6d3d1"],
+    heal: ["#86efac", "#4ade80", "#bbf7d0", "#ecfccb"],
+    quake: ["#f59e0b", "#a16207", "#fef3c7", "#78716c"],
+    ember: ["#fb7185", "#fdba74", "#fecdd3", "#f97316"],
+    spin: ["#fb7185", "#fde047", "#fdba74", "#ffffff"],
+    feast: ["#fb923c", "#f472b6", "#fde047", "#86efac"],
+    dive: ["#c4b5fd", "#f472b6", "#e9d5ff", "#ffffff"],
+    spark: ["#67e8f9", "#facc15", "#e0f2fe", "#ffffff"],
+    beam: ["#fef08a", "#38bdf8", "#ffffff", "#a5f3fc"],
+    vine: ["#4ade80", "#a3e635", "#166534", "#bbf7d0"],
+    leaf: ["#86efac", "#bef264", "#ecfccb", "#22c55e"],
+    grove: ["#15803d", "#84cc16", "#fde047", "#4ade80"],
+    bomb: ["#f9a8d4", "#f472b6", "#67e8f9", "#ffffff"],
+    storm: ["#f9a8d4", "#a78bfa", "#67e8f9", "#fde047"],
+    trail: ["#7dd3fc", "#fef08a", "#bae6fd", "#ffffff"],
+    missile: ["#fdba74", "#facc15", "#fb923c", "#fff7ed"],
+    spiral: ["#99f6e4", "#e9d5ff", "#67e8f9", "#ffffff"],
+    metal: ["#94a3b8", "#f97316", "#e2e8f0", "#64748b"],
+    shield: ["#38bdf8", "#e0f2fe", "#7dd3fc", "#ffffff"],
+    meteor: ["#f97316", "#ef4444", "#fde047", "#1e293b"],
+    warp: ["#e879f9", "#1e1b4b", "#c084fc", "#f5d0fe"],
+    drain: ["#c084fc", "#7e22ce", "#f0abfc", "#581c87"],
+    bloom: ["#e879f9", "#f472b6", "#1e1b4b", "#fae8ff"],
+    hit: ["#ffffff", "#fde047", "#fb923c", "#67e8f9"],
+    ko: ["#fef08a", "#fb7185", "#a5b4fc", "#ffffff"],
+    ki: ["#38bdf8", "#fef08a", "#67e8f9", "#ffffff"],
+    regen: ["#86efac", "#fef08a", "#bbf7d0", "#ffffff"],
+    jump: ["#bae6fd", "#e0f2fe", "#ffffff", "#7dd3fc"],
+    land: ["#cbd5e1", "#94a3b8", "#e2e8f0", "#64748b"],
+    charge: ["#fef08a", "#38bdf8", "#ffffff", "#f472b6"]
+  };
+  function palette(name) {
+    return FX_PALETTES[name] || FX_PALETTES.spark;
+  }
+  function rand(a, b) {
+    return a + Math.random() * (b - a);
+  }
+  var FXSystem = class {
+    constructor() {
+      this.particles = [];
+      this.rings = [];
+      this.beams = [];
+      this.flashes = [];
+      this.afterImages = [];
+      this.floatTexts = [];
+      this.auras = [];
+      this.projectiles = [];
+      this.shockwaves = [];
+      this.cutIns = [];
+      this.craters = [];
+      this.orbitals = [];
+      this.shake = { x: 0, y: 0, mag: 0, time: 0 };
+      this.hitstop = 0;
+      this.slowMo = 0;
+      this.flashAlpha = 0;
+      this.flashColor = "#ffffff";
+      this.vignette = 0;
+      this.timeScale = 1;
+    }
+    reset() {
+      this.particles.length = 0;
+      this.rings.length = 0;
+      this.beams.length = 0;
+      this.flashes.length = 0;
+      this.afterImages.length = 0;
+      this.floatTexts.length = 0;
+      this.auras.length = 0;
+      this.projectiles.length = 0;
+      this.shockwaves.length = 0;
+      this.cutIns.length = 0;
+      this.craters.length = 0;
+      this.orbitals.length = 0;
+      this.shake = { x: 0, y: 0, mag: 0, time: 0 };
+      this.hitstop = 0;
+      this.slowMo = 0;
+      this.flashAlpha = 0;
+      this.vignette = 0;
+      this.timeScale = 1;
+    }
+    screenShake(mag = 8, time = 0.25) {
+      this.shake.mag = Math.max(this.shake.mag, mag);
+      this.shake.time = Math.max(this.shake.time, time);
+    }
+    addHitstop(frames = 4) {
+      this.hitstop = Math.max(this.hitstop, frames);
+    }
+    addSlowMo(duration = 0.45, scale = 0.35) {
+      this.slowMo = Math.max(this.slowMo, duration);
+      this.timeScale = Math.min(this.timeScale, scale);
+    }
+    burst(x, y, opts = {}) {
+      const {
+        count = 18,
+        speed = 220,
+        life = 0.55,
+        size = 5,
+        gravity = 180,
+        paletteName = "spark",
+        spread = Math.PI * 2,
+        angle = 0,
+        spark = false
+      } = opts;
+      const colors = palette(paletteName);
+      for (let i = 0; i < count; i++) {
+        const a = angle + (Math.random() - 0.5) * spread;
+        const sp = speed * rand(0.35, 1.15);
+        this.particles.push({
+          x,
+          y,
+          vx: Math.cos(a) * sp,
+          vy: Math.sin(a) * sp,
+          life,
+          maxLife: life,
+          size: size * rand(0.5, 1.4),
+          color: colors[Math.random() * colors.length | 0],
+          gravity,
+          spark,
+          rot: rand(0, Math.PI * 2),
+          spin: rand(-8, 8)
+        });
+      }
+    }
+    ring(x, y, opts = {}) {
+      const colors = palette(opts.paletteName || "hit");
+      this.rings.push({
+        x,
+        y,
+        r: opts.r || 8,
+        maxR: opts.maxR || 70,
+        life: opts.life || 0.45,
+        maxLife: opts.life || 0.45,
+        width: opts.width || 4,
+        color: opts.color || colors[0]
+      });
+    }
+    beam(x, y, angle, opts = {}) {
+      const colors = palette(opts.paletteName || "beam");
+      this.beams.push({
+        x,
+        y,
+        angle,
+        length: 0,
+        maxLength: opts.length || 220,
+        life: opts.life || 0.45,
+        maxLife: opts.life || 0.45,
+        width: opts.width || 18,
+        color: colors[0],
+        core: colors[2] || "#ffffff",
+        pulse: !!opts.pulse
+      });
+    }
+    shockwave(x, y, opts = {}) {
+      this.shockwaves.push({
+        x,
+        y,
+        r: 10,
+        maxR: opts.maxR || 200,
+        life: opts.life || 0.55,
+        maxLife: opts.life || 0.55,
+        color: opts.color || "#fef08a",
+        width: opts.width || 10
+      });
+    }
+    crater(x, y, opts = {}) {
+      this.craters.push({
+        x,
+        y,
+        r: opts.r || 28,
+        life: opts.life || 1.2,
+        maxLife: opts.life || 1.2,
+        color: opts.color || "rgba(15,23,42,0.55)"
+      });
+    }
+    projectile(opts) {
+      const colors = palette(opts.paletteName || "missile");
+      this.projectiles.push({
+        x: opts.x,
+        y: opts.y,
+        vx: opts.vx,
+        vy: opts.vy || 0,
+        life: opts.life || 1.2,
+        maxLife: opts.life || 1.2,
+        radius: opts.radius || 10,
+        color: colors[0],
+        core: colors[2] || "#fff",
+        trail: opts.paletteName || "missile",
+        ownerId: opts.ownerId,
+        damage: opts.damage || 12,
+        knock: opts.knock || 1.2,
+        homing: opts.homing || 0,
+        bounce: opts.bounce || 0,
+        gravity: opts.gravity || 0
+      });
+    }
+    orbital(x, y, opts = {}) {
+      const colors = palette(opts.paletteName || "aurora");
+      for (let i = 0; i < (opts.count || 6); i++) {
+        this.orbitals.push({
+          cx: x,
+          cy: y,
+          angle: Math.PI * 2 * i / (opts.count || 6),
+          radius: opts.radius || 40,
+          speed: opts.speed || 6,
+          life: opts.life || 0.8,
+          maxLife: opts.life || 0.8,
+          size: opts.size || 6,
+          color: colors[i % colors.length]
+        });
+      }
+    }
+    cutIn(fighter, techName) {
+      var _a;
+      this.cutIns.push({
+        name: fighter.name,
+        tech: techName,
+        colors: fighter.colors,
+        life: 0.85,
+        maxLife: 0.85
+      });
+      this.vignette = 0.7;
+      this.addSlowMo(0.55, 0.25);
+      this.flashAlpha = 0.4;
+      this.flashColor = ((_a = fighter.colors) == null ? void 0 : _a.accent) || "#fef08a";
+    }
+    floatText(x, y, text, color = "#fef08a") {
+      this.floatTexts.push({
+        x,
+        y,
+        text,
+        color,
+        life: 0.9,
+        maxLife: 0.9,
+        vy: -55
+      });
+    }
+    afterImage(fighter) {
+      this.afterImages.push({
+        x: fighter.x,
+        y: fighter.y,
+        facing: fighter.facing,
+        colors: fighter.colors,
+        life: 0.28,
+        maxLife: 0.28,
+        radius: fighter.radius
+      });
+    }
+    aura(fighterId, x, y, paletteName = "ki", duration = 0.4) {
+      this.auras.push({
+        fighterId,
+        x,
+        y,
+        life: duration,
+        maxLife: duration,
+        colors: palette(paletteName)
+      });
+    }
+    /** Charge de ki avant ultra / spécial lourd */
+    chargeUp(fighter, intensity = 1) {
+      this.aura(fighter.id, fighter.x, fighter.y, "charge", 0.5 * intensity);
+      this.orbital(fighter.x, fighter.y - 10, {
+        count: 8,
+        radius: 36,
+        life: 0.45,
+        paletteName: "charge",
+        speed: 10
+      });
+      this.burst(fighter.x, fighter.y, {
+        count: 20,
+        speed: 60,
+        paletteName: "ki",
+        gravity: -40,
+        life: 0.5
+      });
+      this.ring(fighter.x, fighter.y, { maxR: 60, paletteName: "ki", life: 0.35 });
+      this.screenShake(4 * intensity, 0.2);
+    }
+    /** FX pack selon technique — version spectaculaire */
+    castTechnique(tech, caster, targetsHit = []) {
+      const fx = tech.fx || "spark";
+      const dir = caster.facing >= 0 ? 0 : Math.PI;
+      const cx = caster.x + caster.facing * 20;
+      const cy = caster.y - 10;
+      const ultra = tech.kind === "ultra";
+      if (ultra) {
+        this.cutIn(caster, tech.name);
+        this.chargeUp(caster, 1.4);
+      }
+      switch (fx) {
+        case "beam":
+          this.beam(cx, cy, dir, {
+            length: tech.range + 80,
+            width: ultra ? 36 : 22,
+            paletteName: "beam",
+            life: ultra ? 0.7 : 0.4,
+            pulse: true
+          });
+          this.beam(cx, cy - 8, dir, {
+            length: tech.range + 40,
+            width: ultra ? 14 : 8,
+            paletteName: "solar",
+            life: ultra ? 0.55 : 0.3
+          });
+          this.burst(cx, cy, { count: 36, speed: 320, paletteName: "beam", spread: 0.7, angle: dir, spark: true });
+          this.shockwave(cx + caster.facing * 40, cy, { maxR: 120, color: "#67e8f9" });
+          this.screenShake(ultra ? 16 : 10, 0.35);
+          this.flashAlpha = ultra ? 0.5 : 0.3;
+          this.flashColor = "#e0f2fe";
+          if (ultra) this.addHitstop(10);
+          break;
+        case "aurora":
+        case "spiral":
+        case "bloom":
+        case "grove":
+        case "feast":
+        case "storm":
+          this.shockwave(caster.x, caster.y - 20, { maxR: tech.range + 40, color: palette(fx)[0], width: 12 });
+          this.ring(caster.x, caster.y - 20, { maxR: tech.range, paletteName: fx, width: 7, life: 0.6 });
+          this.ring(caster.x, caster.y - 20, { maxR: tech.range * 0.55, paletteName: fx, width: 3, life: 0.4 });
+          this.orbital(caster.x, caster.y - 20, { count: 10, radius: 50, life: 0.7, paletteName: fx, speed: 8 });
+          this.burst(caster.x, caster.y - 20, {
+            count: ultra ? 64 : 42,
+            speed: 360,
+            paletteName: fx,
+            gravity: 30,
+            size: 8,
+            spark: true
+          });
+          if (fx === "storm" || fx === "feast" || fx === "spiral") {
+            for (let i = 0; i < (ultra ? 7 : 4); i++) {
+              const a = dir + (i - 2) * 0.22;
+              this.projectile({
+                x: cx,
+                y: cy,
+                vx: Math.cos(a) * (380 + i * 20) * (caster.facing >= 0 ? 1 : -1),
+                vy: Math.sin(a) * 80 - 40,
+                paletteName: fx,
+                life: 0.9,
+                ownerId: caster.id,
+                damage: ultra ? 16 : 10,
+                knock: 1.3,
+                radius: ultra ? 12 : 8
+              });
+            }
+          }
+          this.screenShake(ultra ? 18 : 12, 0.45);
+          this.addHitstop(ultra ? 9 : 5);
+          this.flashAlpha = ultra ? 0.55 : 0.35;
+          this.flashColor = palette(fx)[0];
+          break;
+        case "quake":
+        case "meteor":
+          this.crater(caster.x, caster.y + 24, { r: ultra ? 56 : 36, life: 1.4 });
+          this.shockwave(caster.x, caster.y + 24, { maxR: ultra ? 260 : 160, color: "#fb923c", width: 14 });
+          this.burst(caster.x, caster.y + 20, {
+            count: ultra ? 50 : 36,
+            speed: 300,
+            paletteName: fx,
+            angle: -Math.PI / 2,
+            spread: Math.PI,
+            gravity: 320,
+            size: 9,
+            spark: true
+          });
+          if (fx === "meteor") {
+            for (let i = 0; i < 5; i++) {
+              this.projectile({
+                x: caster.x + rand(-80, 80),
+                y: caster.y - 220 - i * 30,
+                vx: rand(-40, 40),
+                vy: 520,
+                paletteName: "meteor",
+                life: 1,
+                ownerId: caster.id,
+                damage: 14,
+                knock: 1.6,
+                gravity: 200,
+                radius: 14
+              });
+            }
+          }
+          this.screenShake(ultra ? 22 : 14, 0.5);
+          this.addHitstop(ultra ? 11 : 7);
+          break;
+        case "heal":
+        case "regen":
+        case "shield":
+          this.aura(caster.id, caster.x, caster.y, fx === "shield" ? "shield" : "heal", 0.85);
+          this.orbital(caster.x, caster.y, {
+            count: 6,
+            radius: 42,
+            life: 0.7,
+            paletteName: fx === "shield" ? "shield" : "heal"
+          });
+          this.burst(caster.x, caster.y - 30, {
+            count: 28,
+            speed: 100,
+            paletteName: fx === "shield" ? "shield" : "heal",
+            gravity: -70,
+            size: 6
+          });
+          this.floatText(caster.x, caster.y - 50, tech.heal ? `+${tech.heal}` : "GUARD", "#86efac");
+          break;
+        case "warp":
+          this.burst(caster.x, caster.y, { count: 28, speed: 220, paletteName: "warp", size: 6, spark: true });
+          this.ring(caster.x, caster.y, { maxR: 70, paletteName: "warp", life: 0.3 });
+          this.shockwave(caster.x, caster.y, { maxR: 90, color: "#e879f9" });
+          for (let i = 0; i < 6; i++) this.afterImage(caster);
+          break;
+        case "drain":
+          targetsHit.forEach((t) => {
+            this.beam(t.x, t.y - 10, Math.atan2(caster.y - t.y, caster.x - t.x), {
+              length: Math.hypot(caster.x - t.x, caster.y - t.y),
+              width: 12,
+              paletteName: "drain",
+              life: 0.4,
+              pulse: true
+            });
+            this.burst(t.x, t.y, { count: 14, speed: 120, paletteName: "drain" });
+          });
+          this.burst(cx, cy, { count: 20, speed: 160, paletteName: "drain" });
+          break;
+        case "vine":
+        case "leaf":
+          this.burst(cx, cy, { count: 34, speed: 220, paletteName: fx, gravity: 90, life: 0.75 });
+          this.ring(cx, cy, { maxR: tech.range * 0.55, paletteName: fx });
+          this.orbital(cx, cy, { count: 5, radius: 30, paletteName: fx, life: 0.5 });
+          break;
+        case "bomb":
+        case "missile":
+          for (let i = 0; i < (ultra ? 5 : 2); i++) {
+            this.projectile({
+              x: cx,
+              y: cy - i * 6,
+              vx: caster.facing * (420 + i * 40),
+              vy: -60 - i * 30,
+              paletteName: fx,
+              life: 1.1,
+              ownerId: caster.id,
+              damage: ultra ? 18 : 12,
+              knock: 1.4,
+              bounce: fx === "bomb" ? 2 : 0,
+              gravity: fx === "bomb" ? 420 : 180,
+              radius: fx === "bomb" ? 14 : 9,
+              homing: fx === "missile" ? 0.8 : 0
+            });
+          }
+          this.burst(cx, cy, { count: 16, speed: 180, paletteName: fx, spread: 0.9, angle: dir });
+          break;
+        case "dive":
+        case "trail":
+        case "spin":
+        case "ember":
+        case "metal":
+        case "rock":
+        case "solar":
+        case "spark":
+        default:
+          this.burst(cx, cy, {
+            count: ultra ? 40 : 28,
+            speed: 280,
+            paletteName: fx,
+            spread: 1.5,
+            angle: dir,
+            spark: true,
+            size: ultra ? 8 : 5
+          });
+          this.ring(cx, cy, { maxR: ultra ? 90 : 55, paletteName: fx, life: 0.35 });
+          this.shockwave(cx, cy, { maxR: ultra ? 140 : 70, color: palette(fx)[0], width: 6 });
+          for (let i = 0; i < (ultra ? 5 : 2); i++) this.afterImage(caster);
+          this.screenShake(ultra ? 12 : 6, ultra ? 0.3 : 0.18);
+          if (ultra) this.addHitstop(7);
+          break;
+      }
+      if (ultra) {
+        this.floatText(caster.x, caster.y - 80, tech.name.toUpperCase(), "#fef08a");
+        targetsHit.forEach((t) => {
+          this.burst(t.x, t.y, { count: 24, speed: 260, paletteName: "hit", spark: true, size: 7 });
+          this.shockwave(t.x, t.y, { maxR: 100, color: "#fb7185" });
+        });
+      }
+    }
+    onHit(x, y, damage, heavy = false) {
+      this.burst(x, y, {
+        count: heavy ? 32 : 14,
+        speed: heavy ? 320 : 180,
+        paletteName: "hit",
+        spark: true,
+        size: heavy ? 7 : 4,
+        gravity: 120
+      });
+      this.ring(x, y, { maxR: heavy ? 90 : 40, paletteName: "hit", width: heavy ? 5 : 3 });
+      if (heavy) this.shockwave(x, y, { maxR: 110, color: "#fde047", width: 8 });
+      this.floatText(x, y - 20, `${Math.round(damage)}%`, heavy ? "#fb7185" : "#fef08a");
+      this.screenShake(heavy ? 14 : 5, heavy ? 0.3 : 0.12);
+      this.addHitstop(heavy ? 7 : 3);
+      if (heavy) {
+        this.flashAlpha = 0.28;
+        this.flashColor = "#ffffff";
+      }
+    }
+    onKO(x, y) {
+      this.burst(x, y, { count: 60, speed: 400, paletteName: "ko", gravity: 50, life: 1, size: 9, spark: true });
+      this.shockwave(x, y, { maxR: 220, color: "#fb7185", width: 16 });
+      this.ring(x, y, { maxR: 160, paletteName: "ko", width: 8, life: 0.65 });
+      this.ring(x, y, { maxR: 100, paletteName: "aurora", width: 4, life: 0.45 });
+      this.screenShake(24, 0.6);
+      this.addHitstop(12);
+      this.addSlowMo(0.6, 0.3);
+      this.flashAlpha = 0.6;
+      this.flashColor = "#fef08a";
+      this.floatText(x, y - 40, "KO!", "#fb7185");
+    }
+    onKiRegen(fighter) {
+      this.burst(fighter.x, fighter.y - 20, {
+        count: 20,
+        speed: 80,
+        paletteName: "regen",
+        gravity: -90,
+        life: 0.75
+      });
+      this.aura(fighter.id, fighter.x, fighter.y, "regen", 0.6);
+      this.orbital(fighter.x, fighter.y, { count: 5, radius: 34, paletteName: "regen", life: 0.55 });
+      this.floatText(fighter.x, fighter.y - 45, "REGEN", "#86efac");
+    }
+    onJump(x, y) {
+      this.burst(x, y + 18, {
+        count: 8,
+        speed: 90,
+        paletteName: "jump",
+        angle: Math.PI / 2,
+        spread: 1.2,
+        gravity: 40,
+        life: 0.3
+      });
+    }
+    onLand(x, y) {
+      this.burst(x, y + 20, {
+        count: 10,
+        speed: 120,
+        paletteName: "land",
+        angle: -Math.PI / 2,
+        spread: Math.PI,
+        gravity: 200,
+        life: 0.28
+      });
+    }
+    /**
+     * @returns {{ frozen: boolean, dtScale: number }}
+     */
+    update(dt) {
+      if (this.hitstop > 0) {
+        this.hitstop -= 1;
+        this.flashAlpha = Math.max(0, this.flashAlpha - dt * 1.5);
+        for (let i = this.cutIns.length - 1; i >= 0; i--) {
+          this.cutIns[i].life -= dt;
+          if (this.cutIns[i].life <= 0) this.cutIns.splice(i, 1);
+        }
+        return { frozen: true, dtScale: 0 };
+      }
+      let dtScale = 1;
+      if (this.slowMo > 0) {
+        this.slowMo -= dt;
+        dtScale = this.timeScale;
+        if (this.slowMo <= 0) this.timeScale = 1;
+      }
+      const sdt = dt * dtScale;
+      if (this.shake.time > 0) {
+        this.shake.time -= sdt;
+        const m = this.shake.mag * (this.shake.time > 0 ? 1 : 0);
+        this.shake.x = (Math.random() - 0.5) * 2 * m;
+        this.shake.y = (Math.random() - 0.5) * 2 * m;
+        this.shake.mag *= 0.9;
+      } else {
+        this.shake.x = 0;
+        this.shake.y = 0;
+      }
+      this.flashAlpha = Math.max(0, this.flashAlpha - sdt * 2.2);
+      this.vignette = Math.max(0, this.vignette - sdt * 1.2);
+      for (let i = this.particles.length - 1; i >= 0; i--) {
+        const p = this.particles[i];
+        p.life -= sdt;
+        p.vy += p.gravity * sdt;
+        p.x += p.vx * sdt;
+        p.y += p.vy * sdt;
+        p.rot += p.spin * sdt;
+        p.vx *= 0.98;
+        if (p.life <= 0) this.particles.splice(i, 1);
+      }
+      for (let i = this.rings.length - 1; i >= 0; i--) {
+        const r = this.rings[i];
+        r.life -= sdt;
+        const t = 1 - r.life / r.maxLife;
+        r.r = r.maxR * t;
+        if (r.life <= 0) this.rings.splice(i, 1);
+      }
+      for (let i = this.beams.length - 1; i >= 0; i--) {
+        const b = this.beams[i];
+        b.life -= sdt;
+        const t = 1 - b.life / b.maxLife;
+        b.length = b.maxLength * Math.min(1, t * 2.4);
+        if (b.life <= 0) this.beams.splice(i, 1);
+      }
+      for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+        const s = this.shockwaves[i];
+        s.life -= sdt;
+        const t = 1 - s.life / s.maxLife;
+        s.r = s.maxR * t;
+        if (s.life <= 0) this.shockwaves.splice(i, 1);
+      }
+      for (let i = this.projectiles.length - 1; i >= 0; i--) {
+        const p = this.projectiles[i];
+        p.life -= sdt;
+        p.vy += (p.gravity || 0) * sdt;
+        p.x += p.vx * sdt;
+        p.y += p.vy * sdt;
+        if (Math.random() < 0.7) {
+          this.burst(p.x, p.y, {
+            count: 2,
+            speed: 40,
+            paletteName: p.trail,
+            life: 0.25,
+            size: 3,
+            gravity: 0
+          });
+        }
+        if (p.bounce > 0 && p.y > 500) {
+          p.y = 500;
+          p.vy *= -0.7;
+          p.bounce -= 1;
+          this.burst(p.x, p.y, { count: 10, speed: 140, paletteName: p.trail, spark: true });
+        }
+        if (p.life <= 0 || p.x < -100 || p.x > 1400 || p.y > 900) {
+          this.burst(p.x, p.y, { count: 16, speed: 180, paletteName: p.trail, spark: true });
+          this.projectiles.splice(i, 1);
+        }
+      }
+      for (let i = this.orbitals.length - 1; i >= 0; i--) {
+        const o = this.orbitals[i];
+        o.life -= sdt;
+        o.angle += o.speed * sdt;
+        if (o.life <= 0) this.orbitals.splice(i, 1);
+      }
+      for (let i = this.craters.length - 1; i >= 0; i--) {
+        this.craters[i].life -= sdt;
+        if (this.craters[i].life <= 0) this.craters.splice(i, 1);
+      }
+      for (let i = this.afterImages.length - 1; i >= 0; i--) {
+        this.afterImages[i].life -= sdt;
+        if (this.afterImages[i].life <= 0) this.afterImages.splice(i, 1);
+      }
+      for (let i = this.floatTexts.length - 1; i >= 0; i--) {
+        const f = this.floatTexts[i];
+        f.life -= sdt;
+        f.y += f.vy * sdt;
+        if (f.life <= 0) this.floatTexts.splice(i, 1);
+      }
+      for (let i = this.auras.length - 1; i >= 0; i--) {
+        this.auras[i].life -= sdt;
+        if (this.auras[i].life <= 0) this.auras.splice(i, 1);
+      }
+      for (let i = this.cutIns.length - 1; i >= 0; i--) {
+        this.cutIns[i].life -= sdt;
+        if (this.cutIns[i].life <= 0) this.cutIns.splice(i, 1);
+      }
+      return { frozen: false, dtScale };
+    }
+    /** Resolve projectile hits against fighters; returns hit events */
+    collideProjectiles(fighters, onHit) {
+      for (let i = this.projectiles.length - 1; i >= 0; i--) {
+        const p = this.projectiles[i];
+        for (const f of fighters) {
+          if (!f.alive || f.id === p.ownerId) continue;
+          const d = Math.hypot(f.x - p.x, f.y - p.y);
+          if (d < f.radius + p.radius) {
+            const consumed = onHit(p, f);
+            if (consumed !== false) {
+              this.burst(p.x, p.y, { count: 22, speed: 240, paletteName: p.trail, spark: true, size: 6 });
+              this.ring(p.x, p.y, { maxR: 50, paletteName: p.trail });
+              this.projectiles.splice(i, 1);
+              break;
+            }
+          }
+        }
+      }
+    }
+    draw(ctx) {
+      var _a, _b, _c;
+      for (const c of this.craters) {
+        const a = c.life / c.maxLife;
+        ctx.save();
+        ctx.globalAlpha = 0.45 * a;
+        ctx.fillStyle = c.color;
+        ctx.beginPath();
+        ctx.ellipse(c.x, c.y, c.r, c.r * 0.35, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      for (const a of this.afterImages) {
+        const alpha = a.life / a.maxLife;
+        ctx.save();
+        ctx.globalAlpha = alpha * 0.45;
+        ctx.translate(a.x, a.y);
+        ctx.scale(a.facing || 1, 1);
+        ctx.fillStyle = ((_a = a.colors) == null ? void 0 : _a.accent) || "#7dd3fc";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, a.radius * 0.9, a.radius * 1.1, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      for (const b of this.beams) {
+        const alpha = Math.max(0, b.life / b.maxLife);
+        const pulse = b.pulse ? 1 + Math.sin(Date.now() / 40) * 0.12 : 1;
+        ctx.save();
+        ctx.translate(b.x, b.y);
+        ctx.rotate(b.angle);
+        ctx.shadowColor = b.color;
+        ctx.shadowBlur = 24;
+        const grd = ctx.createLinearGradient(0, 0, b.length, 0);
+        grd.addColorStop(0, b.core);
+        grd.addColorStop(0.25, b.color);
+        grd.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, -b.width / 2 * pulse, b.length, b.width * pulse);
+        ctx.globalAlpha = alpha * 0.95;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, -b.width * 0.18 * pulse, b.length * 0.96, b.width * 0.36 * pulse);
+        ctx.restore();
+      }
+      for (const s of this.shockwaves) {
+        const alpha = s.life / s.maxLife;
+        ctx.save();
+        ctx.globalAlpha = alpha * 0.85;
+        ctx.strokeStyle = s.color;
+        ctx.lineWidth = s.width * alpha;
+        ctx.shadowColor = s.color;
+        ctx.shadowBlur = 16;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, Math.max(1, s.r), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+      for (const r of this.rings) {
+        const alpha = r.life / r.maxLife;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = r.color;
+        ctx.lineWidth = r.width * alpha;
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, Math.max(1, r.r), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+      for (const p of this.projectiles) {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = p.core;
+        ctx.beginPath();
+        ctx.arc(0, 0, p.radius * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      for (const o of this.orbitals) {
+        const alpha = o.life / o.maxLife;
+        const x = o.cx + Math.cos(o.angle) * o.radius;
+        const y = o.cy + Math.sin(o.angle) * o.radius * 0.7;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = o.color;
+        ctx.shadowColor = o.color;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(x, y, o.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      for (const a of this.auras) {
+        const t = a.life / a.maxLife;
+        ctx.save();
+        ctx.globalAlpha = 0.4 * t;
+        const grd = ctx.createRadialGradient(a.x, a.y, 4, a.x, a.y, 56);
+        grd.addColorStop(0, a.colors[0]);
+        grd.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, 56 + (1 - t) * 24, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      for (const p of this.particles) {
+        const alpha = Math.max(0, p.life / p.maxLife);
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        if (p.spark) {
+          ctx.fillRect(-p.size * 0.3, -p.size, p.size * 0.6, p.size * 2);
+          ctx.fillRect(-p.size, -p.size * 0.3, p.size * 2, p.size * 0.6);
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+      for (const f of this.floatTexts) {
+        const alpha = Math.max(0, f.life / f.maxLife);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.font = 'bold 18px "Trebuchet MS", sans-serif';
+        ctx.textAlign = "center";
+        ctx.strokeStyle = "rgba(10,20,40,0.8)";
+        ctx.lineWidth = 4;
+        ctx.strokeText(f.text, f.x, f.y);
+        ctx.fillStyle = f.color;
+        ctx.fillText(f.text, f.x, f.y);
+        ctx.restore();
+      }
+      if (this.vignette > 0) {
+        ctx.save();
+        ctx.globalAlpha = this.vignette * 0.65;
+        const g = ctx.createRadialGradient(640, 360, 200, 640, 360, 520);
+        g.addColorStop(0, "rgba(0,0,0,0)");
+        g.addColorStop(1, "#000");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, 1280, 720);
+        ctx.restore();
+      }
+      for (const c of this.cutIns) {
+        const t = 1 - c.life / c.maxLife;
+        const slide = t < 0.15 ? t / 0.15 : t > 0.85 ? (1 - t) / 0.15 : 1;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, slide);
+        ctx.fillStyle = "rgba(8,12,24,0.82)";
+        ctx.fillRect(0, 250, 1280, 160);
+        ctx.fillStyle = ((_b = c.colors) == null ? void 0 : _b.accent) || "#fde047";
+        ctx.fillRect(0, 250, 1280, 8);
+        ctx.fillRect(0, 402, 1280, 8);
+        ctx.fillStyle = ((_c = c.colors) == null ? void 0 : _c.body) || "#38bdf8";
+        ctx.beginPath();
+        ctx.ellipse(180, 330, 48, 56, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#f8fafc";
+        ctx.font = '800 42px "Exo 2", "Trebuchet MS", sans-serif';
+        ctx.fillText(c.name, 260, 320);
+        ctx.fillStyle = "#fde047";
+        ctx.font = '800 28px "Exo 2", "Trebuchet MS", sans-serif';
+        ctx.fillText(c.tech.toUpperCase(), 260, 365);
+        ctx.strokeStyle = "rgba(253,224,71,0.35)";
+        for (let i = 0; i < 12; i++) {
+          const y = 260 + i * 12;
+          ctx.beginPath();
+          ctx.moveTo(700 + i % 3 * 30, y);
+          ctx.lineTo(1260, y + 4);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+      if (this.flashAlpha > 0) {
+        ctx.save();
+        ctx.globalAlpha = this.flashAlpha;
+        ctx.fillStyle = this.flashColor;
+        ctx.fillRect(-2e3, -2e3, 6e3, 6e3);
+        ctx.restore();
+      }
+    }
+  };
+
+  // ../src/js/game/audio.js
+  var AudioBus = class {
+    constructor() {
+      this.ctx = null;
+      this.master = null;
+      this.enabled = true;
+      this.volume = 0.55;
+    }
+    ensure() {
+      if (!this.enabled) return null;
+      if (!this.ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        this.ctx = new AC();
+        this.master = this.ctx.createGain();
+        this.master.gain.value = this.volume;
+        this.master.connect(this.ctx.destination);
+      }
+      if (this.ctx.state === "suspended") this.ctx.resume();
+      return this.ctx;
+    }
+    tone({ freq = 440, dur = 0.12, type = "square", gain = 0.12, slide = 0, delay = 0 }) {
+      const ctx = this.ensure();
+      if (!ctx) return;
+      const t0 = ctx.currentTime + delay;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(40, freq + slide), t0 + dur);
+      g.gain.setValueAtTime(1e-4, t0);
+      g.gain.exponentialRampToValueAtTime(gain, t0 + 0.01);
+      g.gain.exponentialRampToValueAtTime(1e-4, t0 + dur);
+      osc.connect(g);
+      g.connect(this.master);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.02);
+    }
+    noise({ dur = 0.1, gain = 0.08, filterFreq = 1200 }) {
+      const ctx = this.ensure();
+      if (!ctx) return;
+      const n = Math.floor(ctx.sampleRate * dur);
+      const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < n; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / n);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const filter = ctx.createBiquadFilter();
+      filter.type = "bandpass";
+      filter.frequency.value = filterFreq;
+      const g = ctx.createGain();
+      g.gain.value = gain;
+      src.connect(filter);
+      filter.connect(g);
+      g.connect(this.master);
+      src.start();
+    }
+    hit(heavy = false) {
+      this.noise({ dur: heavy ? 0.18 : 0.08, gain: heavy ? 0.14 : 0.07, filterFreq: heavy ? 600 : 1400 });
+      this.tone({
+        freq: heavy ? 180 : 320,
+        dur: heavy ? 0.16 : 0.08,
+        type: "sawtooth",
+        gain: heavy ? 0.1 : 0.06,
+        slide: heavy ? -120 : -60
+      });
+    }
+    ki() {
+      this.tone({ freq: 520, dur: 0.2, type: "sine", gain: 0.07, slide: 280 });
+      this.tone({ freq: 780, dur: 0.25, type: "triangle", gain: 0.05, slide: 200, delay: 0.04 });
+    }
+    charge() {
+      this.tone({ freq: 110, dur: 0.45, type: "sawtooth", gain: 0.08, slide: 220 });
+      this.tone({ freq: 220, dur: 0.5, type: "sine", gain: 0.06, slide: 400, delay: 0.05 });
+      this.noise({ dur: 0.35, gain: 0.05, filterFreq: 900 });
+    }
+    ultra() {
+      this.charge();
+      this.tone({ freq: 90, dur: 0.55, type: "square", gain: 0.1, slide: 60, delay: 0.15 });
+      this.noise({ dur: 0.4, gain: 0.12, filterFreq: 400 });
+      this.tone({ freq: 660, dur: 0.3, type: "triangle", gain: 0.08, slide: -200, delay: 0.35 });
+    }
+    special() {
+      this.tone({ freq: 300, dur: 0.14, type: "square", gain: 0.07, slide: 180 });
+      this.noise({ dur: 0.12, gain: 0.06, filterFreq: 1100 });
+    }
+    regen() {
+      this.tone({ freq: 400, dur: 0.25, type: "sine", gain: 0.06, slide: 180 });
+      this.tone({ freq: 600, dur: 0.3, type: "sine", gain: 0.04, slide: 120, delay: 0.08 });
+    }
+    ko() {
+      this.noise({ dur: 0.35, gain: 0.16, filterFreq: 350 });
+      this.tone({ freq: 140, dur: 0.4, type: "sawtooth", gain: 0.12, slide: -100 });
+      this.tone({ freq: 80, dur: 0.5, type: "square", gain: 0.08, slide: -40, delay: 0.1 });
+    }
+    jump() {
+      this.tone({ freq: 280, dur: 0.1, type: "triangle", gain: 0.05, slide: 160 });
+    }
+    ui() {
+      this.tone({ freq: 520, dur: 0.07, type: "sine", gain: 0.05 });
+    }
+    win() {
+      [523, 659, 784, 1046].forEach((f, i) => {
+        this.tone({ freq: f, dur: 0.22, type: "triangle", gain: 0.07, delay: i * 0.1 });
+      });
+    }
+  };
+  var audio = new AudioBus();
+
+  // ../src/js/game/engine.js
+  function clamp(v, a, b) {
+    return Math.max(a, Math.min(b, v));
+  }
+  function dist(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return Math.hypot(dx, dy);
+  }
+  function randRange(a, b) {
+    return a + Math.random() * (b - a);
+  }
+  var Fighter = class {
+    constructor(opts) {
+      var _a, _b;
+      const ch = getCharacter(opts.characterId);
+      const skin = opts.skinId && ((_a = SKINS[ch.id]) == null ? void 0 : _a[opts.skinId]);
+      this.id = opts.id;
+      this.slot = opts.slot;
+      this.team = opts.team;
+      this.characterId = ch.id;
+      this.name = opts.name || ch.name;
+      this.colors = skin ? { ...ch.colors, ...skin } : { ...ch.colors };
+      this.stats = { ...ch.stats };
+      this.specials = [...ch.specials];
+      this.ultraId = opts.ultraId || ch.ultra;
+      this.bonusTechs = opts.bonusTechs || [];
+      this.x = opts.x;
+      this.y = opts.y;
+      this.vx = 0;
+      this.vy = 0;
+      this.facing = opts.facing || 1;
+      this.radius = 22;
+      this.onGround = false;
+      this.jumps = 2;
+      this.percent = 0;
+      this.hp = this.stats.hp;
+      this.maxHp = this.stats.hp;
+      this.ki = 30;
+      this.maxKi = 100;
+      this.stocks = (_b = opts.stocks) != null ? _b : 3;
+      this.alive = true;
+      this.invuln = 0;
+      this.attackCd = 0;
+      this.specialCd = 0;
+      this.ultraCd = 0;
+      this.actionTimer = 0;
+      this.action = "idle";
+      this.shieldTimer = 0;
+      this.hitstun = 0;
+      this.respawnTimer = 0;
+      this.combo = 0;
+      this.chargeTimer = 0;
+      this.pendingUltra = null;
+      this.spectacleTimer = 0;
+      this.spectacleHits = 0;
+    }
+    get dead() {
+      return this.stocks <= 0;
+    }
+  };
+  var CombatEngine = class {
+    constructor(config) {
+      this.mode = config.mode || "1v1";
+      this.online = !!config.online;
+      this.stage = getStage(config.stageId);
+      this.fx = new FXSystem();
+      this.log = [];
+      this.time = 0;
+      this.ended = false;
+      this.winnerTeams = null;
+      this.fighters = (config.fighters || []).map((f, i) => {
+        var _a;
+        const spawn = this.stage.spawns[i] || this.stage.spawns[0];
+        return new Fighter({
+          ...f,
+          x: spawn.x,
+          y: spawn.y,
+          facing: i % 2 === 0 ? 1 : -1,
+          stocks: (_a = config.stocks) != null ? _a : 3
+        });
+      });
+      this.host = config.host !== false;
+      this.pushLog("Le combat commence ! Effets sp\xE9ciaux pr\xEAts.");
+    }
+    pushLog(msg) {
+      const stamp = this.time.toFixed(1);
+      this.log.unshift({ t: stamp, msg });
+      if (this.log.length > 40) this.log.pop();
+    }
+    damageRoll(attacker, baseMul, tech = null) {
+      const atk = attacker.stats.atk;
+      const variance = randRange(0.85, 1.15);
+      const techMul = (tech == null ? void 0 : tech.power) || 1;
+      return Math.max(1, atk * baseMul * techMul * variance);
+    }
+    applyDamage(attacker, defender, raw, opts = {}) {
+      if (!defender.alive || defender.invuln > 0) return 0;
+      const def = defender.stats.def;
+      const shield = defender.shieldTimer > 0 ? 0.45 : 1;
+      const mitigated = raw * shield / (1 + def * 0.04);
+      const dmg = mitigated * randRange(0.92, 1.08);
+      defender.percent += dmg;
+      defender.hp = Math.max(0, defender.hp - dmg * 0.55);
+      defender.hitstun = Math.max(defender.hitstun, opts.hitstun || 0.18);
+      defender.combo += 1;
+      attacker.combo += 1;
+      attacker.ki = clamp(attacker.ki + 8 * (opts.kiGain || 1) * attacker.stats.kiRegen, 0, attacker.maxKi);
+      const knockMul = (opts.knock || 1) * (0.7 + defender.percent / 80) / defender.stats.weight;
+      const dir = Math.sign(defender.x - attacker.x) || attacker.facing;
+      defender.vx += dir * 180 * knockMul;
+      defender.vy -= 220 * knockMul * (opts.up || 0.85);
+      defender.onGround = false;
+      const heavy = dmg > 18 || !!opts.heavy;
+      this.fx.onHit(defender.x, defender.y - 10, dmg, heavy);
+      audio.hit(heavy);
+      if (defender.percent > 100 && heavy) {
+        this.fx.shockwave(defender.x, defender.y, { maxR: 130, color: "#fb7185", width: 10 });
+        this.fx.floatText(defender.x, defender.y - 55, "FINISHER!", "#fb7185");
+        audio.special();
+      }
+      this.pushLog(
+        `${attacker.name} frappe ${defender.name} \u2014 ${dmg.toFixed(1)} dmg (${defender.percent.toFixed(0)}%)`
+      );
+      return dmg;
+    }
+    platforms() {
+      return [this.stage.ground, ...this.stage.platforms];
+    }
+    resolvePhysics(f, dt) {
+      const g = 1500;
+      f.vy += g * dt;
+      f.x += f.vx * dt;
+      f.y += f.vy * dt;
+      f.vx *= f.onGround ? 0.75 : 0.98;
+      f.onGround = false;
+      for (const p of this.platforms()) {
+        const withinX = f.x + f.radius * 0.5 > p.x && f.x - f.radius * 0.5 < p.x + p.w;
+        const feet = f.y + f.radius;
+        if (withinX && f.vy >= 0 && feet >= p.y && feet <= p.y + p.h + 18 && f.y < p.y + 10) {
+          f.y = p.y - f.radius;
+          f.vy = 0;
+          f.onGround = true;
+          f.jumps = 2;
+        }
+      }
+      const b = this.stage.blast;
+      if (f.x < b.left || f.x > b.right || f.y < b.top || f.y > b.bottom) {
+        this.ko(f);
+      }
+    }
+    ko(f) {
+      if (!f.alive) return;
+      this.fx.onKO(f.x, f.y);
+      audio.ko();
+      this.pushLog(`KO ! ${f.name} sort de l'ar\xE8ne !`);
+      f.stocks -= 1;
+      f.alive = false;
+      f.percent = 0;
+      f.hp = f.maxHp;
+      f.ki = 25;
+      f.vx = 0;
+      f.vy = 0;
+      f.respawnTimer = 1.6;
+      f.invuln = 2.2;
+      if (f.stocks <= 0) {
+        this.pushLog(`${f.name} est \xE9limin\xE9.`);
+        this.checkWinner();
+      }
+    }
+    respawn(f) {
+      const spawn = this.stage.spawns[f.slot % this.stage.spawns.length];
+      f.x = spawn.x;
+      f.y = spawn.y - 40;
+      f.vx = 0;
+      f.vy = 0;
+      f.alive = true;
+      f.action = "idle";
+      this.fx.burst(f.x, f.y, { count: 20, speed: 160, paletteName: "aurora" });
+      this.fx.ring(f.x, f.y, { maxR: 70, paletteName: "aurora" });
+      this.pushLog(`${f.name} r\xE9appara\xEEt !`);
+    }
+    checkWinner() {
+      const livingTeams = new Set(
+        this.fighters.filter((f) => f.stocks > 0).map((f) => f.team)
+      );
+      if (livingTeams.size <= 1) {
+        this.ended = true;
+        this.winnerTeams = [...livingTeams];
+        const names = this.fighters.filter((f) => livingTeams.has(f.team)).map((f) => f.name).join(" & ");
+        this.pushLog(`Victoire : ${names || "personne"} !`);
+        this.fx.burst(640, 300, { count: 60, speed: 300, paletteName: "aurora", gravity: 40, size: 0.9 });
+        this.fx.screenShake(10, 0.4);
+        audio.win();
+      }
+    }
+    enemiesOf(f) {
+      return this.fighters.filter((o) => o.alive && o.team !== f.team);
+    }
+    tryAttack(f) {
+      if (f.attackCd > 0 || f.hitstun > 0 || f.actionTimer > 0 || f.chargeTimer > 0) return;
+      f.attackCd = 0.28;
+      f.action = "attack";
+      f.actionTimer = 0.22;
+      this.fx.burst(f.x + f.facing * 28, f.y - 8, {
+        count: 12,
+        speed: 160,
+        paletteName: "hit",
+        spread: 1,
+        angle: f.facing >= 0 ? 0 : Math.PI,
+        spark: true
+      });
+      this.fx.ring(f.x + f.facing * 30, f.y - 6, { maxR: 36, paletteName: "hit", life: 0.2 });
+      audio.hit(false);
+      for (const e of this.enemiesOf(f)) {
+        if (dist(f, e) < 58) {
+          this.applyDamage(f, e, this.damageRoll(f, 1), { knock: 1, kiGain: 1 });
+        }
+      }
+    }
+    resolveTechHits(f, tech, rangeBonus = 0) {
+      const hit = [];
+      for (const e of this.enemiesOf(f)) {
+        if (dist(f, e) <= tech.range + 10 + rangeBonus) {
+          hit.push(e);
+          this.applyDamage(f, e, this.damageRoll(f, tech.kind === "ultra" ? 1.15 : 1, tech), {
+            knock: tech.knock,
+            heavy: tech.kind === "ultra" || tech.power > 1.4,
+            up: tech.kind === "ultra" ? 1.1 : 0.85,
+            kiGain: tech.kind === "ultra" ? 0.5 : 1.2,
+            hitstun: tech.kind === "ultra" ? 0.4 : 0.28
+          });
+          if (tech.fx === "drain") {
+            const steal = 12;
+            e.ki = Math.max(0, e.ki - steal);
+            f.ki = clamp(f.ki + steal, 0, f.maxKi);
+          }
+          if (tech.fx === "vine") {
+            e.x += Math.sign(f.x - e.x) * 40;
+          }
+        }
+      }
+      return hit;
+    }
+    trySpecial(f, index = 0) {
+      if (f.specialCd > 0 || f.hitstun > 0 || f.chargeTimer > 0) return;
+      const techId = f.specials[index] || f.specials[0];
+      const extra = f.bonusTechs[0];
+      const tech = getTechnique(index === 1 && extra ? extra : techId);
+      if (!tech) return;
+      if (f.ki < tech.kiCost) {
+        this.fx.floatText(f.x, f.y - 40, "KI?", "#94a3b8");
+        return;
+      }
+      f.ki -= tech.kiCost;
+      f.specialCd = tech.cooldown;
+      f.action = "special";
+      f.actionTimer = 0.4;
+      if (tech.power >= 1.3) this.fx.chargeUp(f, 0.7);
+      if (tech.fx === "trail" || tech.fx === "dive" || tech.fx === "ember" || tech.fx === "metal") {
+        f.vx = f.facing * (tech.fx === "metal" ? 420 : 560);
+        f.vy = tech.fx === "dive" ? 280 : -100;
+        for (let i = 0; i < 5; i++) this.fx.afterImage(f);
+        f.spectacleTimer = 0.28;
+        f.spectacleHits = 3;
+      }
+      if (tech.fx === "spin") {
+        f.spectacleTimer = 0.45;
+        f.spectacleHits = 4;
+        f.vx = f.facing * 200;
+      }
+      if (tech.fx === "warp") {
+        this.fx.castTechnique(tech, f, []);
+        f.x += f.facing * Math.min(tech.range, 150);
+        this.fx.burst(f.x, f.y, { count: 24, speed: 200, paletteName: "warp", spark: true });
+      }
+      if (tech.heal) {
+        f.hp = clamp(f.hp + tech.heal, 0, f.maxHp);
+        f.percent = Math.max(0, f.percent - tech.heal * 0.4);
+      }
+      if (tech.fx === "shield") f.shieldTimer = 1.4;
+      const hit = this.resolveTechHits(f, tech);
+      this.fx.castTechnique(tech, f, hit);
+      audio.special();
+      this.pushLog(`${f.name} utilise ${tech.name} !`);
+    }
+    tryUltra(f) {
+      if (f.ultraCd > 0 || f.hitstun > 0 || f.chargeTimer > 0) return;
+      const tech = getTechnique(f.ultraId);
+      if (!tech) return;
+      if (f.ki < tech.kiCost) {
+        this.fx.floatText(f.x, f.y - 40, "KI INSUFFISANT", "#94a3b8");
+        return;
+      }
+      f.ki -= tech.kiCost;
+      f.ultraCd = tech.cooldown;
+      f.action = "charge";
+      f.chargeTimer = 0.55;
+      f.pendingUltra = tech;
+      f.vx *= 0.2;
+      f.vy = Math.min(f.vy, 0);
+      this.fx.chargeUp(f, 1.5);
+      this.fx.cutIn(f, tech.name);
+      audio.charge();
+      this.pushLog(`${f.name} charge l'ULTRA ${tech.name}\u2026`);
+    }
+    releaseUltra(f) {
+      const tech = f.pendingUltra;
+      if (!tech) return;
+      f.pendingUltra = null;
+      f.action = "ultra";
+      f.actionTimer = 0.7;
+      f.spectacleTimer = 0.55;
+      f.spectacleHits = 4;
+      if (tech.fx === "beam" || tech.fx === "dive" || tech.fx === "trail" || tech.fx === "daybreak") {
+        f.vx = f.facing * 420;
+        for (let i = 0; i < 6; i++) this.fx.afterImage(f);
+      }
+      if (tech.fx === "meteor" || tech.fx === "quake") {
+        f.vy = -200;
+        f.vx = f.facing * 120;
+      }
+      const juicy = this.enemiesOf(f).some((e) => e.percent >= 80);
+      const rangeBonus = juicy ? 50 : 30;
+      const hit = this.resolveTechHits(f, tech, rangeBonus);
+      if (juicy && hit.length) {
+        hit.forEach((e) => {
+          this.applyDamage(f, e, this.damageRoll(f, 0.55, tech), {
+            knock: tech.knock * 1.15,
+            heavy: true,
+            up: 1.25,
+            hitstun: 0.45
+          });
+        });
+        this.fx.floatText(f.x, f.y - 90, "SUPER FINISHER", "#fde047");
+        this.fx.shockwave(f.x, f.y, { maxR: 200, color: "#fde047", width: 14 });
+      }
+      this.fx.castTechnique(tech, f, hit);
+      audio.ultra();
+      this.pushLog(`${f.name} d\xE9clenche l'ULTRA ${tech.name} !!`);
+    }
+    tryRegen(f) {
+      if (f.ki < 35 || f.hitstun > 0) return;
+      const heal = 14 + f.stats.kiRegen * 4;
+      f.ki -= 35;
+      f.hp = clamp(f.hp + heal, 0, f.maxHp);
+      f.percent = Math.max(0, f.percent - heal * 0.5);
+      this.fx.onKiRegen(f);
+      audio.regen();
+      this.pushLog(`${f.name} se r\xE9g\xE9n\xE8re (+${heal.toFixed(0)} PV).`);
+    }
+    applyInput(f, input, dt) {
+      if (!f.alive || f.dead) return;
+      if (f.hitstun > 0 || f.chargeTimer > 0) return;
+      if (input.moveX) {
+        const spd = f.stats.speed * 70;
+        f.vx += input.moveX * spd * dt * 8;
+        f.vx = clamp(f.vx, -spd, spd);
+        f.facing = Math.sign(input.moveX) || f.facing;
+        if (Math.abs(f.vx) > 180 && Math.random() < 0.2) this.fx.afterImage(f);
+      }
+      if (input.jump && f.jumps > 0) {
+        f.vy = -f.stats.jump * 42;
+        f.jumps -= 1;
+        f.onGround = false;
+        this.fx.onJump(f.x, f.y);
+        audio.jump();
+      }
+      if (input.attack) this.tryAttack(f);
+      if (input.special) this.trySpecial(f, 0);
+      if (input.ultra) this.tryUltra(f);
+      if (input.regen) this.tryRegen(f);
+    }
+    updateSpectacle(f, dt) {
+      if (f.spectacleTimer <= 0) return;
+      f.spectacleTimer -= dt;
+      if (f.spectacleHits > 0 && Math.random() < 0.35) {
+        f.spectacleHits -= 1;
+        this.fx.afterImage(f);
+        this.fx.burst(f.x + f.facing * 20, f.y, {
+          count: 8,
+          speed: 160,
+          paletteName: "hit",
+          spark: true,
+          life: 0.3
+        });
+        for (const e of this.enemiesOf(f)) {
+          if (dist(f, e) < 70) {
+            this.applyDamage(f, e, this.damageRoll(f, 0.45), {
+              knock: 0.55,
+              kiGain: 0.4,
+              hitstun: 0.12
+            });
+          }
+        }
+      }
+    }
+    update(dt, inputsBySlot) {
+      if (this.ended) {
+        this.fx.update(dt);
+        return;
+      }
+      const fxState = this.fx.update(dt);
+      if (fxState.frozen) return;
+      const sdt = dt * (fxState.dtScale || 1);
+      this.time += sdt;
+      this.fx.collideProjectiles(this.fighters, (proj, target) => {
+        const owner = this.fighters.find((x) => x.id === proj.ownerId);
+        if (!owner || owner.team === target.team) return false;
+        this.applyDamage(owner, target, proj.damage * randRange(0.9, 1.1), {
+          knock: proj.knock,
+          heavy: proj.damage >= 15,
+          kiGain: 0.6
+        });
+        this.pushLog(`Projectile de ${owner.name} touche ${target.name} !`);
+        return true;
+      });
+      for (const f of this.fighters) {
+        if (f.stocks <= 0) continue;
+        if (!f.alive) {
+          f.respawnTimer -= sdt;
+          if (f.respawnTimer <= 0) this.respawn(f);
+          continue;
+        }
+        f.attackCd = Math.max(0, f.attackCd - sdt);
+        f.specialCd = Math.max(0, f.specialCd - sdt);
+        f.ultraCd = Math.max(0, f.ultraCd - sdt);
+        f.actionTimer = Math.max(0, f.actionTimer - sdt);
+        f.invuln = Math.max(0, f.invuln - sdt);
+        f.shieldTimer = Math.max(0, f.shieldTimer - sdt);
+        f.hitstun = Math.max(0, f.hitstun - sdt);
+        if (f.chargeTimer > 0) {
+          f.chargeTimer -= sdt;
+          if (Math.random() < 0.4) this.fx.chargeUp(f, 0.35);
+          if (f.chargeTimer <= 0) this.releaseUltra(f);
+          this.resolvePhysics(f, sdt * 0.3);
+          continue;
+        }
+        if (f.actionTimer <= 0 && f.action !== "idle") f.action = "idle";
+        f.ki = clamp(f.ki + sdt * 3.5 * f.stats.kiRegen, 0, f.maxKi);
+        this.updateSpectacle(f, sdt);
+        const wasGround = f.onGround;
+        const input = inputsBySlot[f.slot] || { moveX: 0 };
+        this.applyInput(f, input, sdt);
+        this.resolvePhysics(f, sdt);
+        if (!wasGround && f.onGround) this.fx.onLand(f.x, f.y);
+      }
+    }
+    snapshot() {
+      return {
+        time: this.time,
+        ended: this.ended,
+        winnerTeams: this.winnerTeams,
+        fighters: this.fighters.map((f) => ({
+          id: f.id,
+          slot: f.slot,
+          team: f.team,
+          characterId: f.characterId,
+          name: f.name,
+          x: f.x,
+          y: f.y,
+          vx: f.vx,
+          vy: f.vy,
+          facing: f.facing,
+          percent: f.percent,
+          hp: f.hp,
+          maxHp: f.maxHp,
+          ki: f.ki,
+          stocks: f.stocks,
+          alive: f.alive,
+          action: f.action,
+          colors: f.colors,
+          invuln: f.invuln,
+          shieldTimer: f.shieldTimer
+        })),
+        log: this.log.slice(0, 12)
+      };
+    }
+  };
+
+  // ../src/js/game/renderer.js
+  var Renderer = class {
+    constructor(canvas) {
+      this.canvas = canvas;
+      this.ctx = canvas.getContext("2d");
+      this.w = canvas.width;
+      this.h = canvas.height;
+      this.stars = Array.from({ length: 60 }, () => ({
+        x: Math.random() * 1280,
+        y: Math.random() * 520,
+        r: Math.random() * 1.8 + 0.4,
+        a: Math.random()
+      }));
+    }
+    resize() {
+      const parent = this.canvas.parentElement;
+      if (!parent) return;
+      const rect = parent.getBoundingClientRect();
+      const scale = Math.min(rect.width / 1280, rect.height / 720);
+      this.canvas.style.width = `${1280 * scale}px`;
+      this.canvas.style.height = `${720 * scale}px`;
+    }
+    drawBackground(stage, t) {
+      const ctx = this.ctx;
+      const sky = stage.sky;
+      const grd = ctx.createLinearGradient(0, 0, 0, 720);
+      grd.addColorStop(0, sky[0]);
+      grd.addColorStop(0.55, sky[1]);
+      grd.addColorStop(1, sky[2]);
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, 1280, 720);
+      ctx.save();
+      ctx.globalAlpha = 0.28;
+      const neb = ctx.createRadialGradient(900, 160, 20, 900, 160, 320);
+      neb.addColorStop(0, stage.accent || "#f9a8d4");
+      neb.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = neb;
+      ctx.fillRect(0, 0, 1280, 500);
+      const neb2 = ctx.createRadialGradient(220, 420, 10, 220, 420, 260);
+      neb2.addColorStop(0, "rgba(56,189,248,0.35)");
+      neb2.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = neb2;
+      ctx.fillRect(0, 200, 600, 400);
+      ctx.restore();
+      for (const s of this.stars) {
+        ctx.globalAlpha = 0.4 + Math.sin(t * 2 + s.a * 10) * 0.3;
+        ctx.fillStyle = "#e0f2fe";
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.save();
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = stage.accent || "#67e8f9";
+      ctx.beginPath();
+      ctx.arc(1100, 120, 70, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    drawStage(stage) {
+      const ctx = this.ctx;
+      const top = stage.platformTop || "#fef3c7";
+      const bot = stage.platformBot || "#f59e0b";
+      const plats = [stage.ground, ...stage.platforms];
+      for (const p of plats) {
+        ctx.save();
+        const g = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
+        g.addColorStop(0, top);
+        g.addColorStop(1, bot);
+        ctx.fillStyle = g;
+        ctx.strokeStyle = "rgba(15,23,42,0.65)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(p.x, p.y, p.w, p.h, 8);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowColor = top;
+        ctx.shadowBlur = 14;
+        ctx.strokeStyle = "rgba(255,255,255,0.35)";
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+    drawFighter(f, t) {
+      if (!f.alive && f.stocks > 0) return;
+      if (f.stocks <= 0) return;
+      const ctx = this.ctx;
+      ctx.save();
+      ctx.translate(f.x, f.y);
+      if (f.invuln > 0 && Math.floor(t * 20) % 2 === 0) ctx.globalAlpha = 0.45;
+      if (f.shieldTimer > 0) {
+        ctx.save();
+        ctx.globalAlpha = 0.35;
+        ctx.strokeStyle = "#67e8f9";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, 34, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+      if (f.ki > 70 || f.action === "charge" || f.action === "ultra") {
+        const boost = f.action === "charge" || f.action === "ultra" ? 1.6 : 1;
+        const pulse = (28 + Math.sin(t * 14) * 6) * boost;
+        const aura = ctx.createRadialGradient(0, 0, 8, 0, 0, pulse);
+        aura.addColorStop(0, f.action === "ultra" ? "rgba(251,113,133,0.55)" : "rgba(254,240,138,0.5)");
+        aura.addColorStop(0.5, "rgba(56,189,248,0.25)");
+        aura.addColorStop(1, "rgba(56,189,248,0)");
+        ctx.fillStyle = aura;
+        ctx.beginPath();
+        ctx.arc(0, 0, pulse, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (f.action === "charge") {
+        ctx.save();
+        ctx.strokeStyle = "#fef08a";
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 0.8;
+        for (let i = 0; i < 5; i++) {
+          const a = t * 12 + i * 1.2;
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(a) * 18, Math.sin(a) * 18);
+          ctx.lineTo(Math.cos(a + 0.4) * 40, Math.sin(a + 0.5) * 40);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+      ctx.scale(f.facing || 1, 1);
+      ctx.fillStyle = f.colors.body;
+      ctx.strokeStyle = f.colors.outline;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 20, 24, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = f.colors.accent;
+      ctx.beginPath();
+      ctx.ellipse(2, 4, 9, 11, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#0f172a";
+      ctx.beginPath();
+      ctx.arc(6, -8, 3.2, 0, Math.PI * 2);
+      ctx.arc(13, -8, 3.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(7, -9, 1.1, 0, Math.PI * 2);
+      ctx.arc(14, -9, 1.1, 0, Math.PI * 2);
+      ctx.fill();
+      if (f.action === "attack" || f.action === "special" || f.action === "ultra") {
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = f.action === "ultra" ? "#fef08a" : "#ffffff";
+        ctx.shadowColor = f.action === "ultra" ? "#fb7185" : "#7dd3fc";
+        ctx.shadowBlur = 16;
+        ctx.beginPath();
+        ctx.moveTo(18, -10);
+        ctx.lineTo(f.action === "ultra" ? 52 : 38, 0);
+        ctx.lineTo(18, 10);
+        ctx.closePath();
+        ctx.fill();
+        if (f.action === "ultra") {
+          ctx.beginPath();
+          ctx.moveTo(12, -18);
+          ctx.lineTo(44, -6);
+          ctx.lineTo(12, 0);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+      ctx.save();
+      ctx.font = 'bold 12px "Trebuchet MS", sans-serif';
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#e2e8f0";
+      ctx.fillText(f.name, f.x, f.y - 40);
+      ctx.fillStyle = f.percent > 100 ? "#fb7185" : "#fde047";
+      ctx.font = 'bold 16px "Trebuchet MS", sans-serif';
+      ctx.fillText(`${f.percent.toFixed(0)}%`, f.x, f.y - 24);
+      if (f.combo > 1 && (f.action === "attack" || f.action === "special" || f.action === "ultra" || f.spectacleTimer > 0)) {
+        ctx.fillStyle = "#67e8f9";
+        ctx.font = 'bold 11px "Trebuchet MS", sans-serif';
+        ctx.fillText(`x${f.combo}`, f.x, f.y - 52);
+      }
+      ctx.restore();
+    }
+    drawHUD(fighters, mode, stageName = "Ar\xE8ne") {
+      const ctx = this.ctx;
+      const slots = fighters.slice().sort((a, b) => a.slot - b.slot);
+      slots.forEach((f, i) => {
+        const x = 40 + i % 2 * 640;
+        const y = i < 2 ? 24 : 100;
+        this.drawFighterHUD(ctx, f, x, y);
+      });
+      ctx.save();
+      ctx.font = 'bold 14px "Trebuchet MS", sans-serif';
+      ctx.fillStyle = "rgba(226,232,240,0.75)";
+      ctx.textAlign = "center";
+      ctx.fillText(`${mode.toUpperCase()} \u2014 ${stageName}`, 640, 18);
+      ctx.restore();
+    }
+    drawFighterHUD(ctx, f, x, y) {
+      var _a, _b, _c, _d, _e;
+      ctx.save();
+      ctx.fillStyle = "rgba(15,23,42,0.55)";
+      ctx.strokeStyle = ((_a = f.colors) == null ? void 0 : _a.accent) || "#7dd3fc";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(x, y, 280, 64, 12);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = 'bold 14px "Trebuchet MS", sans-serif';
+      ctx.fillText(f.name, x + 14, y + 20);
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(x + 14, y + 28, 180, 10);
+      const hpPct = Math.max(0, f.hp / f.maxHp);
+      const hpG = ctx.createLinearGradient(x + 14, 0, x + 194, 0);
+      hpG.addColorStop(0, "#4ade80");
+      hpG.addColorStop(1, "#fde047");
+      ctx.fillStyle = hpG;
+      ctx.fillRect(x + 14, y + 28, 180 * hpPct, 10);
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(x + 14, y + 44, 180, 8);
+      const kiG = ctx.createLinearGradient(x + 14, 0, x + 194, 0);
+      kiG.addColorStop(0, "#38bdf8");
+      kiG.addColorStop(1, "#fef08a");
+      ctx.fillStyle = kiG;
+      ctx.fillRect(x + 14, y + 44, 180 * (f.ki / 100), 8);
+      for (let s = 0; s < f.stocks; s++) {
+        ctx.fillStyle = ((_b = f.colors) == null ? void 0 : _b.body) || "#fff";
+        ctx.beginPath();
+        ctx.arc(x + 220 + s * 16, y + 36, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = "#fde047";
+      ctx.font = 'bold 18px "Trebuchet MS", sans-serif';
+      ctx.fillText(`${(_e = (_d = (_c = f.percent) == null ? void 0 : _c.toFixed) == null ? void 0 : _d.call(_c, 0)) != null ? _e : 0}%`, x + 210, y + 22);
+      ctx.restore();
+    }
+    render(engine2) {
+      var _a;
+      const ctx = this.ctx;
+      const shake = engine2.fx.shake;
+      ctx.save();
+      ctx.clearRect(0, 0, 1280, 720);
+      ctx.translate(shake.x, shake.y);
+      this.drawBackground(engine2.stage, engine2.time);
+      this.drawStage(engine2.stage);
+      ctx.save();
+      ctx.strokeStyle = "rgba(251,113,133,0.25)";
+      ctx.setLineDash([8, 8]);
+      ctx.strokeRect(20, 20, 1240, 680);
+      ctx.restore();
+      engine2.fx.draw(ctx);
+      for (const f of engine2.fighters) this.drawFighter(f, engine2.time);
+      this.drawHUD(engine2.fighters, engine2.mode, ((_a = engine2.stage) == null ? void 0 : _a.name) || "Ar\xE8ne");
+      ctx.restore();
+    }
+  };
+
+  // game/mobile-entry.js
+  var held = {};
+  var prevHeld = {};
+  var engine = null;
+  var renderer = null;
+  var raf = 0;
+  var lastTs = 0;
+  function post(msg) {
+    var _a;
+    if ((_a = window.ReactNativeWebView) == null ? void 0 : _a.postMessage) {
+      window.ReactNativeWebView.postMessage(JSON.stringify(msg));
+    }
+  }
+  function stop() {
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    engine = null;
+  }
+  function edgeInputs() {
+    const clean = {};
+    for (const slot of Object.keys(held)) {
+      const cur = held[slot] || {};
+      const prev = prevHeld[slot] || {};
+      const press = (k) => !!(cur[k] && !prev[k]);
+      clean[slot] = {
+        moveX: cur.moveX || 0,
+        jump: press("jump"),
+        attack: press("attack"),
+        special: press("special"),
+        ultra: press("ultra"),
+        regen: press("regen")
+      };
+      prevHeld[slot] = { ...cur };
+    }
+    return clean;
+  }
+  function frame(ts) {
+    if (!engine || !renderer) return;
+    const dt = Math.min(0.033, (ts - lastTs) / 1e3 || 0.016);
+    lastTs = ts;
+    engine.update(dt, edgeInputs());
+    renderer.render(engine);
+    if (Math.floor(engine.time * 4) !== Math.floor((engine.time - dt) * 4)) {
+      post({ type: "log", log: engine.log.slice(0, 8) });
+    }
+    if (engine.ended) {
+      post({
+        type: "ended",
+        winnerTeams: engine.winnerTeams,
+        fighters: engine.fighters.map((f) => ({
+          name: f.name,
+          team: f.team,
+          stocks: f.stocks
+        }))
+      });
+      stop();
+      return;
+    }
+    raf = requestAnimationFrame(frame);
+  }
+  function startCombat(config) {
+    var _a;
+    stop();
+    try {
+      audio.ensure();
+    } catch (e) {
+    }
+    const canvas = document.getElementById("game");
+    const wrap = document.getElementById("wrap");
+    engine = new CombatEngine({
+      mode: config.mode || "1v1",
+      fighters: config.fighters,
+      stocks: (_a = config.stocks) != null ? _a : 3
+    });
+    renderer = new Renderer(canvas);
+    const fit = () => {
+      const w = wrap.clientWidth || window.innerWidth;
+      const h = wrap.clientHeight || window.innerHeight;
+      const scale = Math.min(w / 1280, h / 720);
+      canvas.style.width = `${1280 * scale}px`;
+      canvas.style.height = `${720 * scale}px`;
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    engine.fighters.forEach((f) => {
+      held[f.slot] = { moveX: 0 };
+      prevHeld[f.slot] = {};
+    });
+    lastTs = performance.now();
+    post({ type: "ready", stage: engine.stage.name });
+    raf = requestAnimationFrame(frame);
+  }
+  function onMessage(raw) {
+    var _a;
+    let data = raw;
+    if (typeof raw === "string") {
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        return;
+      }
+    }
+    if (!data || !data.type) return;
+    if (data.type === "start") startCombat(data.config);
+    if (data.type === "input") {
+      const slot = (_a = data.slot) != null ? _a : 0;
+      held[slot] = { ...held[slot] || {}, ...data.input };
+    }
+    if (data.type === "forfeit") {
+      if (engine) {
+        engine.ended = true;
+        engine.winnerTeams = [];
+        post({ type: "ended", winnerTeams: [], fighters: [] });
+        stop();
+      }
+    }
+  }
+  document.addEventListener("message", (e) => onMessage(e.data));
+  window.addEventListener("message", (e) => onMessage(e.data));
+  window.AKI = { startCombat, onMessage };
+  post({ type: "boot" });
+})();
+
+
+  </script>
   <script>
     const CHARS = [
       { id:'lumo', name:'Lumo', tag:'Alien doux', body:'#7dd3fc', accent:'#fef08a' },
@@ -133,7 +2637,7 @@
 
     let me = 'lumo';
     let moveX = 0;
-    let frameReady = false;
+    let fighting = false;
 
     const $ = (id) => document.getElementById(id);
     function show(id) {
@@ -141,13 +2645,37 @@
       $(id).classList.add('on');
     }
 
-    function post(msg) {
-      const f = $('gameFrame');
-      f.contentWindow?.postMessage(JSON.stringify(msg), '*');
+    // Bridge: game posts via ReactNativeWebView or we patch post
+    const inbox = [];
+    function handleGameMsg(data) {
+      if (!data?.type) return;
+      if (data.type === 'ready') $('stage').textContent = data.stage || 'Arène';
+      if (data.type === 'log') $('log').textContent = (data.log || []).map(l => l.msg).slice(0, 2).join(' · ');
+      if (data.type === 'ended') {
+        fighting = false;
+        const winners = new Set(data.winnerTeams || []);
+        const names = (data.fighters || []).filter(f => winners.has(f.team)).map(f => f.name).join(' & ');
+        $('winTitle').textContent = names || 'Match terminé';
+        $('rewardText').textContent = PROMPTS[Math.floor(Math.random() * PROMPTS.length)];
+        show('victory');
+      }
+    }
+
+    // Intercept game -> host messages without postMessage('*')
+    window.ReactNativeWebView = {
+      postMessage(raw) {
+        try { handleGameMsg(JSON.parse(raw)); } catch (_) {}
+      }
+    };
+
+    function send(msg) {
+      if (window.AKI && typeof window.AKI.onMessage === 'function') {
+        window.AKI.onMessage(msg);
+      }
     }
 
     function sendInput(extra = {}) {
-      post({ type: 'input', slot: 0, input: { moveX, ...extra } });
+      send({ type: 'input', slot: 0, input: { moveX, ...extra } });
     }
 
     function renderChars() {
@@ -155,8 +2683,9 @@
       grid.innerHTML = '';
       CHARS.forEach(c => {
         const b = document.createElement('button');
+        b.type = 'button';
         b.className = 'card' + (me === c.id ? ' on' : '');
-        b.innerHTML = `<div class="swatch" style="background:linear-gradient(135deg,${c.body},${c.accent})"></div><strong>${c.name}</strong><small>${c.tag}</small>`;
+        b.innerHTML = '<div class="swatch" style="background:linear-gradient(135deg,'+c.body+','+c.accent+')"></div><strong>'+c.name+'</strong><small>'+c.tag+'</small>';
         b.onclick = () => { me = c.id; renderChars(); };
         grid.appendChild(b);
       });
@@ -164,33 +2693,24 @@
 
     function startCombat() {
       show('combat');
-      frameReady = false;
-      const frame = $('gameFrame');
-      frame.onload = () => {
-        // wait for boot message too
-        setTimeout(() => {
-          const foe = CHARS.find(c => c.id !== me) || CHARS[1];
-          post({
-            type: 'start',
-            config: {
-              mode: '1v1',
-              stocks: 3,
-              fighters: [
-                { id:'p0', slot:0, team:0, characterId: me, name: CHARS.find(c=>c.id===me).name, stocks:3 },
-                { id:'p1', slot:1, team:1, characterId: foe.id, name: foe.name, stocks:3 }
-              ]
-            }
-          });
-          frameReady = true;
-        }, 250);
-      };
-      frame.src = './game-inner.html';
+      fighting = true;
+      const foe = CHARS.find(c => c.id !== me) || CHARS[1];
+      send({
+        type: 'start',
+        config: {
+          mode: '1v1',
+          stocks: 3,
+          fighters: [
+            { id:'p0', slot:0, team:0, characterId: me, name: CHARS.find(c=>c.id===me).name, stocks:3 },
+            { id:'p1', slot:1, team:1, characterId: foe.id, name: foe.name, stocks:3 }
+          ]
+        }
+      });
     }
 
-    // CPU
     setInterval(() => {
-      if (!frameReady || !$('combat').classList.contains('on')) return;
-      post({
+      if (!fighting || !$('combat').classList.contains('on')) return;
+      send({
         type: 'input',
         slot: 1,
         input: {
@@ -202,25 +2722,6 @@
         }
       });
     }, 180);
-
-    window.addEventListener('message', (e) => {
-      let data = e.data;
-      if (typeof data === 'string') {
-        try { data = JSON.parse(data); } catch { return; }
-      }
-      if (!data?.type) return;
-      if (data.type === 'ready') $('stage').textContent = data.stage || 'Arène';
-      if (data.type === 'log') $('log').textContent = (data.log || []).map(l => l.msg).slice(0, 2).join(' · ');
-      if (data.type === 'ended') {
-        frameReady = false;
-        const winners = new Set(data.winnerTeams || []);
-        const names = (data.fighters || []).filter(f => winners.has(f.team)).map(f => f.name).join(' & ');
-        $('winTitle').textContent = names || 'Match terminé';
-        $('rewardText').textContent = PROMPTS[Math.floor(Math.random() * PROMPTS.length)];
-        show('victory');
-      }
-      if (data.type === 'boot') frameReady = true;
-    });
 
     function bindHold(el, on, off) {
       const start = (ev) => { ev.preventDefault(); on(); };
@@ -243,7 +2744,7 @@
     $('goPlay').onclick = startCombat;
     $('goChars').onclick = () => { renderChars(); show('chars'); };
     $('startFromChars').onclick = startCombat;
-    $('forfeit').onclick = () => post({ type: 'forfeit' });
+    $('forfeit').onclick = () => send({ type: 'forfeit' });
     document.querySelectorAll('[data-back]').forEach((b) => b.onclick = () => show(b.getAttribute('data-back')));
     renderChars();
   </script>
