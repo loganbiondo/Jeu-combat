@@ -3327,7 +3327,8 @@ background:radial-gradient(circle at 15% 20%,rgba(245,214,87,.18),transparent 50
         ctx.font = '800 10px "Exo 2", "Trebuchet MS", sans-serif';
         ctx.fillText("PARTENAIRE FUSION", x + 14, y + 70);
       }
-      for (let s = 0; s < f.stocks; s++) {
+      const stockDots = Math.max(0, Math.min(5, Number(f.stocks) || 0));
+      for (let s = 0; s < stockDots; s++) {
         ctx.fillStyle = ((_b = f.colors) == null ? void 0 : _b.body) || "#fff";
         ctx.beginPath();
         ctx.arc(x + 220 + s * 16, y + 36, 6, 0, Math.PI * 2);
