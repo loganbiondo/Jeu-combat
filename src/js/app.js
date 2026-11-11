@@ -188,6 +188,14 @@ function stopLoop() {
   if (state.raf) cancelAnimationFrame(state.raf);
   state.raf = 0;
   state.engine = null;
+  if (state.renderer) {
+    try {
+      state.renderer.dispose?.();
+    } catch {
+      /* ignore */
+    }
+    state.renderer = null;
+  }
 }
 
 function startCombat(fighters, { online = false, host = true } = {}) {

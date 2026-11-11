@@ -213,12 +213,49 @@ export class Renderer3D {
   }
 
   resize() {
-    const parent = this.canvas.parentElement;
-    if (!parent) return;
-    const rect = parent.getBoundingClientRect();
-    const scale = Math.min(rect.width / 1280, rect.height / 720);
-    this.canvas.style.width = `${1280 * scale}px`;
-    this.canvas.style.height = `${720 * scale}px`;
+    const host = this._hudHost || this.canvas.parentElement;
+    if (!host) return;
+    const rect = host.getBoundingClientRect();
+    const scale = Math.min(rect.width / 1280, rect.height / 720) || Math.min(
+      (this.canvas.parentElement?.clientWidth || 1280) / 1280,
+      (this.canvas.parentElement?.clientHeight || 720) / 720
+    );
+    const w = `${1280 * scale}px`;
+    const h = `${720 * scale}px`;
+    this.canvas.style.width = w;
+    this.canvas.style.height = h;
+    if (this._overlay) {
+      this._overlay.style.width = w;
+      this._overlay.style.height = h;
+    }
+    if (this._hudHost) {
+      this._hudHost.style.width = w;
+      this._hudHost.style.height = h;
+    }
+  }
+
+  dispose() {
+    if (this._overlay?.parentElement) this._overlay.parentElement.removeChild(this._overlay);
+    if (this._hudHost) {
+      const parent = this._hudHost.parentElement;
+      if (parent && this.canvas.parentElement === this._hudHost) {
+        parent.insertBefore(this.canvas, this._hudHost);
+        parent.removeChild(this._hudHost);
+      }
+      this._hudHost = null;
+    }
+    this._overlay = null;
+    this.fighterMeshes.clear();
+    this.fxMeshes.length = 0;
+    this.scene.traverse((obj) => {
+      if (obj.geometry) obj.geometry.dispose?.();
+      if (obj.material) {
+        if (Array.isArray(obj.material)) obj.material.forEach((m) => m.dispose?.());
+        else obj.material.dispose?.();
+      }
+    });
+    this.renderer.dispose();
+    this.renderer.forceContextLoss?.();
   }
 
   ensureFighter(f) {
@@ -375,17 +412,25 @@ export class Renderer3D {
   }
 
   paintOverlay(engine) {
-    let overlay = this.canvas.parentElement?.querySelector?.('.hud3d');
-    if (!overlay && this.canvas.parentElement) {
-      overlay = document.createElement('canvas');
+    if (!this._hudHost && this.canvas.parentElement) {
+      const host = document.createElement('div');
+      host.className = 'hud3d-host';
+      host.style.cssText = 'position:relative;display:inline-block;line-height:0;max-width:100%;max-height:100%';
+      const parent = this.canvas.parentElement;
+      parent.insertBefore(host, this.canvas);
+      host.appendChild(this.canvas);
+      const overlay = document.createElement('canvas');
       overlay.className = 'hud3d';
       overlay.width = 1280;
       overlay.height = 720;
       overlay.style.cssText =
-        'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2';
-      this.canvas.parentElement.style.position = 'relative';
-      this.canvas.parentElement.appendChild(overlay);
+        'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:2';
+      host.appendChild(overlay);
+      this._hudHost = host;
+      this._overlay = overlay;
+      this.resize();
     }
+    const overlay = this._overlay;
     if (!overlay) return;
     const ctx = overlay.getContext('2d');
     ctx.clearRect(0, 0, 1280, 720);

@@ -170,6 +170,8 @@ export function poseHumanoid(root, f, t) {
   const facing = f.facing || 1;
   const bob = Math.sin(t * 6) * 0.02;
   root.rotation.y = facing >= 0 ? Math.PI / 2 : -Math.PI / 2;
+  root.rotation.z = 0;
+  root.rotation.x = 0;
 
   // reset
   Larm.rotation.set(0, 0, 0.12);

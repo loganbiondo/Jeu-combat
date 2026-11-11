@@ -23,6 +23,14 @@ function stop() {
   if (raf) cancelAnimationFrame(raf);
   raf = 0;
   engine = null;
+  if (renderer) {
+    try {
+      renderer.dispose?.();
+    } catch {
+      /* ignore */
+    }
+    renderer = null;
+  }
 }
 
 function edgeInputs() {

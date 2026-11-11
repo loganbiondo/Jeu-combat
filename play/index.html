@@ -24124,6 +24124,8 @@ void main() {
     const facing = f.facing || 1;
     const bob = Math.sin(t * 6) * 0.02;
     root.rotation.y = facing >= 0 ? Math.PI / 2 : -Math.PI / 2;
+    root.rotation.z = 0;
+    root.rotation.x = 0;
     Larm.rotation.set(0, 0, 0.12);
     Rarm.rotation.set(0, 0, -0.12);
     Lleg.rotation.set(0, 0, 0);
@@ -24411,12 +24413,54 @@ void main() {
       }
     }
     resize() {
-      const parent = this.canvas.parentElement;
-      if (!parent) return;
-      const rect = parent.getBoundingClientRect();
-      const scale = Math.min(rect.width / 1280, rect.height / 720);
-      this.canvas.style.width = `${1280 * scale}px`;
-      this.canvas.style.height = `${720 * scale}px`;
+      var _a, _b;
+      const host = this._hudHost || this.canvas.parentElement;
+      if (!host) return;
+      const rect = host.getBoundingClientRect();
+      const scale = Math.min(rect.width / 1280, rect.height / 720) || Math.min(
+        (((_a = this.canvas.parentElement) == null ? void 0 : _a.clientWidth) || 1280) / 1280,
+        (((_b = this.canvas.parentElement) == null ? void 0 : _b.clientHeight) || 720) / 720
+      );
+      const w = `${1280 * scale}px`;
+      const h = `${720 * scale}px`;
+      this.canvas.style.width = w;
+      this.canvas.style.height = h;
+      if (this._overlay) {
+        this._overlay.style.width = w;
+        this._overlay.style.height = h;
+      }
+      if (this._hudHost) {
+        this._hudHost.style.width = w;
+        this._hudHost.style.height = h;
+      }
+    }
+    dispose() {
+      var _a, _b, _c;
+      if ((_a = this._overlay) == null ? void 0 : _a.parentElement) this._overlay.parentElement.removeChild(this._overlay);
+      if (this._hudHost) {
+        const parent = this._hudHost.parentElement;
+        if (parent && this.canvas.parentElement === this._hudHost) {
+          parent.insertBefore(this.canvas, this._hudHost);
+          parent.removeChild(this._hudHost);
+        }
+        this._hudHost = null;
+      }
+      this._overlay = null;
+      this.fighterMeshes.clear();
+      this.fxMeshes.length = 0;
+      this.scene.traverse((obj) => {
+        var _a2, _b2, _c2, _d;
+        if (obj.geometry) (_b2 = (_a2 = obj.geometry).dispose) == null ? void 0 : _b2.call(_a2);
+        if (obj.material) {
+          if (Array.isArray(obj.material)) obj.material.forEach((m) => {
+            var _a3;
+            return (_a3 = m.dispose) == null ? void 0 : _a3.call(m);
+          });
+          else (_d = (_c2 = obj.material).dispose) == null ? void 0 : _d.call(_c2);
+        }
+      });
+      this.renderer.dispose();
+      (_c = (_b = this.renderer).forceContextLoss) == null ? void 0 : _c.call(_b);
     }
     ensureFighter(f) {
       let mesh = this.fighterMeshes.get(f.id);
@@ -24552,17 +24596,25 @@ void main() {
       this.paintOverlay(engine2);
     }
     paintOverlay(engine2) {
-      var _a, _b, _c;
-      let overlay = (_b = (_a = this.canvas.parentElement) == null ? void 0 : _a.querySelector) == null ? void 0 : _b.call(_a, ".hud3d");
-      if (!overlay && this.canvas.parentElement) {
-        overlay = document.createElement("canvas");
-        overlay.className = "hud3d";
-        overlay.width = 1280;
-        overlay.height = 720;
-        overlay.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2";
-        this.canvas.parentElement.style.position = "relative";
-        this.canvas.parentElement.appendChild(overlay);
+      var _a;
+      if (!this._hudHost && this.canvas.parentElement) {
+        const host = document.createElement("div");
+        host.className = "hud3d-host";
+        host.style.cssText = "position:relative;display:inline-block;line-height:0;max-width:100%;max-height:100%";
+        const parent = this.canvas.parentElement;
+        parent.insertBefore(host, this.canvas);
+        host.appendChild(this.canvas);
+        const overlay2 = document.createElement("canvas");
+        overlay2.className = "hud3d";
+        overlay2.width = 1280;
+        overlay2.height = 720;
+        overlay2.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:2";
+        host.appendChild(overlay2);
+        this._hudHost = host;
+        this._overlay = overlay2;
+        this.resize();
       }
+      const overlay = this._overlay;
       if (!overlay) return;
       const ctx = overlay.getContext("2d");
       ctx.clearRect(0, 0, 1280, 720);
@@ -24575,7 +24627,7 @@ void main() {
       ctx.font = '800 14px "Exo 2", "Trebuchet MS", sans-serif';
       ctx.fillStyle = "rgba(226,232,240,0.8)";
       ctx.textAlign = "center";
-      ctx.fillText(`${(engine2.mode || "1v1").toUpperCase()} \xB7 3D ARENA \xB7 ${((_c = engine2.stage) == null ? void 0 : _c.name) || "Ring"}`, 640, 18);
+      ctx.fillText(`${(engine2.mode || "1v1").toUpperCase()} \xB7 3D ARENA \xB7 ${((_a = engine2.stage) == null ? void 0 : _a.name) || "Ring"}`, 640, 18);
     }
     drawBar(ctx, f, x, y) {
       var _a;
@@ -24632,9 +24684,17 @@ void main() {
     }
   }
   function stop() {
+    var _a;
     if (raf) cancelAnimationFrame(raf);
     raf = 0;
     engine = null;
+    if (renderer) {
+      try {
+        (_a = renderer.dispose) == null ? void 0 : _a.call(renderer);
+      } catch (e) {
+      }
+      renderer = null;
+    }
   }
   function edgeInputs() {
     const clean = {};
@@ -24787,28 +24847,44 @@ function paintHero(){const c=$('heroCanvas'); const ctx=c.getContext('2d'); ctx.
 function renderChars(){const grid=$('charGrid'); grid.innerHTML=''; CHARS.forEach(c=>{const b=document.createElement('button'); b.type='button'; b.className='card'+(me===c.id?' on':''); const cv=document.createElement('canvas'); cv.width=180; cv.height=180; b.appendChild(cv); const strong=document.createElement('strong'); strong.textContent=c.name; const small=document.createElement('small'); small.textContent=c.tag; b.appendChild(strong); b.appendChild(small); b.onclick=()=>{me=c.id; renderChars()}; grid.appendChild(b); paintPortrait(cv,c)})}
 function startCombat(){show('combat'); fighting=true; const foe=CHARS.find(c=>c.id!==me)||CHARS[1]; send({type:'start',config:{mode:'1v1',stocks:1,fighters:[{id:'p0',slot:0,team:0,characterId:me,name:CHARS.find(c=>c.id===me).name,stocks:1},{id:'p1',slot:1,team:1,characterId:foe.id,name:foe.name,stocks:1}]}})}
 
-/* Virtual stick */
+/* Virtual stick — tracks its own finger; never clears Jump button state */
 (function(){
   const stick=$('stick'), knob=$('knob');
-  let active=false, cx=0, cy=0;
+  let active=false, touchId=null;
   const setKnob=(x,y)=>{knob.style.left=(49+x)+'px'; knob.style.top=(49+y)+'px'};
+  const pickTouch=(e)=>{
+    if(!e.touches) return e;
+    if(touchId!=null){
+      for(const t of e.touches){ if(t.identifier===touchId) return t; }
+      for(const t of e.changedTouches||[]){ if(t.identifier===touchId) return t; }
+      return null;
+    }
+    return e.touches[0]||e.changedTouches?.[0]||null;
+  };
   const read=(e)=>{
-    const t=e.touches?e.touches[0]:e;
+    const t=pickTouch(e); if(!t) return;
     const r=stick.getBoundingClientRect();
     const dx=t.clientX-(r.left+r.width/2);
     const dy=t.clientY-(r.top+r.height/2);
     const max=42; const len=Math.hypot(dx,dy)||1; const s=Math.min(1,max/len);
     const x=dx*s, y=dy*s; setKnob(x,y);
     moveX = Math.abs(x)>12 ? (x>0?1:-1) : 0;
-    sendInput({moveX, jump:y<-28, down:y>28});
+    // move/aim only — Jump stays on its dedicated button
+    sendInput({moveX, up:y<-28, down:y>28});
   };
-  const end=()=>{active=false; setKnob(0,0); moveX=0; sendInput({moveX:0,jump:false,down:false})};
-  stick.addEventListener('touchstart',e=>{e.preventDefault();active=true;read(e)},{passive:false});
-  stick.addEventListener('touchmove',e=>{e.preventDefault();if(active)read(e)},{passive:false});
+  const end=(e)=>{
+    if(e&&e.changedTouches&&touchId!=null){
+      let ours=false; for(const t of e.changedTouches){ if(t.identifier===touchId) ours=true; }
+      if(!ours) return;
+    }
+    active=false; touchId=null; setKnob(0,0); moveX=0; sendInput({moveX:0, up:false, down:false});
+  };
+  stick.addEventListener('touchstart',e=>{e.preventDefault(); active=true; touchId=e.changedTouches?.[0]?.identifier ?? null; read(e)},{passive:false});
+  stick.addEventListener('touchmove',e=>{e.preventDefault(); if(active) read(e)},{passive:false});
   stick.addEventListener('touchend',end); stick.addEventListener('touchcancel',end);
-  stick.addEventListener('mousedown',e=>{active=true;read(e)});
-  window.addEventListener('mousemove',e=>{if(active)read(e)});
-  window.addEventListener('mouseup',end);
+  stick.addEventListener('mousedown',e=>{active=true; touchId=null; read(e)});
+  window.addEventListener('mousemove',e=>{if(active && touchId==null) read(e)});
+  window.addEventListener('mouseup',()=>{if(touchId==null) end()});
 })();
 
 function bindAct(el){

@@ -154,28 +154,44 @@ function paintHero(){const c=$('heroCanvas'); const ctx=c.getContext('2d'); ctx.
 function renderChars(){const grid=$('charGrid'); grid.innerHTML=''; CHARS.forEach(c=>{const b=document.createElement('button'); b.type='button'; b.className='card'+(me===c.id?' on':''); const cv=document.createElement('canvas'); cv.width=180; cv.height=180; b.appendChild(cv); const strong=document.createElement('strong'); strong.textContent=c.name; const small=document.createElement('small'); small.textContent=c.tag; b.appendChild(strong); b.appendChild(small); b.onclick=()=>{me=c.id; renderChars()}; grid.appendChild(b); paintPortrait(cv,c)})}
 function startCombat(){show('combat'); fighting=true; const foe=CHARS.find(c=>c.id!==me)||CHARS[1]; send({type:'start',config:{mode:'1v1',stocks:1,fighters:[{id:'p0',slot:0,team:0,characterId:me,name:CHARS.find(c=>c.id===me).name,stocks:1},{id:'p1',slot:1,team:1,characterId:foe.id,name:foe.name,stocks:1}]}})}
 
-/* Virtual stick */
+/* Virtual stick — tracks its own finger; never clears Jump button state */
 (function(){
   const stick=$('stick'), knob=$('knob');
-  let active=false, cx=0, cy=0;
+  let active=false, touchId=null;
   const setKnob=(x,y)=>{knob.style.left=(49+x)+'px'; knob.style.top=(49+y)+'px'};
+  const pickTouch=(e)=>{
+    if(!e.touches) return e;
+    if(touchId!=null){
+      for(const t of e.touches){ if(t.identifier===touchId) return t; }
+      for(const t of e.changedTouches||[]){ if(t.identifier===touchId) return t; }
+      return null;
+    }
+    return e.touches[0]||e.changedTouches?.[0]||null;
+  };
   const read=(e)=>{
-    const t=e.touches?e.touches[0]:e;
+    const t=pickTouch(e); if(!t) return;
     const r=stick.getBoundingClientRect();
     const dx=t.clientX-(r.left+r.width/2);
     const dy=t.clientY-(r.top+r.height/2);
     const max=42; const len=Math.hypot(dx,dy)||1; const s=Math.min(1,max/len);
     const x=dx*s, y=dy*s; setKnob(x,y);
     moveX = Math.abs(x)>12 ? (x>0?1:-1) : 0;
-    sendInput({moveX, jump:y<-28, down:y>28});
+    // move/aim only — Jump stays on its dedicated button
+    sendInput({moveX, up:y<-28, down:y>28});
   };
-  const end=()=>{active=false; setKnob(0,0); moveX=0; sendInput({moveX:0,jump:false,down:false})};
-  stick.addEventListener('touchstart',e=>{e.preventDefault();active=true;read(e)},{passive:false});
-  stick.addEventListener('touchmove',e=>{e.preventDefault();if(active)read(e)},{passive:false});
+  const end=(e)=>{
+    if(e&&e.changedTouches&&touchId!=null){
+      let ours=false; for(const t of e.changedTouches){ if(t.identifier===touchId) ours=true; }
+      if(!ours) return;
+    }
+    active=false; touchId=null; setKnob(0,0); moveX=0; sendInput({moveX:0, up:false, down:false});
+  };
+  stick.addEventListener('touchstart',e=>{e.preventDefault(); active=true; touchId=e.changedTouches?.[0]?.identifier ?? null; read(e)},{passive:false});
+  stick.addEventListener('touchmove',e=>{e.preventDefault(); if(active) read(e)},{passive:false});
   stick.addEventListener('touchend',end); stick.addEventListener('touchcancel',end);
-  stick.addEventListener('mousedown',e=>{active=true;read(e)});
-  window.addEventListener('mousemove',e=>{if(active)read(e)});
-  window.addEventListener('mouseup',end);
+  stick.addEventListener('mousedown',e=>{active=true; touchId=null; read(e)});
+  window.addEventListener('mousemove',e=>{if(active && touchId==null) read(e)});
+  window.addEventListener('mouseup',()=>{if(touchId==null) end()});
 })();
 
 function bindAct(el){
