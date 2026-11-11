@@ -52,16 +52,25 @@ export class Fighter {
     this.attackCd = 0;
     this.specialCd = 0;
     this.ultraCd = 0;
+    this.blastCd = 0;
+    this.dashCd = 0;
     this.actionTimer = 0;
     this.action = 'idle';
     this.shieldTimer = 0;
+    this.shielding = false;
     this.hitstun = 0;
     this.respawnTimer = 0;
     this.combo = 0;
+    this.jabStep = 0;
+    this.jabWindow = 0;
     this.chargeTimer = 0;
     this.pendingUltra = null;
     this.spectacleTimer = 0;
     this.spectacleHits = 0;
+    this.pendingHit = null;
+    this.fastFall = false;
+    this.jumpHeld = false;
+    this.comboCount = 0;
   }
 
   get dead() {
@@ -119,23 +128,34 @@ export class CombatEngine {
     attacker.combo += 1;
     attacker.ki = clamp(attacker.ki + 8 * (opts.kiGain || 1) * attacker.stats.kiRegen, 0, attacker.maxKi);
 
-    const knockMul = (opts.knock || 1) * (0.7 + defender.percent / 80) / defender.stats.weight;
-    const dir = Math.sign(defender.x - attacker.x) || attacker.facing;
-    defender.vx += dir * 180 * knockMul;
-    defender.vy -= 220 * knockMul * (opts.up || 0.85);
+    // Smash-like knockback: base + scaling with %
+    const kb =
+      ((opts.knock || 1) * (18 + defender.percent * 0.92) * (opts.kbMul || 1)) /
+      defender.stats.weight;
+    const dir = opts.dirX != null ? opts.dirX : Math.sign(defender.x - attacker.x) || attacker.facing;
+    const angle = opts.angle != null ? opts.angle : -0.75;
+    defender.vx = dir * Math.cos(Math.abs(angle)) * kb * 14;
+    defender.vy = Math.sin(angle) * kb * 16 * (opts.up || 1);
     defender.onGround = false;
+    defender.fastFall = false;
+    defender.jabStep = 0;
+    defender.shielding = false;
 
-    const heavy = dmg > 18 || !!opts.heavy;
+    attacker.comboCount = (attacker.comboCount || 0) + 1;
+    if (attacker.comboCount > 1) {
+      this.fx.floatText(attacker.x, attacker.y - 60, `${attacker.comboCount} HIT!`, '#67e8f9');
+    }
+
+    const heavy = dmg > 16 || !!opts.heavy;
     this.fx.onHit(defender.x, defender.y - 10, dmg, heavy);
     audio.hit(heavy);
-    // Finisher spark when target is launched hard
     if (defender.percent > 100 && heavy) {
       this.fx.shockwave(defender.x, defender.y, { maxR: 130, color: '#fb7185', width: 10 });
-      this.fx.floatText(defender.x, defender.y - 55, 'FINISHER!', '#fb7185');
+      this.fx.floatText(defender.x, defender.y - 55, 'LAUNCH!', '#fb7185');
       audio.special();
     }
     this.pushLog(
-      `${attacker.name} frappe ${defender.name} — ${dmg.toFixed(1)} dmg (${defender.percent.toFixed(0)}%)`
+      `${attacker.name} → ${defender.name}  ${dmg.toFixed(0)}  (${defender.percent.toFixed(0)}%)`
     );
     return dmg;
   }
@@ -145,11 +165,11 @@ export class CombatEngine {
   }
 
   resolvePhysics(f, dt) {
-    const g = 1500;
-    f.vy += g * dt;
+    const g = f.fastFall ? 2600 : 1650;
+    if (!f.shielding) f.vy += g * dt;
     f.x += f.vx * dt;
     f.y += f.vy * dt;
-    f.vx *= f.onGround ? 0.75 : 0.98;
+    f.vx *= f.onGround ? (f.shielding ? 0.6 : 0.78) : 0.985;
 
     f.onGround = false;
     for (const p of this.platforms()) {
@@ -160,6 +180,7 @@ export class CombatEngine {
         f.vy = 0;
         f.onGround = true;
         f.jumps = 2;
+        f.fastFall = false;
       }
     }
 
@@ -224,25 +245,277 @@ export class CombatEngine {
     return this.fighters.filter((o) => o.alive && o.team !== f.team);
   }
 
-  tryAttack(f) {
-    if (f.attackCd > 0 || f.hitstun > 0 || f.actionTimer > 0 || f.chargeTimer > 0) return;
-    f.attackCd = 0.28;
-    f.action = 'attack';
-    f.actionTimer = 0.22;
-    this.fx.burst(f.x + f.facing * 28, f.y - 8, {
-      count: 12,
-      speed: 160,
-      paletteName: 'hit',
-      spread: 1,
+  queueHit(f, spec) {
+    // Active frames after startup — feels like a real fighter
+    f.pendingHit = {
+      ...spec,
+      delay: spec.startup || 0.06
+    };
+    f.action = spec.action || 'attack';
+    f.actionTimer = (spec.startup || 0.06) + (spec.active || 0.12) + (spec.recovery || 0.1);
+  }
+
+  resolvePendingHit(f, dt) {
+    if (!f.pendingHit) return;
+    f.pendingHit.delay -= dt;
+    if (f.pendingHit.delay > 0) return;
+    const hit = f.pendingHit;
+    f.pendingHit = null;
+    const range = hit.range || 58;
+    const ox = f.x + f.facing * (hit.reach || 28);
+    const oy = f.y + (hit.yOff || -6);
+    this.fx.burst(ox, oy, {
+      count: hit.heavy ? 18 : 10,
+      speed: hit.heavy ? 220 : 150,
+      paletteName: hit.fx || 'hit',
+      spread: 1.1,
       angle: f.facing >= 0 ? 0 : Math.PI,
       spark: true
     });
-    this.fx.ring(f.x + f.facing * 30, f.y - 6, { maxR: 36, paletteName: 'hit', life: 0.2 });
-    audio.hit(false);
+    this.fx.ring(ox, oy, { maxR: hit.heavy ? 55 : 34, paletteName: hit.fx || 'hit', life: 0.2 });
+    if (hit.move) {
+      f.vx += f.facing * hit.move;
+    }
+    let connected = false;
     for (const e of this.enemiesOf(f)) {
-      if (dist(f, e) < 58) {
-        this.applyDamage(f, e, this.damageRoll(f, 1.0), { knock: 1.0, kiGain: 1 });
+      if (Math.hypot(e.x - ox, e.y - oy) <= range + e.radius * 0.4) {
+        if (e.shielding) {
+          e.ki = Math.max(0, e.ki - 4);
+          this.fx.floatText(e.x, e.y - 40, 'GUARD', '#67e8f9');
+          this.fx.ring(e.x, e.y, { maxR: 40, paletteName: 'shield' });
+          audio.hit(false);
+          continue;
+        }
+        this.applyDamage(f, e, this.damageRoll(f, hit.power || 1), {
+          knock: hit.knock || 1,
+          heavy: !!hit.heavy,
+          up: hit.up || 1,
+          angle: hit.angle,
+          kiGain: hit.kiGain || 1,
+          hitstun: hit.hitstun || 0.2,
+          kbMul: hit.kbMul || 1
+        });
+        connected = true;
       }
+    }
+    if (connected) audio.hit(!!hit.heavy);
+  }
+
+  tryAttack(f, input = {}) {
+    if (f.attackCd > 0 || f.hitstun > 0 || f.actionTimer > 0 || f.chargeTimer > 0 || f.shielding) return;
+
+    const aerial = !f.onGround;
+    const heavy = !!(input.heavy || input.down);
+    const up = !!(input.up && !heavy);
+
+    // Reset jab if window expired
+    if (f.jabWindow <= 0) f.jabStep = 0;
+
+    if (aerial) {
+      f.attackCd = 0.34;
+      if (up) {
+        // up-air launcher
+        this.queueHit(f, {
+          startup: 0.08,
+          power: 1.15,
+          knock: 1.15,
+          up: 1.35,
+          angle: -1.2,
+          range: 62,
+          reach: 18,
+          yOff: -28,
+          hitstun: 0.28,
+          action: 'attack'
+        });
+        this.pushLog(`${f.name} — aerial haut !`);
+      } else if (heavy) {
+        this.queueHit(f, {
+          startup: 0.1,
+          power: 1.45,
+          knock: 1.4,
+          heavy: true,
+          angle: -0.55,
+          range: 70,
+          reach: 34,
+          move: 80,
+          hitstun: 0.32,
+          action: 'attack'
+        });
+        f.vy = Math.min(f.vy, -40);
+        this.pushLog(`${f.name} — smash aérien !`);
+      } else {
+        this.queueHit(f, {
+          startup: 0.05,
+          power: 0.85,
+          knock: 0.75,
+          angle: -0.9,
+          range: 56,
+          reach: 26,
+          hitstun: 0.22,
+          action: 'attack'
+        });
+      }
+      return;
+    }
+
+    if (heavy) {
+      // Forward smash
+      f.attackCd = 0.55;
+      f.jabStep = 0;
+      this.queueHit(f, {
+        startup: 0.14,
+        power: 1.7,
+        knock: 1.65,
+        heavy: true,
+        angle: -0.5,
+        range: 78,
+        reach: 40,
+        move: 160,
+        hitstun: 0.38,
+        kbMul: 1.15,
+        action: 'attack',
+        fx: 'solar'
+      });
+      this.fx.chargeUp(f, 0.5);
+      this.pushLog(`${f.name} — SMASH !`);
+      return;
+    }
+
+    if (up) {
+      f.attackCd = 0.4;
+      f.jabStep = 0;
+      this.queueHit(f, {
+        startup: 0.09,
+        power: 1.2,
+        knock: 1.1,
+        angle: -1.35,
+        up: 1.4,
+        range: 64,
+        reach: 16,
+        yOff: -30,
+        hitstun: 0.3,
+        action: 'attack'
+      });
+      this.pushLog(`${f.name} — anti-air !`);
+      return;
+    }
+
+    // Ground jab combo 1-2-3
+    const step = f.jabStep;
+    f.jabStep = (step + 1) % 3;
+    f.jabWindow = 0.55;
+    if (step === 0) {
+      f.attackCd = 0.18;
+      this.queueHit(f, {
+        startup: 0.04,
+        power: 0.7,
+        knock: 0.45,
+        angle: -0.3,
+        range: 54,
+        reach: 30,
+        hitstun: 0.18,
+        action: 'attack'
+      });
+    } else if (step === 1) {
+      f.attackCd = 0.2;
+      this.queueHit(f, {
+        startup: 0.05,
+        power: 0.85,
+        knock: 0.55,
+        angle: -0.45,
+        range: 58,
+        reach: 32,
+        move: 40,
+        hitstun: 0.2,
+        action: 'attack'
+      });
+    } else {
+      f.attackCd = 0.38;
+      f.jabStep = 0;
+      this.queueHit(f, {
+        startup: 0.07,
+        power: 1.25,
+        knock: 1.25,
+        heavy: true,
+        angle: -0.85,
+        range: 68,
+        reach: 36,
+        move: 120,
+        hitstun: 0.3,
+        action: 'attack',
+        fx: 'spark'
+      });
+      this.pushLog(`${f.name} — finisher combo !`);
+    }
+  }
+
+  tryKiBlast(f) {
+    if (f.blastCd > 0 || f.hitstun > 0 || f.chargeTimer > 0 || f.shielding) return;
+    if (f.ki < 12) {
+      this.fx.floatText(f.x, f.y - 40, 'KI?', '#94a3b8');
+      return;
+    }
+    f.ki -= 12;
+    f.blastCd = 0.38;
+    f.action = 'attack';
+    f.actionTimer = 0.22;
+    const speed = 520;
+    this.fx.projectile({
+      x: f.x + f.facing * 28,
+      y: f.y - 8,
+      vx: f.facing * speed,
+      vy: -20,
+      paletteName: 'beam',
+      life: 1.1,
+      ownerId: f.id,
+      damage: 10 + f.stats.atk * 0.35,
+      knock: 1.05,
+      radius: 11
+    });
+    this.fx.burst(f.x + f.facing * 24, f.y - 8, {
+      count: 10,
+      speed: 140,
+      paletteName: 'beam',
+      spread: 0.6,
+      angle: f.facing >= 0 ? 0 : Math.PI,
+      spark: true
+    });
+    audio.special();
+    this.pushLog(`${f.name} — KI BLAST !`);
+  }
+
+  tryDash(f, dir) {
+    if (f.dashCd > 0 || f.hitstun > 0 || f.chargeTimer > 0) return;
+    const d = dir || f.facing;
+    f.dashCd = 0.55;
+    f.facing = Math.sign(d) || f.facing;
+    f.vx = f.facing * 620;
+    f.vy = Math.min(f.vy, -40);
+    f.action = 'special';
+    f.actionTimer = 0.2;
+    f.invuln = Math.max(f.invuln, 0.12);
+    for (let i = 0; i < 5; i++) this.fx.afterImage(f);
+    this.fx.burst(f.x, f.y, { count: 14, speed: 180, paletteName: 'trail', spark: true });
+    audio.jump();
+    this.pushLog(`${f.name} — dash !`);
+  }
+
+  tryGuard(f, hold) {
+    if (f.hitstun > 0 || f.chargeTimer > 0 || !f.onGround) {
+      f.shielding = false;
+      return;
+    }
+    if (hold) {
+      f.shielding = true;
+      f.shieldTimer = 0.2;
+      f.vx *= 0.5;
+      f.action = 'idle';
+      f.jabStep = 0;
+      if (Math.random() < 0.15) {
+        this.fx.aura(f.id, f.x, f.y, 'shield', 0.2);
+      }
+    } else {
+      f.shielding = false;
     }
   }
 
@@ -395,26 +668,48 @@ export class CombatEngine {
 
   applyInput(f, input, dt) {
     if (!f.alive || f.dead) return;
-    if (f.hitstun > 0 || f.chargeTimer > 0) return;
-
-    if (input.moveX) {
-      const spd = f.stats.speed * 70;
-      f.vx += input.moveX * spd * dt * 8;
-      f.vx = clamp(f.vx, -spd, spd);
-      f.facing = Math.sign(input.moveX) || f.facing;
-      if (Math.abs(f.vx) > 180 && Math.random() < 0.2) this.fx.afterImage(f);
+    if (f.hitstun > 0 || f.chargeTimer > 0) {
+      f.shielding = false;
+      return;
     }
-    if (input.jump && f.jumps > 0) {
-      f.vy = -f.stats.jump * 42;
+
+    this.tryGuard(f, !!input.guard);
+    if (f.shielding) return;
+
+    // Movement — snappier ground, air drift
+    if (input.moveX) {
+      const spd = f.stats.speed * (f.onGround ? 78 : 62);
+      const accel = f.onGround ? 14 : 9;
+      f.vx += input.moveX * spd * dt * accel;
+      f.vx = clamp(f.vx, -spd, spd);
+      if (f.onGround || Math.abs(input.moveX) > 0) f.facing = Math.sign(input.moveX) || f.facing;
+      if (Math.abs(f.vx) > 220 && Math.random() < 0.25) this.fx.afterImage(f);
+    }
+
+    // Short hop / full hop
+    if (input.jump && f.jumps > 0 && !f.jumpHeld) {
+      const short = !!input.shortHop;
+      f.vy = -f.stats.jump * (short ? 30 : 44);
       f.jumps -= 1;
       f.onGround = false;
+      f.fastFall = false;
+      f.jumpHeld = true;
       this.fx.onJump(f.x, f.y);
       audio.jump();
     }
-    if (input.attack) this.tryAttack(f);
+    if (!input.jump) f.jumpHeld = false;
+    // Fast fall
+    if (input.down && !f.onGround && f.vy > 0) f.fastFall = true;
+
+    if (input.dash) this.tryDash(f, input.moveX || f.facing);
+    if (input.attack) this.tryAttack(f, input);
+    if (input.blast || input.regen) {
+      // regen button becomes ki blast in fighter kit; still allow regen via input.heal
+      if (input.heal) this.tryRegen(f);
+      else this.tryKiBlast(f);
+    }
     if (input.special) this.trySpecial(f, 0);
     if (input.ultra) this.tryUltra(f);
-    if (input.regen) this.tryRegen(f);
   }
 
   updateSpectacle(f, dt) {
@@ -478,22 +773,27 @@ export class CombatEngine {
       f.attackCd = Math.max(0, f.attackCd - sdt);
       f.specialCd = Math.max(0, f.specialCd - sdt);
       f.ultraCd = Math.max(0, f.ultraCd - sdt);
+      f.blastCd = Math.max(0, f.blastCd - sdt);
+      f.dashCd = Math.max(0, f.dashCd - sdt);
+      f.jabWindow = Math.max(0, f.jabWindow - sdt);
       f.actionTimer = Math.max(0, f.actionTimer - sdt);
       f.invuln = Math.max(0, f.invuln - sdt);
       f.shieldTimer = Math.max(0, f.shieldTimer - sdt);
       f.hitstun = Math.max(0, f.hitstun - sdt);
+      if (f.hitstun <= 0 && f.jabWindow <= 0) f.comboCount = 0;
 
       if (f.chargeTimer > 0) {
         f.chargeTimer -= sdt;
-        // Continuous charge VFX
         if (Math.random() < 0.4) this.fx.chargeUp(f, 0.35);
         if (f.chargeTimer <= 0) this.releaseUltra(f);
         this.resolvePhysics(f, sdt * 0.3);
         continue;
       }
 
-      if (f.actionTimer <= 0 && f.action !== 'idle') f.action = 'idle';
-      f.ki = clamp(f.ki + sdt * 3.5 * f.stats.kiRegen, 0, f.maxKi);
+      this.resolvePendingHit(f, sdt);
+
+      if (f.actionTimer <= 0 && f.action !== 'idle' && !f.shielding) f.action = 'idle';
+      f.ki = clamp(f.ki + sdt * 4.2 * f.stats.kiRegen, 0, f.maxKi);
 
       this.updateSpectacle(f, sdt);
 

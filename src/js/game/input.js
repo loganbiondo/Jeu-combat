@@ -7,10 +7,13 @@ const KEY_MAPS = [
     up: ['KeyW', 'ArrowUp'],
     down: ['KeyS', 'ArrowDown'],
     attack: ['KeyJ', 'KeyZ'],
+    heavy: ['KeyU', 'KeyB'],
     special: ['KeyK', 'KeyX'],
     ultra: ['KeyL', 'KeyC'],
-    regen: ['KeyI', 'KeyV'],
-    jump: ['Space', 'KeyW', 'ArrowUp']
+    blast: ['KeyI', 'KeyV'],
+    guard: ['KeyH', 'ShiftLeft'],
+    dash: ['KeyN', 'ShiftRight'],
+    jump: ['Space']
   },
   // P2
   {
@@ -19,10 +22,13 @@ const KEY_MAPS = [
     up: ['Digit8', 'Numpad8'],
     down: ['Digit5', 'Numpad5'],
     attack: ['KeyO'],
+    heavy: ['KeyU'],
     special: ['KeyP'],
     ultra: ['BracketLeft'],
-    regen: ['BracketRight'],
-    jump: ['Digit8', 'Numpad8', 'Numpad0']
+    blast: ['BracketRight'],
+    guard: ['Semicolon'],
+    dash: ['Quote'],
+    jump: ['Numpad0']
   }
 ];
 
@@ -73,9 +79,12 @@ export class InputManager {
     let down = this.anyDown(map.down);
     let jump = this.anyPressed(map.jump);
     let attack = this.anyPressed(map.attack);
+    let heavy = this.anyPressed(map.heavy || []);
     let special = this.anyPressed(map.special);
     let ultra = this.anyPressed(map.ultra);
-    let regen = this.anyPressed(map.regen);
+    let blast = this.anyPressed(map.blast || map.regen || []);
+    let guard = this.anyDown(map.guard || []);
+    let dash = this.anyPressed(map.dash || []);
 
     if (pad) {
       const ax = pad.axes[0] || 0;
@@ -91,35 +100,30 @@ export class InputManager {
       attack = attack || edge(2);
       special = special || edge(1);
       ultra = ultra || edge(3);
-      regen = regen || edge(5) || edge(7);
+      blast = blast || edge(5);
+      heavy = heavy || edge(7);
+      guard = guard || btn(4) || btn(6);
+      dash = dash || edge(10) || edge(11);
       this.padPrev[slot] = {
         0: btn(0),
         1: btn(1),
         2: btn(2),
         3: btn(3),
+        4: btn(4),
         5: btn(5),
+        6: btn(6),
         7: btn(7),
+        10: btn(10),
+        11: btn(11),
         12: btn(12)
       };
     }
 
-    // P3/P4 keyboard fallback shares P1/P2 with modifiers via gamepad primarily
     if (slot >= 2 && !pad) {
-      return {
-        left: false,
-        right: false,
-        up: false,
-        down: false,
-        jump: false,
-        attack: false,
-        special: false,
-        ultra: false,
-        regen: false,
-        moveX: 0
-      };
+      return { moveX: 0, jump: false, attack: false, special: false, ultra: false, blast: false, guard: false, dash: false, heavy: false, up: false, down: false };
     }
 
     const moveX = (right ? 1 : 0) - (left ? 1 : 0);
-    return { left, right, up, down, jump, attack, special, ultra, regen, moveX };
+    return { left, right, up, down, jump, attack, heavy, special, ultra, blast, guard, dash, moveX };
   }
 }

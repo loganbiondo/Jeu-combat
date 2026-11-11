@@ -70,8 +70,9 @@ ${cssGame}
 #log{font-size:.7rem;color:#94a3b8;white-space:nowrap;overflow:auto;min-height:1.2em}
 .controls{display:flex;justify-content:space-between;gap:8px}
 .pad,.acts{display:flex;flex-wrap:wrap;gap:8px}
-.hold{min-width:64px;min-height:56px;border-radius:16px;border:2px solid rgba(125,211,252,.45);background:rgba(10,20,34,.92);color:#fff;font-weight:800;font-family:"Exo 2",sans-serif}
+.hold{min-width:56px;min-height:52px;border-radius:16px;border:2px solid rgba(125,211,252,.45);background:rgba(10,20,34,.92);color:#fff;font-weight:800;font-family:"Exo 2",sans-serif;font-size:.85rem}
 .hold:active{background:rgba(62,199,240,.35);transform:scale(.97)}
+.hintbar{margin:2px 0 0;text-align:center;color:#9eb6c9;font-size:.72rem}
 .reward{border:1px solid rgba(245,214,87,.45);border-radius:18px;padding:16px;background:
  radial-gradient(circle at 20% 20%,rgba(245,214,87,.16),transparent 50%),rgba(10,20,34,.75)}
 .heroArt{height:160px;border-radius:20px;margin:8px 0 16px;overflow:hidden;border:1px solid rgba(125,211,252,.25);position:relative}
@@ -106,14 +107,18 @@ ${cssGame}
         <button class="hold" data-hold="left" type="button">◀</button>
         <button class="hold" data-hold="right" type="button">▶</button>
         <button class="hold" data-hold="jump" type="button">Jump</button>
+        <button class="hold" data-hold="dash" type="button">Dash</button>
       </div>
       <div class="acts">
         <button class="hold" data-hold="attack" type="button" style="border-color:#f5d657">Atk</button>
+        <button class="hold" data-hold="heavy" type="button" style="border-color:#fb923c">Smash</button>
+        <button class="hold" data-hold="blast" type="button" style="border-color:#67e8f9">Ki</button>
         <button class="hold" data-hold="special" type="button" style="border-color:#3ec7f0">Spé</button>
+        <button class="hold" data-hold="guard" type="button" style="border-color:#a5b4fc">Garde</button>
         <button class="hold" data-hold="ultra" type="button" style="border-color:#ff6b8a">ULTRA</button>
-        <button class="hold" data-hold="regen" type="button" style="border-color:#5ee39a">Regen</button>
       </div>
     </div>
+    <p class="hintbar">Atk x3 = combo · Smash = lance · Ki = projectile · Garde = block</p>
     <button class="btn" id="forfeit" type="button">Abandonner</button>
   </section>
   <section id="victory" class="screen">
@@ -154,9 +159,9 @@ function paintHero(){const c=$('heroCanvas'); const ctx=c.getContext('2d'); ctx.
   ['lumo','kira','zib','bolt'].forEach((id,i)=>{const off=document.createElement('canvas'); off.width=120; off.height=120; const octx=off.getContext('2d'); const ch=CHARS.find(x=>x.id===id); window.AKI.drawPortrait(octx,ch.id,ch.colors,120); ctx.drawImage(off,40+i*150,70,120,120)})}
 function renderChars(){const grid=$('charGrid'); grid.innerHTML=''; CHARS.forEach(c=>{const b=document.createElement('button'); b.type='button'; b.className='card'+(me===c.id?' on':''); const cv=document.createElement('canvas'); cv.width=180; cv.height=180; b.appendChild(cv); const strong=document.createElement('strong'); strong.textContent=c.name; const small=document.createElement('small'); small.textContent=c.tag; b.appendChild(strong); b.appendChild(small); b.onclick=()=>{me=c.id; renderChars()}; grid.appendChild(b); paintPortrait(cv,c)})}
 function startCombat(){show('combat'); fighting=true; const foe=CHARS.find(c=>c.id!==me)||CHARS[1]; send({type:'start',config:{mode:'1v1',stocks:3,fighters:[{id:'p0',slot:0,team:0,characterId:me,name:CHARS.find(c=>c.id===me).name,stocks:3},{id:'p1',slot:1,team:1,characterId:foe.id,name:foe.name,stocks:3}]}})}
-setInterval(()=>{if(!fighting||!$('combat').classList.contains('on'))return; send({type:'input',slot:1,input:{moveX:Math.random()>.5?1:-1,jump:Math.random()>.92,attack:Math.random()>.85,special:Math.random()>.95,ultra:Math.random()>.985}})},180);
 function bindHold(el,on,off){const s=e=>{e.preventDefault();on()}; const e=ev=>{ev.preventDefault();off()}; el.addEventListener('touchstart',s,{passive:false}); el.addEventListener('touchend',e); el.addEventListener('touchcancel',e); el.addEventListener('mousedown',s); el.addEventListener('mouseup',e); el.addEventListener('mouseleave',e)}
-document.querySelectorAll('[data-hold]').forEach(el=>{const k=el.getAttribute('data-hold'); if(k==='left')bindHold(el,()=>{moveX=-1;sendInput({moveX:-1})},()=>{moveX=0;sendInput({moveX:0})}); else if(k==='right')bindHold(el,()=>{moveX=1;sendInput({moveX:1})},()=>{moveX=0;sendInput({moveX:0})}); else bindHold(el,()=>sendInput({[k]:true}),()=>sendInput({[k]:false}))});
+document.querySelectorAll('[data-hold]').forEach(el=>{const k=el.getAttribute('data-hold'); if(k==='left')bindHold(el,()=>{moveX=-1;sendInput({moveX:-1})},()=>{moveX=0;sendInput({moveX:0})}); else if(k==='right')bindHold(el,()=>{moveX=1;sendInput({moveX:1})},()=>{moveX=0;sendInput({moveX:0})}); else if(k==='guard')bindHold(el,()=>sendInput({guard:true}),()=>sendInput({guard:false})); else bindHold(el,()=>sendInput({[k]:true}),()=>sendInput({[k]:false}))});
+setInterval(()=>{if(!fighting||!$('combat').classList.contains('on'))return; const r=Math.random(); send({type:'input',slot:1,input:{moveX:Math.random()>.5?1:-1,jump:r>.9,attack:r>.82,heavy:r>.96,blast:r>.93,special:r>.95,dash:r>.97,guard:r>.98,ultra:r>.992}})},160);
 $('goPlay').onclick=startCombat; $('goChars').onclick=()=>{renderChars();show('chars')}; $('startFromChars').onclick=startCombat; $('forfeit').onclick=()=>send({type:'forfeit'});
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>show(b.getAttribute('data-back')));
 paintHero();

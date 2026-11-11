@@ -343,19 +343,19 @@ export default function App() {
                   sendInput({ moveX: 0 });
                 }}
               />
-              <Hold
-                label="Jump"
-                onPressIn={() => sendInput({ jump: true })}
-                onPressOut={() => sendInput({ jump: false })}
-              />
+              <Hold label="Jump" onPressIn={() => sendInput({ jump: true })} onPressOut={() => sendInput({ jump: false })} />
+              <Hold label="Dash" onPressIn={() => sendInput({ dash: true })} onPressOut={() => sendInput({ dash: false })} />
             </View>
             <View style={styles.actions}>
               <Hold label="Atk" accent="#fde047" onPressIn={() => sendInput({ attack: true })} onPressOut={() => sendInput({ attack: false })} />
+              <Hold label="Smash" accent="#fb923c" onPressIn={() => sendInput({ heavy: true })} onPressOut={() => sendInput({ heavy: false })} />
+              <Hold label="Ki" accent="#67e8f9" onPressIn={() => sendInput({ blast: true })} onPressOut={() => sendInput({ blast: false })} />
               <Hold label="Spé" accent="#38bdf8" onPressIn={() => sendInput({ special: true })} onPressOut={() => sendInput({ special: false })} />
+              <Hold label="Garde" accent="#a5b4fc" onPressIn={() => sendInput({ guard: true })} onPressOut={() => sendInput({ guard: false })} />
               <Hold label="ULTRA" accent="#fb7185" onPressIn={() => sendInput({ ultra: true })} onPressOut={() => sendInput({ ultra: false })} />
-              <Hold label="Regen" accent="#4ade80" onPressIn={() => sendInput({ regen: true })} onPressOut={() => sendInput({ regen: false })} />
             </View>
           </View>
+          <Text style={styles.muted}>Atk x3 combo · Smash lance · Ki projectile</Text>
           <Btn label="Abandonner" onPress={() => postToGame({ type: 'forfeit' })} />
         </View>
       )}

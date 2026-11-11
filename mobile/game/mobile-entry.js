@@ -33,11 +33,17 @@ function edgeInputs() {
     const press = (k) => !!(cur[k] && !prev[k]);
     clean[slot] = {
       moveX: cur.moveX || 0,
+      up: !!cur.up,
+      down: !!cur.down,
       jump: press('jump'),
       attack: press('attack'),
+      heavy: press('heavy'),
       special: press('special'),
       ultra: press('ultra'),
-      regen: press('regen')
+      blast: press('blast') || press('regen'),
+      dash: press('dash'),
+      guard: !!cur.guard,
+      heal: press('heal')
     };
     prevHeld[slot] = { ...cur };
   }
