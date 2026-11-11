@@ -43,9 +43,18 @@ ipcMain.handle('store:get', () => store.read());
 ipcMain.handle('store:set', (_e, data) => store.write(data));
 ipcMain.handle('store:patch', (_e, patch) => store.patch(patch));
 
+function isSafeExternalUrl(url) {
+  try {
+    const u = new URL(String(url || ''));
+    return u.protocol === 'https:' || u.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
 ipcMain.handle('shop:checkout', async (_e, productId) => {
   const result = await createCheckoutSession(productId);
-  if (result.url) {
+  if (result.url && isSafeExternalUrl(result.url)) {
     await shell.openExternal(result.url);
   }
   return result;
@@ -56,6 +65,7 @@ ipcMain.handle('shop:verify', async (_e, sessionId) => {
 });
 
 ipcMain.handle('app:open-external', async (_e, url) => {
+  if (!isSafeExternalUrl(url)) return false;
   await shell.openExternal(url);
   return true;
 });

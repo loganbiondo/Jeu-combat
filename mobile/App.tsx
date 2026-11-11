@@ -136,18 +136,20 @@ export default function App() {
     return () => clearInterval(id);
   }, [screen, webReady, slotCount]);
 
-  const finishToVictory = async (names: string) => {
+  const finishToVictory = async (names: string, didWin: boolean) => {
     const picked = pickPrompt(save.promptHistory);
     const next = {
       ...save,
-      promptHistory: [...save.promptHistory, picked.index].slice(-100),
-      wins: save.wins + 1
+      promptHistory: didWin
+        ? [...save.promptHistory, picked.index].slice(-100)
+        : save.promptHistory,
+      wins: save.wins + (didWin ? 1 : 0)
     };
     await persist(next);
     setVictoryTitle(names || 'Match terminé');
-    setReward(picked.text);
+    setReward(didWin ? picked.text : 'Victoire requise pour la récompense.');
     const go = () => setScreen('victory');
-    if (!save.adFree) {
+    if (didWin && !save.adFree) {
       setAd(ADS[Math.floor(Math.random() * ADS.length)]);
       setAdLeft(3);
       pendingVictory.current = go;
@@ -178,7 +180,8 @@ export default function App() {
           .filter((f: { team: number }) => winners.has(f.team))
           .map((f: { name: string }) => f.name)
           .join(' & ');
-        finishToVictory(names);
+        const didWin = winners.has(0);
+        finishToVictory(names, didWin);
       }
     } catch {
       /* ignore */

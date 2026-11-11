@@ -27,24 +27,43 @@ const state = {
   shopCatalog: []
 };
 
+function normalizeSave(save) {
+  const freeIds = CHARACTERS.filter((c) => c.free).map((c) => c.id);
+  const unlocked = new Set([...(save?.unlockedCharacters || []), ...freeIds]);
+  return {
+    unlockedSkins: {},
+    unlockedTechniques: {},
+    ownedProducts: [],
+    adFree: false,
+    promptHistory: [],
+    wins: 0,
+    matchesPlayed: 0,
+    settings: { showAds: true },
+    ...save,
+    unlockedCharacters: [...unlocked]
+  };
+}
+
 async function loadSave() {
   if (window.aki?.getSave) {
-    state.save = await window.aki.getSave();
+    state.save = normalizeSave(await window.aki.getSave());
   } else {
     const raw = localStorage.getItem('aki-save');
-    state.save = raw
-      ? JSON.parse(raw)
-      : {
-          unlockedCharacters: CHARACTERS.filter((c) => c.free).map((c) => c.id),
-          unlockedSkins: {},
-          unlockedTechniques: {},
-          ownedProducts: [],
-          adFree: false,
-          promptHistory: [],
-          wins: 0,
-          matchesPlayed: 0,
-          settings: { showAds: true }
-        };
+    state.save = normalizeSave(
+      raw
+        ? JSON.parse(raw)
+        : {
+            unlockedCharacters: CHARACTERS.filter((c) => c.free).map((c) => c.id),
+            unlockedSkins: {},
+            unlockedTechniques: {},
+            ownedProducts: [],
+            adFree: false,
+            promptHistory: [],
+            wins: 0,
+            matchesPlayed: 0,
+            settings: { showAds: true }
+          }
+    );
   }
 }
 
@@ -164,10 +183,16 @@ function fighterConfigsFromSelections() {
 function updateCombatLog() {
   const ul = document.getElementById('combat-log');
   if (!state.engine) return;
-  ul.innerHTML = state.engine.log
-    .slice(0, 20)
-    .map((l) => `<li><span class="t">${l.t}s</span>${l.msg}</li>`)
-    .join('');
+  ul.replaceChildren();
+  for (const l of state.engine.log.slice(0, 20)) {
+    const li = document.createElement('li');
+    const t = document.createElement('span');
+    t.className = 't';
+    t.textContent = `${l.t}s`;
+    li.appendChild(t);
+    li.appendChild(document.createTextNode(String(l.msg ?? '')));
+    ul.appendChild(li);
+  }
 }
 
 function stopLoop() {
@@ -258,29 +283,39 @@ function startCombat(fighters, { online = false, host = true, fusionReady = fals
 }
 
 async function finishMatch() {
-  stopLoop();
-  const winners = state.engine?.winnerTeams || [];
-  const names = (state.engine?.fighters || [])
+  const engine = state.engine;
+  const winners = engine?.winnerTeams || [];
+  const fighters = engine?.fighters || [];
+  const names = fighters
     .filter((f) => winners.includes(f.team))
     .map((f) => f.name)
     .join(' & ');
+  const localTeam =
+    fighters.find((f) => f.slot === (state.localSeat ?? 0))?.team ?? 0;
+  const didWin = winners.includes(localTeam);
+
+  stopLoop();
 
   const reward = pickRewardPrompt(state.save.promptHistory || []);
   const history = [...(state.save.promptHistory || []), reward.index].slice(-100);
   await patchSave({
     promptHistory: history,
-    wins: (state.save.wins || 0) + 1,
+    wins: (state.save.wins || 0) + (didWin ? 1 : 0),
     matchesPlayed: (state.save.matchesPlayed || 0) + 1
   });
 
   const goVictory = () => {
     document.getElementById('victory-title').textContent = names || 'Match terminé';
-    document.getElementById('victory-sub').textContent = 'Effets spéciaux déployés. Prompt débloqué !';
-    document.getElementById('reward-prompt').textContent = reward.text;
+    document.getElementById('victory-sub').textContent = didWin
+      ? 'Effets spéciaux déployés. Prompt débloqué !'
+      : 'Match terminé. Réessaie pour débloquer un prompt.';
+    document.getElementById('reward-prompt').textContent = didWin
+      ? reward.text
+      : 'Victoire requise pour la récompense.';
     showScreen('victory');
   };
 
-  if (shouldShowAds(state.save)) showInterstitial(goVictory);
+  if (didWin && shouldShowAds(state.save)) showInterstitial(goVictory);
   else goVictory();
 }
 
@@ -354,7 +389,7 @@ function bindNet() {
   });
   state.net.on('match:state', (snap) => {
     if (!state.engine || state.localSeat === 0) return;
-    // Soft sync positions for non-host
+    // Soft sync positions + Fusion Grok for non-host
     snap.fighters?.forEach((sf) => {
       const f = state.engine.fighters.find((x) => x.slot === sf.slot);
       if (!f) return;
@@ -364,13 +399,24 @@ function bindNet() {
       f.vy = sf.vy;
       f.percent = sf.percent;
       f.hp = sf.hp;
+      f.maxHp = sf.maxHp ?? f.maxHp;
       f.ki = sf.ki;
       f.stocks = sf.stocks;
       f.alive = sf.alive;
       f.action = sf.action;
       f.facing = sf.facing;
+      f.characterId = sf.characterId ?? f.characterId;
+      f.name = sf.name ?? f.name;
+      if (sf.colors) f.colors = sf.colors;
+      f.fused = !!sf.fused;
+      f.fusionMeter = sf.fusionMeter ?? f.fusionMeter;
+      f.maxFusionMeter = sf.maxFusionMeter ?? f.maxFusionMeter;
+      f.fusionTimer = sf.fusionTimer ?? f.fusionTimer;
+      f.canFusion = sf.canFusion ?? f.canFusion;
     });
     if (snap.log) state.engine.log = snap.log;
+    state.engine.fusionBanner = snap.fusionBanner ?? 0;
+    state.engine.fusionBannerText = snap.fusionBannerText || '';
     if (snap.ended) {
       state.engine.ended = true;
       state.engine.winnerTeams = snap.winnerTeams;

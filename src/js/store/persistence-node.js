@@ -1,9 +1,11 @@
 const fs = require('fs');
 
+const FREE_CHARACTERS = [
+  'lumo', 'pebble', 'nori', 'capra', 'mossy', 'zib', 'kira', 'bolt', 'grok'
+];
+
 const DEFAULT_SAVE = {
-  unlockedCharacters: [
-    'lumo', 'pebble', 'nori', 'capra', 'mossy', 'zib', 'kira', 'bolt'
-  ],
+  unlockedCharacters: [...FREE_CHARACTERS],
   unlockedSkins: {},
   unlockedTechniques: {},
   ownedProducts: [],
@@ -33,17 +35,24 @@ class Store {
     }
   }
 
+  normalize(data) {
+    const merged = { ...DEFAULT_SAVE, ...data };
+    const unlocked = new Set([...(merged.unlockedCharacters || []), ...FREE_CHARACTERS]);
+    merged.unlockedCharacters = [...unlocked];
+    return merged;
+  }
+
   read() {
     try {
       const raw = fs.readFileSync(this.filePath, 'utf8');
-      return { ...DEFAULT_SAVE, ...JSON.parse(raw) };
+      return this.normalize(JSON.parse(raw));
     } catch {
       return { ...DEFAULT_SAVE };
     }
   }
 
   write(data) {
-    const merged = { ...DEFAULT_SAVE, ...data };
+    const merged = this.normalize(data);
     fs.writeFileSync(this.filePath, JSON.stringify(merged, null, 2));
     return merged;
   }

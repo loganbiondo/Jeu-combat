@@ -110,7 +110,6 @@ export class CombatEngine {
       for (const f of this.fighters) {
         if (f.canFusion) {
           f.fusionMeter = f.maxFusionMeter;
-          f.stocks = Math.max(f.stocks, 5);
           f.invuln = Math.max(f.invuln, 1.5);
         }
       }

@@ -1910,7 +1910,6 @@ background:radial-gradient(circle at 15% 20%,rgba(245,214,87,.18),transparent 50
         for (const f of this.fighters) {
           if (f.canFusion) {
             f.fusionMeter = f.maxFusionMeter;
-            f.stocks = Math.max(f.stocks, 5);
             f.invuln = Math.max(f.invuln, 1.5);
           }
         }
@@ -3526,7 +3525,7 @@ const CHARS=[
 ];
 const PROMPTS=['Inventе un snack qui recharge le ki.','Décris une arène en nuages caramel.','Imagine une danse de victoire ridicule.','Propose un nom de technique inédite.','Écris un haiku sur un smash raté.','Design un stage trampoline gelée.']
 .map(s=>s.replace(/\u0435/g,'e'));
-let me='lumo', moveX=0, fighting=false;
+let me='lumo', moveX=0, fighting=false, fusionReadyMatch=false;
 const $=id=>document.getElementById(id);
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on'); if(id==='home') paintHero();}
 function handleGameMsg(data){if(!data?.type)return; if(data.type==='ready')$('stage').textContent=data.stage||'Arène · Fusion Grok active'; if(data.type==='log')$('log').textContent=(data.log||[]).map(l=>l.msg).slice(0,2).join(' · '); if(data.type==='ended'){fighting=false; const winners=new Set(data.winnerTeams||[]); const names=(data.fighters||[]).filter(f=>winners.has(f.team)).map(f=>f.name).join(' & '); $('winTitle').textContent=names||'Match terminé'; $('rewardText').textContent=PROMPTS[Math.floor(Math.random()*PROMPTS.length)]; show('victory');}}
@@ -3537,9 +3536,9 @@ function paintPortrait(canvas,ch){const ctx=canvas.getContext('2d'); window.AKI.
 function paintHero(){const c=$('heroCanvas'); const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); const g=ctx.createLinearGradient(0,0,c.width,c.height); g.addColorStop(0,'#0b1d3a'); g.addColorStop(1,'#1e3a5f'); ctx.fillStyle=g; ctx.fillRect(0,0,c.width,c.height);
   ['lumo','kira','grok','bolt'].forEach((id,i)=>{const off=document.createElement('canvas'); off.width=120; off.height=120; const octx=off.getContext('2d'); const ch=CHARS.find(x=>x.id===id); window.AKI.drawPortrait(octx,ch.id,ch.colors,120); ctx.drawImage(off,40+i*150,70,120,120)})}
 function renderChars(){const grid=$('charGrid'); grid.innerHTML=''; CHARS.forEach(c=>{const b=document.createElement('button'); b.type='button'; b.className='card'+(me===c.id?' on':''); const cv=document.createElement('canvas'); cv.width=180; cv.height=180; b.appendChild(cv); const strong=document.createElement('strong'); strong.textContent=c.name; const small=document.createElement('small'); small.textContent=c.tag; b.appendChild(strong); b.appendChild(small); b.onclick=()=>{me=c.id; renderChars()}; grid.appendChild(b); paintPortrait(cv,c)})}
-function startCombat(opts={}){show('combat'); fighting=true; fightStartedAt=Date.now(); const heroId=me==='grok'?'lumo':me; const foe=CHARS.find(c=>c.id==='grok')||CHARS.find(c=>c.id!==heroId)||CHARS[1]; const hero=CHARS.find(c=>c.id===heroId); send({type:'start',config:{mode:'1v1',stocks:3,fusionReady:!!opts.fusionReady,fighters:[{id:'p0',slot:0,team:0,characterId:hero.id,name:hero.name,stocks:3},{id:'p1',slot:1,team:1,characterId:foe.id,name:foe.name,stocks:3}]}})}
+function startCombat(opts={}){show('combat'); fighting=true; fightStartedAt=Date.now(); fusionReadyMatch=!!opts.fusionReady; const heroId=me==='grok'?'lumo':me; const foe=CHARS.find(c=>c.id==='grok')||CHARS.find(c=>c.id!==heroId)||CHARS[1]; const hero=CHARS.find(c=>c.id===heroId); send({type:'start',config:{mode:'1v1',stocks:3,fusionReady:fusionReadyMatch,fighters:[{id:'p0',slot:0,team:0,characterId:hero.id,name:hero.name,stocks:3},{id:'p1',slot:1,team:1,characterId:foe.id,name:foe.name,stocks:3}]}})}
 let fightStartedAt=0;
-setInterval(()=>{if(!fighting||!$('combat').classList.contains('on'))return; if(Date.now()-fightStartedAt<3500)return; send({type:'input',slot:1,input:{moveX:Math.random()>.5?1:-1,jump:Math.random()>.92,attack:Math.random()>.85,special:Math.random()>.95,ultra:Math.random()>.985}})},180);
+setInterval(()=>{if(!fighting||!$('combat').classList.contains('on'))return; if(fusionReadyMatch&&Date.now()-fightStartedAt<3500)return; send({type:'input',slot:1,input:{moveX:Math.random()>.5?1:-1,jump:Math.random()>.92,attack:Math.random()>.85,special:Math.random()>.95,ultra:Math.random()>.985}})},180);
 function bindHold(el,on,off){const s=e=>{e.preventDefault();on()}; const e=ev=>{ev.preventDefault();off()}; el.addEventListener('touchstart',s,{passive:false}); el.addEventListener('touchend',e); el.addEventListener('touchcancel',e); el.addEventListener('mousedown',s); el.addEventListener('mouseup',e); el.addEventListener('mouseleave',e)}
 document.querySelectorAll('[data-hold]').forEach(el=>{const k=el.getAttribute('data-hold'); if(k==='left')bindHold(el,()=>{moveX=-1;sendInput({moveX:-1})},()=>{moveX=0;sendInput({moveX:0})}); else if(k==='right')bindHold(el,()=>{moveX=1;sendInput({moveX:1})},()=>{moveX=0;sendInput({moveX:0})}); else bindHold(el,()=>sendInput({[k]:true}),()=>sendInput({[k]:false}))});
 $('goPlay').onclick=()=>startCombat(); $('goFusion').onclick=()=>startCombat({fusionReady:true}); $('goChars').onclick=()=>{renderChars();show('chars')}; $('startFromChars').onclick=()=>startCombat(); $('startFusionFromChars').onclick=()=>startCombat({fusionReady:true}); $('forfeit').onclick=()=>send({type:'forfeit'});
