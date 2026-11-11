@@ -147,6 +147,9 @@ export class CombatEngine {
     attacker.combo += 1;
     attacker.ki = clamp(attacker.ki + 8 * (opts.kiGain || 1) * attacker.stats.kiRegen, 0, attacker.maxKi);
 
+    // Capture grounded state before launch clears it (dust VFX)
+    const wasGrounded = !!defender.onGround || !!opts.grounded;
+
     // Realistic fighting-game knockback: angled launch + attacker recoil
     const kb = ((opts.knock || 1) * (11 + dmg * 0.62) * (opts.kbMul || 1)) / defender.stats.weight;
     const dir = opts.dirX != null ? opts.dirX : Math.sign(defender.x - attacker.x) || attacker.facing;
@@ -154,7 +157,7 @@ export class CombatEngine {
     const speed = kb * 26;
     defender.vx = dir * Math.cos(Math.abs(angle)) * speed;
     defender.vy = Math.sin(angle) * speed * (opts.up || 1) - (opts.heavy ? 40 : 18);
-    if (!opts.heavy && defender.onGround) defender.vy = Math.min(defender.vy, -55);
+    if (!opts.heavy && wasGrounded) defender.vy = Math.min(defender.vy, -55);
     defender.onGround = false;
     defender.fastFall = false;
     defender.jabStep = 0;
@@ -173,7 +176,7 @@ export class CombatEngine {
     const impactX = (attacker.x + defender.x) / 2 + dir * 8;
     const impactY = defender.y - defender.radius * 0.35;
     this.fx.onHit(impactX, impactY, hpDmg, heavy);
-    if (defender.onGround || opts.grounded) {
+    if (wasGrounded) {
       this.fx.burst(defender.x, this.stage.ground.y - 4, {
         count: heavy ? 16 : 8,
         speed: 110,
@@ -583,14 +586,17 @@ export class CombatEngine {
       if (id && !kit.includes(id)) kit.push(id);
     });
     if (!kit.length) return;
-    f._specialCursor = ((f._specialCursor || 0) % kit.length);
-    const pick = index > 0 && kit[index] ? kit[index] : kit[f._specialCursor];
-    f._specialCursor = (f._specialCursor + 1) % kit.length;
+    const cursor = (f._specialCursor || 0) % kit.length;
+    const pick = index > 0 && kit[index] ? kit[index] : kit[cursor];
     const tech = getTechnique(pick);
     if (!tech) return;
     if (f.ki < tech.kiCost) {
       this.fx.floatText(f.x, f.y - 40, 'KI?', '#94a3b8');
       return;
+    }
+    // Advance kit only after a successful cast
+    if (!(index > 0 && kit[index])) {
+      f._specialCursor = (cursor + 1) % kit.length;
     }
     f.ki -= tech.kiCost;
     f.specialCd = tech.cooldown;
