@@ -1,124 +1,102 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>Arena Ki Fighters</title>
-  <style>
-    :root {
-      --bg: #07111f;
-      --ink: #e8eef7;
-      --muted: #9fb3c8;
-      --accent: #38bdf8;
-      --hot: #fb7185;
-      --ok: #4ade80;
-      --sun: #fde047;
-    }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body {
-      margin: 0; height: 100%; background: var(--bg); color: var(--ink);
-      font-family: "Trebuchet MS", system-ui, sans-serif; overflow: hidden;
-      touch-action: manipulation;
-    }
-    #app { height: 100%; display: flex; flex-direction: column; }
-    .screen { display: none; flex: 1; flex-direction: column; padding: 20px 18px env(safe-area-inset-bottom); overflow: auto; }
-    .screen.on { display: flex; }
-    .brand { color: var(--sun); font-weight: 800; letter-spacing: .18em; font-size: .75rem; }
-    h1 { margin: 10px 0; font-size: 2rem; line-height: 1.05; }
-    p { color: var(--muted); line-height: 1.4; }
-    .btn {
-      display: block; width: 100%; margin: 8px 0; padding: 14px;
-      border-radius: 999px; border: 1px solid rgba(125,211,252,.35);
-      background: rgba(15,23,42,.7); color: var(--ink); font-weight: 800; font-size: 1rem;
-    }
-    .btn.primary { background: linear-gradient(120deg, #38bdf8, #fde047); color: #0b1220; border: 0; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .card {
-      border: 2px solid #334155; border-radius: 14px; padding: 10px; background: rgba(15,23,42,.75); text-align: left; color: inherit;
-    }
-    .card.on { border-color: var(--sun); }
-    .swatch { height: 42px; border-radius: 10px; margin-bottom: 6px; }
-    .card strong { display: block; }
-    .card small { color: var(--muted); }
-    #combat { padding: 8px; gap: 6px; overflow: hidden; }
-    #frameWrap {
-      flex: 1; min-height: 38vh; border-radius: 14px; overflow: hidden;
-      border: 1px solid rgba(125,211,252,.35); background: #0b1d3a;
-      position: relative;
-    }
-    
-  html,body{margin:0;height:100%;background:#07111f;overflow:hidden}
-  #wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
-  canvas{background:#0b1d3a;max-width:100%;max-height:100%}
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<title>Arena Ki Fighters</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;800&family=Nunito:wght@600;800&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#061018;--ink:#f3f7fb;--muted:#9eb6c9;--sun:#f5d657;--cyan:#3ec7f0;--hot:#ff6b8a;--ok:#5ee39a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,sans-serif;overflow:hidden;touch-action:manipulation}
+#app{height:100%;display:flex;flex-direction:column;position:relative}
+.bgfx{position:fixed;inset:0;pointer-events:none;background:
+ radial-gradient(ellipse 80% 50% at 80% 10%,rgba(255,107,138,.22),transparent 55%),
+ radial-gradient(ellipse 70% 45% at 10% 90%,rgba(62,199,240,.2),transparent 50%),
+ linear-gradient(165deg,#061018 0%,#12314a 48%,#1a4a5e 100%);
+ animation:hue 14s ease-in-out infinite alternate}
+@keyframes hue{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(14deg)}}
+.screen{display:none;flex:1;flex-direction:column;padding:22px 18px calc(18px + env(safe-area-inset-bottom));overflow:auto;position:relative;z-index:1}
+.screen.on{display:flex}
+.brand{font-family:"Exo 2",sans-serif;color:var(--sun);font-weight:800;letter-spacing:.2em;font-size:.78rem;text-shadow:0 0 18px rgba(245,214,87,.35)}
+h1{font-family:"Exo 2",sans-serif;font-weight:800;font-size:clamp(2.1rem,8vw,3.2rem);line-height:.98;margin:12px 0 10px;
+background:linear-gradient(120deg,#fff 10%,#7dd3fc 45%,#f5d657 85%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--muted);font-size:1.02rem;line-height:1.4;max-width:28ch;margin:0 0 18px}
+.btn{display:block;width:100%;margin:8px 0;padding:15px;border-radius:999px;border:1px solid rgba(125,211,252,.3);
+background:rgba(10,20,34,.72);color:var(--ink);font-family:"Exo 2",sans-serif;font-weight:800;font-size:1rem}
+.btn.primary{border:0;background:linear-gradient(120deg,#3ec7f0,#f5d657);color:#0b1220;box-shadow:0 10px 28px rgba(62,199,240,.28)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{border:2px solid transparent;border-radius:18px;padding:10px;background:rgba(10,20,34,.78);text-align:left;color:inherit;
+box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.card.on{border-color:var(--sun);box-shadow:0 0 0 1px var(--sun),0 10px 28px rgba(245,214,87,.2)}
+.card canvas{width:100%;height:auto;border-radius:12px;display:block;background:#0b1d3a}
+.card strong{display:block;margin-top:8px;font-family:"Exo 2",sans-serif}
+.card small{color:var(--muted);display:block;line-height:1.25}
+#combat{padding:8px;gap:6px;overflow:hidden}
+#frameWrap{flex:1;min-height:38vh;border-radius:16px;overflow:hidden;border:1px solid rgba(125,211,252,.35);background:#0b1d3a;position:relative}
 
-    #wrap { width: 100%; height: 100%; display:flex; align-items:center; justify-content:center; }
-    canvas { max-width: 100%; max-height: 100%; background:#0b1d3a; }
-    #stage { text-align: center; color: var(--muted); font-size: .8rem; font-weight: 700; }
-    #log { font-size: .7rem; color: #94a3b8; white-space: nowrap; overflow: auto; min-height: 1.2em; }
-    .controls { display: flex; justify-content: space-between; gap: 8px; }
-    .pad, .acts { display: flex; flex-wrap: wrap; gap: 8px; }
-    .hold {
-      min-width: 64px; min-height: 54px; border-radius: 14px; border: 2px solid rgba(125,211,252,.45);
-      background: rgba(15,23,42,.9); color: #fff; font-weight: 800;
-    }
-    .hold:active { background: rgba(56,189,248,.35); }
-    .reward {
-      border: 1px solid rgba(253,224,71,.45); border-radius: 16px; padding: 14px; background: rgba(15,23,42,.7);
-    }
-  </style>
+  #wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+  canvas#game{background:#0b1d3a;max-width:100%;max-height:100%}
+
+#stage{text-align:center;color:var(--muted);font-size:.8rem;font-weight:800;font-family:"Exo 2",sans-serif}
+#log{font-size:.7rem;color:#94a3b8;white-space:nowrap;overflow:auto;min-height:1.2em}
+.controls{display:flex;justify-content:space-between;gap:8px}
+.pad,.acts{display:flex;flex-wrap:wrap;gap:8px}
+.hold{min-width:64px;min-height:56px;border-radius:16px;border:2px solid rgba(125,211,252,.45);background:rgba(10,20,34,.92);color:#fff;font-weight:800;font-family:"Exo 2",sans-serif}
+.hold:active{background:rgba(62,199,240,.35);transform:scale(.97)}
+.reward{border:1px solid rgba(245,214,87,.45);border-radius:18px;padding:16px;background:
+ radial-gradient(circle at 20% 20%,rgba(245,214,87,.16),transparent 50%),rgba(10,20,34,.75)}
+.heroArt{height:160px;border-radius:20px;margin:8px 0 16px;overflow:hidden;border:1px solid rgba(125,211,252,.25);position:relative}
+.heroArt canvas{width:100%;height:100%}
+</style>
 </head>
 <body>
-  <div id="app">
-    <section id="home" class="screen on">
-      <div class="brand">ARENA KI FIGHTERS</div>
-      <h1>Smash doux.<br/>Ki explosif.</h1>
-      <p>Jouable sur téléphone. Remplis le ki puis lance ULTRA.</p>
-      <button class="btn primary" id="goPlay">Jouer 1v1 vs IA</button>
-      <button class="btn" id="goChars">Choisir mon perso</button>
-    </section>
-
-    <section id="chars" class="screen">
-      <div class="brand">PERSONNAGES</div>
-      <h1>Ton combattant</h1>
-      <div class="grid" id="charGrid"></div>
-      <button class="btn primary" id="startFromChars">Lancer</button>
-      <button class="btn" data-back="home">Retour</button>
-    </section>
-
-    <section id="combat" class="screen">
-      <div id="frameWrap">
-        <div id="wrap"><canvas id="game" width="1280" height="720"></canvas></div>
+<div class="bgfx"></div>
+<div id="app">
+  <section id="home" class="screen on">
+    <div class="brand">ARENA KI FIGHTERS</div>
+    <h1>Smash doux.<br/>Ki explosif.</h1>
+    <p class="sub">Combattants originaux, ultras spectaculaires, arène cosmique.</p>
+    <div class="heroArt"><canvas id="heroCanvas" width="640" height="280"></canvas></div>
+    <button class="btn primary" id="goPlay">Jouer 1v1 vs IA</button>
+    <button class="btn" id="goChars">Choisir mon héros</button>
+  </section>
+  <section id="chars" class="screen">
+    <div class="brand">ROSTER</div>
+    <h1 style="font-size:2rem">Choisis ton style</h1>
+    <p class="sub">Chaque perso a une silhouette et des pouvoirs uniques.</p>
+    <div class="grid" id="charGrid"></div>
+    <button class="btn primary" id="startFromChars">Entrer dans l'arène</button>
+    <button class="btn" data-back="home">Retour</button>
+  </section>
+  <section id="combat" class="screen">
+    <div id="frameWrap"><div id="wrap"><canvas id="game" width="1280" height="720"></canvas></div></div>
+    <div id="stage">Arène</div>
+    <div id="log"></div>
+    <div class="controls">
+      <div class="pad">
+        <button class="hold" data-hold="left" type="button">◀</button>
+        <button class="hold" data-hold="right" type="button">▶</button>
+        <button class="hold" data-hold="jump" type="button">Jump</button>
       </div>
-      <div id="stage">Arène</div>
-      <div id="log"></div>
-      <div class="controls">
-        <div class="pad">
-          <button class="hold" data-hold="left" type="button">◀</button>
-          <button class="hold" data-hold="right" type="button">▶</button>
-          <button class="hold" data-hold="jump" type="button">Jump</button>
-        </div>
-        <div class="acts">
-          <button class="hold" data-hold="attack" type="button" style="border-color:#fde047">Atk</button>
-          <button class="hold" data-hold="special" type="button" style="border-color:#38bdf8">Spé</button>
-          <button class="hold" data-hold="ultra" type="button" style="border-color:#fb7185">ULTRA</button>
-          <button class="hold" data-hold="regen" type="button" style="border-color:#4ade80">Regen</button>
-        </div>
+      <div class="acts">
+        <button class="hold" data-hold="attack" type="button" style="border-color:#f5d657">Atk</button>
+        <button class="hold" data-hold="special" type="button" style="border-color:#3ec7f0">Spé</button>
+        <button class="hold" data-hold="ultra" type="button" style="border-color:#ff6b8a">ULTRA</button>
+        <button class="hold" data-hold="regen" type="button" style="border-color:#5ee39a">Regen</button>
       </div>
-      <button class="btn" id="forfeit" type="button">Abandonner</button>
-    </section>
-
-    <section id="victory" class="screen">
-      <div class="brand">VICTOIRE</div>
-      <h1 id="winTitle">Gagnant</h1>
-      <div class="reward">
-        <strong style="color:var(--sun)">Récompense</strong>
-        <p id="rewardText">—</p>
-      </div>
-      <button class="btn primary" data-back="home" type="button">Menu</button>
-    </section>
-  </div>
-
-  <script>
+    </div>
+    <button class="btn" id="forfeit" type="button">Abandonner</button>
+  </section>
+  <section id="victory" class="screen">
+    <div class="brand">VICTOIRE</div>
+    <h1 id="winTitle">Gagnant</h1>
+    <div class="reward"><strong style="color:var(--sun)">Récompense</strong><p id="rewardText" class="sub">—</p></div>
+    <button class="btn primary" data-back="home" type="button">Menu</button>
+  </section>
+</div>
+<script>
 "use strict";
 (() => {
   // ../src/js/data/characters.js
@@ -2228,6 +2206,595 @@
     }
   };
 
+  // ../src/js/game/sprites.js
+  function shade(hex, amt) {
+    const n = hex.replace("#", "");
+    const num = parseInt(n.length === 3 ? n.split("").map((c) => c + c).join("") : n, 16);
+    let r = (num >> 16) + amt;
+    let g = (num >> 8 & 255) + amt;
+    let b = (num & 255) + amt;
+    r = Math.max(0, Math.min(255, r));
+    g = Math.max(0, Math.min(255, g));
+    b = Math.max(0, Math.min(255, b));
+    return `rgb(${r},${g},${b})`;
+  }
+  function limb(ctx, x1, y1, x2, y2, w, color, outline) {
+    ctx.strokeStyle = outline;
+    ctx.lineWidth = w + 2;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = w;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+  function eyes(ctx, x, y, gap = 7, r = 3.2, happy = true) {
+    ctx.fillStyle = "#0f172a";
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.arc(x + gap, y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.arc(x + 1, y - 1, r * 0.35, 0, Math.PI * 2);
+    ctx.arc(x + gap + 1, y - 1, r * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+    if (happy) {
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(x + gap / 2, y + 6, 4, 0.15, Math.PI - 0.15);
+      ctx.stroke();
+    }
+  }
+  function bob(t, amp = 2) {
+    return Math.sin(t * 6) * amp;
+  }
+  function drawCharacterSprite(ctx, id, colors, t, action = "idle") {
+    const c = colors;
+    const o = c.outline;
+    const body = c.body;
+    const accent = c.accent;
+    const dark = shade(body, -40);
+    const light = shade(body, 35);
+    const hop = action === "idle" ? bob(t) : action === "attack" ? -2 : 0;
+    ctx.save();
+    ctx.translate(0, hop);
+    const drawers = {
+      lumo: drawLumo,
+      pebble: drawPebble,
+      nori: drawNori,
+      capra: drawCapra,
+      mossy: drawMossy,
+      zib: drawZib,
+      kira: drawKira,
+      bolt: drawBolt,
+      quillox: drawQuillox,
+      ironpaw: drawIronpaw,
+      velvet: drawVelvet
+    };
+    (drawers[id] || drawLumo)(ctx, { body, accent, o, dark, light, t, action });
+    ctx.restore();
+  }
+  function drawLumo(ctx, p) {
+    ctx.fillStyle = "rgba(254,240,138,0.35)";
+    ctx.beginPath();
+    ctx.ellipse(-18, -6, 14, 22, -0.5, 0, Math.PI * 2);
+    ctx.ellipse(-8, -16, 12, 18, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+    limb(ctx, -6, 10, -14, 26, 7, p.body, p.o);
+    limb(ctx, 6, 10, 12, 26, 7, p.body, p.o);
+    limb(ctx, -10, 0, -22, -8, 6, p.accent, p.o);
+    limb(ctx, 10, 0, 20, 6, 6, p.accent, p.o);
+    const g = ctx.createLinearGradient(-16, -20, 16, 24);
+    g.addColorStop(0, p.light);
+    g.addColorStop(1, p.dark);
+    ctx.fillStyle = g;
+    ctx.strokeStyle = p.o;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-14, 8);
+    ctx.quadraticCurveTo(-20, -10, -6, -22);
+    ctx.quadraticCurveTo(0, -28, 8, -20);
+    ctx.quadraticCurveTo(20, -6, 14, 10);
+    ctx.quadraticCurveTo(0, 22, -14, 8);
+    ctx.fill();
+    ctx.stroke();
+    ctx.strokeStyle = p.accent;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-4, -22);
+    ctx.quadraticCurveTo(-10, -36, -2, -40);
+    ctx.moveTo(6, -20);
+    ctx.quadraticCurveTo(14, -34, 10, -42);
+    ctx.stroke();
+    ctx.fillStyle = p.accent;
+    ctx.beginPath();
+    ctx.arc(-2, -40, 4, 0, Math.PI * 2);
+    ctx.arc(10, -42, 4, 0, Math.PI * 2);
+    ctx.fill();
+    eyes(ctx, 0, -10, 9, 3.4);
+    ctx.fillStyle = p.accent;
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const a = -Math.PI / 2 + i * 2 * Math.PI / 5;
+      const r = i % 2 ? 4 : 9;
+      const x = Math.cos(a) * r;
+      const y = 4 + Math.sin(a) * r;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+  function drawPebble(ctx, p) {
+    ctx.fillStyle = p.dark;
+    ctx.strokeStyle = p.o;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(0, 6, 26, 18, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = p.accent;
+    ctx.beginPath();
+    ctx.ellipse(-10, 0, 8, 5, -0.4, 0, Math.PI * 2);
+    ctx.ellipse(8, 4, 7, 4, 0.3, 0, Math.PI * 2);
+    ctx.ellipse(0, -4, 6, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const g = ctx.createRadialGradient(-2, -14, 2, 0, -10, 18);
+    g.addColorStop(0, p.light);
+    g.addColorStop(1, p.body);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(4, -12, 16, 14, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = p.dark;
+    ctx.beginPath();
+    ctx.moveTo(-8, -22);
+    ctx.lineTo(-14, -34);
+    ctx.lineTo(-2, -26);
+    ctx.moveTo(10, -22);
+    ctx.lineTo(18, -34);
+    ctx.lineTo(14, -20);
+    ctx.fill();
+    eyes(ctx, 0, -14, 8, 3);
+    ctx.strokeStyle = p.o;
+    ctx.beginPath();
+    ctx.arc(4, -8, 5, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+    ctx.fillStyle = p.body;
+    ctx.beginPath();
+    ctx.ellipse(-12, 22, 8, 5, 0, 0, Math.PI * 2);
+    ctx.ellipse(12, 22, 8, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  function drawNori(ctx, p) {
+    limb(ctx, -6, 12, -10, 28, 6, "#f5c6a5", p.o);
+    limb(ctx, 6, 12, 12, 28, 6, "#f5c6a5", p.o);
+    ctx.fillStyle = p.accent;
+    ctx.beginPath();
+    ctx.moveTo(10, -4);
+    ctx.quadraticCurveTo(28, 0, 34, 12 + Math.sin(p.t * 8) * 3);
+    ctx.quadraticCurveTo(22, 8, 10, 4);
+    ctx.fill();
+    ctx.fillStyle = p.body;
+    ctx.strokeStyle = p.o;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-12, 14);
+    ctx.lineTo(-14, -6);
+    ctx.lineTo(-8, -14);
+    ctx.lineTo(10, -14);
+    ctx.lineTo(14, -4);
+    ctx.lineTo(12, 14);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = p.accent;
+    ctx.fillRect(-12, 2, 24, 5);
+    ctx.fillStyle = "#f5c6a5";
+    ctx.beginPath();
+    ctx.arc(0, -22, 11, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#3f1d0f";
+    ctx.beginPath();
+    ctx.ellipse(0, -30, 10, 6, 0, 0, Math.PI * 2);
+    ctx.arc(8, -34, 6, 0, Math.PI * 2);
+    ctx.fill();
+    eyes(ctx, -4, -23, 8, 2.8);
+    ctx.fillStyle = "#334155";
+    ctx.beginPath();
+    ctx.ellipse(22, 2, 10, 5, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = p.accent;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(12, 2);
+    ctx.lineTo(22, 2);
+    ctx.stroke();
+    ctx.fillStyle = p.accent;
+    ctx.beginPath();
+    ctx.arc(20, -2, 2, 0, Math.PI * 2);
+    ctx.arc(25, 0, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  function drawCapra(ctx, p) {
+    limb(ctx, -8, 10, -12, 26, 7, p.body, p.o);
+    limb(ctx, 8, 10, 14, 26, 7, p.body, p.o);
+    ctx.fillStyle = p.body;
+    ctx.strokeStyle = p.o;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(0, 4, 16, 18, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = p.accent;
+    ctx.beginPath();
+    ctx.moveTo(-14, -2);
+    ctx.lineTo(-18, 16);
+    ctx.lineTo(18, 16);
+    ctx.lineTo(14, -2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = p.light;
+    ctx.beginPath();
+    ctx.ellipse(2, -16, 13, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.strokeStyle = p.o;
+    ctx.fillStyle = "#e7e5e4";
+    ctx.beginPath();
+    ctx.moveTo(-6, -24);
+    ctx.quadraticCurveTo(-18, -38, -8, -42);
+    ctx.quadraticCurveTo(-4, -34, -2, -26);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(8, -24);
+    ctx.quadraticCurveTo(22, -40, 14, -44);
+    ctx.quadraticCurveTo(10, -34, 10, -24);
+    ctx.fill();
+    ctx.fillStyle = "#0f172a";
+    ctx.beginPath();
+    ctx.arc(-2, -16, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#0f172a";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-10, -20);
+    ctx.lineTo(10, -12);
+    ctx.stroke();
+    eyes(ctx, 4, -16, 0, 3.2, false);
+    ctx.fillStyle = p.accent;
+    ctx.beginPath();
+    ctx.ellipse(2, -24, 12, 5, 0, Math.PI, Math.PI * 2);
+    ctx.fill();
+  }
+  function drawMossy(ctx, p) {
+    limb(ctx, -10, 8, -16, 24, 9, p.dark, p.o);
+    limb(ctx, 10, 8, 16, 24, 9, p.dark, p.o);
+    ctx.fillStyle = p.body;
+    ctx.strokeStyle = p.o;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(-16, -8, 32, 28, 10);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = p.accent;
+    for (let i = 0; i < 5; i++) {
+      ctx.beginPath();
+      ctx.ellipse(-20 + i * 4, -4 + i % 2 * 4, 6, 10, -0.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = p.light;
+    ctx.beginPath();
+    ctx.arc(0, -18, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.strokeStyle = p.accent;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, -18, 16, Math.PI * 1.1, Math.PI * 1.9);
+    ctx.stroke();
+    ctx.fillStyle = "#86efac";
+    ctx.beginPath();
+    ctx.ellipse(-10, -32, 5, 8, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(8, -34, 5, 9, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    eyes(ctx, -5, -18, 10, 3.5);
+    ctx.strokeStyle = p.accent;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-6, 2, 12, 12);
+    ctx.beginPath();
+    ctx.moveTo(0, 2);
+    ctx.lineTo(0, 14);
+    ctx.moveTo(-6, 8);
+    ctx.lineTo(6, 8);
+    ctx.stroke();
+  }
+  function drawZib(ctx, p) {
+    const wiggle = Math.sin(p.t * 10) * 2;
+    ctx.fillStyle = p.body;
+    ctx.strokeStyle = p.o;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-16, 8);
+    ctx.quadraticCurveTo(-22 + wiggle, -10, -4, -24);
+    ctx.quadraticCurveTo(4, -30, 14, -18);
+    ctx.quadraticCurveTo(24 - wiggle, 0, 16, 14);
+    ctx.quadraticCurveTo(0, 24, -16, 8);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.ellipse(2, -2, 10, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = p.o;
+    ctx.beginPath();
+    ctx.ellipse(2, 0, 8, 4, 0, 0, Math.PI);
+    ctx.fill();
+    eyes(ctx, -4, -14, 12, 4.2);
+    ctx.strokeStyle = p.accent;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, -24);
+    ctx.lineTo(0, -38);
+    ctx.stroke();
+    ctx.fillStyle = p.accent;
+    ctx.beginPath();
+    ctx.arc(0, -40, 5, 0, Math.PI * 2);
+    ctx.fill();
+    for (let i = 0; i < 3; i++) {
+      const a = p.t * 8 + i * 2.1;
+      ctx.fillStyle = p.accent;
+      ctx.beginPath();
+      ctx.arc(Math.cos(a) * 26, Math.sin(a) * 16, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  function drawKira(ctx, p) {
+    limb(ctx, -7, 12, -8, 28, 6, "#f5c6a5", p.o);
+    limb(ctx, 5, 12, 14, 26, 6, "#f5c6a5", p.o);
+    ctx.fillStyle = p.body;
+    ctx.strokeStyle = p.o;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-13, 14);
+    ctx.lineTo(-12, -8);
+    ctx.lineTo(12, -8);
+    ctx.lineTo(13, 14);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = p.accent;
+    ctx.fillRect(-12, 0, 24, 4);
+    ctx.fillStyle = "#f5c6a5";
+    ctx.beginPath();
+    ctx.arc(0, -18, 11, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#854d0e";
+    ctx.beginPath();
+    ctx.moveTo(-10, -22);
+    ctx.lineTo(-6, -36);
+    ctx.lineTo(-2, -24);
+    ctx.lineTo(2, -38);
+    ctx.lineTo(6, -24);
+    ctx.lineTo(12, -34);
+    ctx.lineTo(10, -20);
+    ctx.closePath();
+    ctx.fill();
+    eyes(ctx, -4, -18, 8, 2.8);
+    const glow = ctx.createRadialGradient(20, 0, 2, 20, 0, 14);
+    glow.addColorStop(0, "#fff");
+    glow.addColorStop(0.4, p.body);
+    glow.addColorStop(1, "rgba(253,224,71,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(18, 2, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = p.accent;
+    ctx.beginPath();
+    ctx.arc(18, 2, 6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  function drawBolt(ctx, p) {
+    ctx.fillStyle = p.accent;
+    ctx.strokeStyle = p.o;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-8, 8);
+    ctx.quadraticCurveTo(-28, -10, -18, -28);
+    ctx.quadraticCurveTo(-6, -16, -4, 4);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.arc(-20, -20, 2, 0, Math.PI * 2);
+    ctx.arc(-14, -12, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    limb(ctx, -6, 12, -10, 26, 5, p.body, p.o);
+    limb(ctx, 6, 12, 12, 26, 5, p.body, p.o);
+    ctx.fillStyle = p.body;
+    ctx.beginPath();
+    ctx.ellipse(0, 4, 13, 15, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(2, -14, 12, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-6, -20);
+    ctx.lineTo(-10, -34);
+    ctx.lineTo(0, -24);
+    ctx.moveTo(8, -20);
+    ctx.lineTo(14, -34);
+    ctx.lineTo(12, -18);
+    ctx.fill();
+    ctx.stroke();
+    eyes(ctx, -2, -14, 8, 3);
+    ctx.fillStyle = p.light;
+    ctx.beginPath();
+    ctx.ellipse(-8, -8, 4, 3, 0, 0, Math.PI * 2);
+    ctx.ellipse(10, -8, 4, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = p.accent;
+    ctx.beginPath();
+    ctx.moveTo(0, -2);
+    ctx.lineTo(6, 4);
+    ctx.lineTo(1, 4);
+    ctx.lineTo(4, 12);
+    ctx.lineTo(-4, 4);
+    ctx.lineTo(1, 4);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function drawQuillox(ctx, p) {
+    for (let i = 0; i < 7; i++) {
+      const a = -1.2 + i * 0.35;
+      ctx.fillStyle = i % 2 ? p.accent : p.body;
+      ctx.beginPath();
+      ctx.ellipse(Math.cos(a) * 8 - 16, Math.sin(a) * 10 - 4, 5, 14, a, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    limb(ctx, -6, 12, -12, 26, 6, p.body, p.o);
+    limb(ctx, 6, 12, 12, 26, 6, p.body, p.o);
+    ctx.fillStyle = p.body;
+    ctx.strokeStyle = p.o;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(0, 2, 15, 18, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = p.light;
+    ctx.beginPath();
+    ctx.ellipse(2, -16, 13, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    eyes(ctx, -2, -16, 9, 3.2);
+    ctx.fillStyle = p.accent;
+    ctx.beginPath();
+    ctx.ellipse(0, 6, 6, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  function drawIronpaw(ctx, p) {
+    limb(ctx, -10, 10, -14, 26, 8, p.dark, p.o);
+    limb(ctx, 10, 10, 16, 26, 8, p.dark, p.o);
+    const g = ctx.createLinearGradient(-16, -10, 16, 20);
+    g.addColorStop(0, p.light);
+    g.addColorStop(1, p.dark);
+    ctx.fillStyle = g;
+    ctx.strokeStyle = p.o;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(-16, -6, 32, 26, 6);
+    ctx.fill();
+    ctx.stroke();
+    ctx.strokeStyle = p.accent;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-10, 0, 20, 12);
+    ctx.fillStyle = p.body;
+    ctx.beginPath();
+    ctx.ellipse(2, -18, 14, 12, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = p.o;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = p.dark;
+    ctx.beginPath();
+    ctx.moveTo(-8, -26);
+    ctx.lineTo(-12, -40);
+    ctx.lineTo(0, -28);
+    ctx.moveTo(8, -24);
+    ctx.lineTo(16, -40);
+    ctx.lineTo(14, -22);
+    ctx.fill();
+    eyes(ctx, -4, -18, 10, 3);
+    ctx.fillStyle = p.accent;
+    ctx.beginPath();
+    ctx.moveTo(18, 4);
+    ctx.lineTo(30, -2);
+    ctx.lineTo(30, 10);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function drawVelvet(ctx, p) {
+    ctx.fillStyle = p.accent;
+    ctx.beginPath();
+    ctx.moveTo(-8, -8);
+    ctx.quadraticCurveTo(-30, 10, -20, 28);
+    ctx.quadraticCurveTo(-4, 18, 0, 8);
+    ctx.fill();
+    limb(ctx, -6, 12, -8, 28, 5, "#e8b4c8", p.o);
+    limb(ctx, 6, 12, 12, 28, 5, "#e8b4c8", p.o);
+    ctx.fillStyle = p.body;
+    ctx.strokeStyle = p.o;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-12, 14);
+    ctx.lineTo(-11, -8);
+    ctx.lineTo(11, -8);
+    ctx.lineTo(12, 14);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#e8b4c8";
+    ctx.beginPath();
+    ctx.arc(0, -18, 11, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#4a044e";
+    ctx.beginPath();
+    ctx.moveTo(-10, -20);
+    ctx.quadraticCurveTo(-18, 0, -8, 16);
+    ctx.lineTo(-4, -8);
+    ctx.quadraticCurveTo(-8, -24, 0, -28);
+    ctx.quadraticCurveTo(12, -24, 10, -8);
+    ctx.lineTo(14, 14);
+    ctx.quadraticCurveTo(20, 0, 10, -20);
+    ctx.closePath();
+    ctx.fill();
+    eyes(ctx, -4, -18, 8, 2.6, false);
+    ctx.strokeStyle = p.o;
+    ctx.beginPath();
+    ctx.arc(2, -12, 4, 0.1, Math.PI * 0.7);
+    ctx.stroke();
+    const orb = ctx.createRadialGradient(18, 0, 1, 18, 0, 10);
+    orb.addColorStop(0, "#f5d0fe");
+    orb.addColorStop(1, "#1e1b4b");
+    ctx.fillStyle = orb;
+    ctx.beginPath();
+    ctx.arc(18, 0, 9, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  function drawPortrait(ctx, id, colors, size = 120) {
+    ctx.save();
+    ctx.clearRect(0, 0, size, size);
+    const bg = ctx.createLinearGradient(0, 0, size, size);
+    bg.addColorStop(0, shade(colors.body, 20));
+    bg.addColorStop(1, shade(colors.outline, 10));
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, size, size);
+    ctx.strokeStyle = colors.accent;
+    ctx.globalAlpha = 0.35;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size * 0.42, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.translate(size / 2, size * 0.58);
+    ctx.scale(size / 90, size / 90);
+    drawCharacterSprite(ctx, id, colors, 0.5, "idle");
+    ctx.restore();
+  }
+
   // ../src/js/game/renderer.js
   var Renderer = class {
     constructor(canvas) {
@@ -2281,10 +2848,30 @@
       }
       ctx.globalAlpha = 1;
       ctx.save();
-      ctx.globalAlpha = 0.35;
+      ctx.globalAlpha = 0.4;
       ctx.fillStyle = stage.accent || "#67e8f9";
       ctx.beginPath();
       ctx.arc(1100, 120, 70, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.35)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.ellipse(1100, 120, 100, 28, -0.3, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 0.22;
+      ctx.fillStyle = "#0b1220";
+      ctx.beginPath();
+      ctx.moveTo(0, 480);
+      ctx.lineTo(120, 400);
+      ctx.lineTo(260, 450);
+      ctx.lineTo(400, 360);
+      ctx.lineTo(560, 430);
+      ctx.lineTo(720, 340);
+      ctx.lineTo(900, 420);
+      ctx.lineTo(1100, 350);
+      ctx.lineTo(1280, 400);
+      ctx.lineTo(1280, 520);
+      ctx.lineTo(0, 520);
       ctx.fill();
       ctx.restore();
     }
@@ -2356,56 +2943,32 @@
         ctx.restore();
       }
       ctx.scale(f.facing || 1, 1);
-      ctx.fillStyle = f.colors.body;
-      ctx.strokeStyle = f.colors.outline;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 20, 24, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = f.colors.accent;
-      ctx.beginPath();
-      ctx.ellipse(2, 4, 9, 11, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#0f172a";
-      ctx.beginPath();
-      ctx.arc(6, -8, 3.2, 0, Math.PI * 2);
-      ctx.arc(13, -8, 3.2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#fff";
-      ctx.beginPath();
-      ctx.arc(7, -9, 1.1, 0, Math.PI * 2);
-      ctx.arc(14, -9, 1.1, 0, Math.PI * 2);
-      ctx.fill();
+      drawCharacterSprite(ctx, f.characterId || "lumo", f.colors, t, f.action || "idle");
       if (f.action === "attack" || f.action === "special" || f.action === "ultra") {
         ctx.globalAlpha = 0.9;
         ctx.fillStyle = f.action === "ultra" ? "#fef08a" : "#ffffff";
         ctx.shadowColor = f.action === "ultra" ? "#fb7185" : "#7dd3fc";
         ctx.shadowBlur = 16;
         ctx.beginPath();
-        ctx.moveTo(18, -10);
-        ctx.lineTo(f.action === "ultra" ? 52 : 38, 0);
-        ctx.lineTo(18, 10);
+        ctx.moveTo(22, -14);
+        ctx.lineTo(f.action === "ultra" ? 58 : 42, 0);
+        ctx.lineTo(22, 14);
         ctx.closePath();
         ctx.fill();
-        if (f.action === "ultra") {
-          ctx.beginPath();
-          ctx.moveTo(12, -18);
-          ctx.lineTo(44, -6);
-          ctx.lineTo(12, 0);
-          ctx.closePath();
-          ctx.fill();
-        }
       }
       ctx.restore();
       ctx.save();
-      ctx.font = 'bold 12px "Trebuchet MS", sans-serif';
+      ctx.font = '800 13px "Exo 2", "Trebuchet MS", sans-serif';
       ctx.textAlign = "center";
-      ctx.fillStyle = "#e2e8f0";
-      ctx.fillText(f.name, f.x, f.y - 40);
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "rgba(7,17,31,0.75)";
+      ctx.strokeText(f.name, f.x, f.y - 48);
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillText(f.name, f.x, f.y - 48);
       ctx.fillStyle = f.percent > 100 ? "#fb7185" : "#fde047";
-      ctx.font = 'bold 16px "Trebuchet MS", sans-serif';
-      ctx.fillText(`${f.percent.toFixed(0)}%`, f.x, f.y - 24);
+      ctx.font = '800 18px "Exo 2", "Trebuchet MS", sans-serif';
+      ctx.strokeText(`${f.percent.toFixed(0)}%`, f.x, f.y - 30);
+      ctx.fillText(`${f.percent.toFixed(0)}%`, f.x, f.y - 30);
       if (f.combo > 1 && (f.action === "attack" || f.action === "special" || f.action === "ultra" || f.spectacleTimer > 0)) {
         ctx.fillStyle = "#67e8f9";
         ctx.font = 'bold 11px "Trebuchet MS", sans-serif';
@@ -2607,146 +3170,45 @@
   }
   document.addEventListener("message", (e) => onMessage(e.data));
   window.addEventListener("message", (e) => onMessage(e.data));
-  window.AKI = { startCombat, onMessage };
+  window.AKI = { startCombat, onMessage, drawPortrait };
   post({ type: "boot" });
 })();
 
-
-  </script>
-  <script>
-    const CHARS = [
-      { id:'lumo', name:'Lumo', tag:'Alien doux', body:'#7dd3fc', accent:'#fef08a' },
-      { id:'pebble', name:'Pebble', tag:'Roc ronron', body:'#a8a29e', accent:'#84cc16' },
-      { id:'nori', name:'Nori', tag:'Wok de ki', body:'#fb7185', accent:'#fdba74' },
-      { id:'capra', name:'Capra', tag:'Chèvre pirate', body:'#c4b5fd', accent:'#f472b6' },
-      { id:'mossy', name:'Mossy', tag:'Gardien', body:'#4ade80', accent:'#a3e635' },
-      { id:'zib', name:'Zib', tag:'Chaos rose', body:'#f9a8d4', accent:'#67e8f9' },
-      { id:'kira', name:'Kira', tag:'Poing solaire', body:'#fde047', accent:'#38bdf8' },
-      { id:'bolt', name:'Bolt', tag:'Écureuil', body:'#fdba74', accent:'#facc15' }
-    ];
-    const PROMPTS = [
-      'Inventе un snack qui recharge le ki en trois bouchées.',
-      'Décris une arène flottante faite de nuages caramel.',
-      'Imagine une danse de victoire ridicule mais magnifique.',
-      'Propose un nom de technique spéciale jamais vue.',
-      'Écris un haiku sur un smash qui rate comiquement.',
-      'Design un stage avec des trampolines de gelée.',
-      'Crée un duo 2v2 nommé Sucre & Foudre.',
-      'Imagine un podcast animé par deux aliens pelucheux.'
-    ].map(s => s.replace(/\u0435/g,'e'));
-
-    let me = 'lumo';
-    let moveX = 0;
-    let fighting = false;
-
-    const $ = (id) => document.getElementById(id);
-    function show(id) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
-      $(id).classList.add('on');
-    }
-
-    // Bridge: game posts via ReactNativeWebView or we patch post
-    const inbox = [];
-    function handleGameMsg(data) {
-      if (!data?.type) return;
-      if (data.type === 'ready') $('stage').textContent = data.stage || 'Arène';
-      if (data.type === 'log') $('log').textContent = (data.log || []).map(l => l.msg).slice(0, 2).join(' · ');
-      if (data.type === 'ended') {
-        fighting = false;
-        const winners = new Set(data.winnerTeams || []);
-        const names = (data.fighters || []).filter(f => winners.has(f.team)).map(f => f.name).join(' & ');
-        $('winTitle').textContent = names || 'Match terminé';
-        $('rewardText').textContent = PROMPTS[Math.floor(Math.random() * PROMPTS.length)];
-        show('victory');
-      }
-    }
-
-    // Intercept game -> host messages without postMessage('*')
-    window.ReactNativeWebView = {
-      postMessage(raw) {
-        try { handleGameMsg(JSON.parse(raw)); } catch (_) {}
-      }
-    };
-
-    function send(msg) {
-      if (window.AKI && typeof window.AKI.onMessage === 'function') {
-        window.AKI.onMessage(msg);
-      }
-    }
-
-    function sendInput(extra = {}) {
-      send({ type: 'input', slot: 0, input: { moveX, ...extra } });
-    }
-
-    function renderChars() {
-      const grid = $('charGrid');
-      grid.innerHTML = '';
-      CHARS.forEach(c => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'card' + (me === c.id ? ' on' : '');
-        b.innerHTML = '<div class="swatch" style="background:linear-gradient(135deg,'+c.body+','+c.accent+')"></div><strong>'+c.name+'</strong><small>'+c.tag+'</small>';
-        b.onclick = () => { me = c.id; renderChars(); };
-        grid.appendChild(b);
-      });
-    }
-
-    function startCombat() {
-      show('combat');
-      fighting = true;
-      const foe = CHARS.find(c => c.id !== me) || CHARS[1];
-      send({
-        type: 'start',
-        config: {
-          mode: '1v1',
-          stocks: 3,
-          fighters: [
-            { id:'p0', slot:0, team:0, characterId: me, name: CHARS.find(c=>c.id===me).name, stocks:3 },
-            { id:'p1', slot:1, team:1, characterId: foe.id, name: foe.name, stocks:3 }
-          ]
-        }
-      });
-    }
-
-    setInterval(() => {
-      if (!fighting || !$('combat').classList.contains('on')) return;
-      send({
-        type: 'input',
-        slot: 1,
-        input: {
-          moveX: Math.random() > 0.5 ? 1 : -1,
-          jump: Math.random() > 0.92,
-          attack: Math.random() > 0.85,
-          special: Math.random() > 0.95,
-          ultra: Math.random() > 0.985
-        }
-      });
-    }, 180);
-
-    function bindHold(el, on, off) {
-      const start = (ev) => { ev.preventDefault(); on(); };
-      const end = (ev) => { ev.preventDefault(); off(); };
-      el.addEventListener('touchstart', start, { passive: false });
-      el.addEventListener('touchend', end);
-      el.addEventListener('touchcancel', end);
-      el.addEventListener('mousedown', start);
-      el.addEventListener('mouseup', end);
-      el.addEventListener('mouseleave', end);
-    }
-
-    document.querySelectorAll('[data-hold]').forEach((el) => {
-      const k = el.getAttribute('data-hold');
-      if (k === 'left') bindHold(el, () => { moveX = -1; sendInput({ moveX: -1 }); }, () => { moveX = 0; sendInput({ moveX: 0 }); });
-      else if (k === 'right') bindHold(el, () => { moveX = 1; sendInput({ moveX: 1 }); }, () => { moveX = 0; sendInput({ moveX: 0 }); });
-      else bindHold(el, () => sendInput({ [k]: true }), () => sendInput({ [k]: false }));
-    });
-
-    $('goPlay').onclick = startCombat;
-    $('goChars').onclick = () => { renderChars(); show('chars'); };
-    $('startFromChars').onclick = startCombat;
-    $('forfeit').onclick = () => send({ type: 'forfeit' });
-    document.querySelectorAll('[data-back]').forEach((b) => b.onclick = () => show(b.getAttribute('data-back')));
-    renderChars();
-  </script>
+</script>
+<script>
+const CHARS=[
+{id:'lumo',name:'Lumo',tag:'Alien voyageur · ailes de lumière',colors:{body:'#7dd3fc',accent:'#fef08a',outline:'#0c4a6e'}},
+{id:'pebble',name:'Pebble',tag:'Roc vivant · bouclier mousse',colors:{body:'#a8a29e',accent:'#84cc16',outline:'#292524'}},
+{id:'nori',name:'Nori',tag:'Humaine · wok de ki acrobatique',colors:{body:'#fb7185',accent:'#fdba74',outline:'#7f1d1d'}},
+{id:'capra',name:'Capra',tag:'Chèvre pirate · cornes farceuses',colors:{body:'#c4b5fd',accent:'#f472b6',outline:'#4c1d95'}},
+{id:'mossy',name:'Mossy',tag:'Gardien forestier · runes vivantes',colors:{body:'#4ade80',accent:'#a3e635',outline:'#14532d'}},
+{id:'zib',name:'Zib',tag:'Alien chaos · étincelles roses',colors:{body:'#f9a8d4',accent:'#67e8f9',outline:'#9d174d'}},
+{id:'kira',name:'Kira',tag:'Parkour · poing solaire',colors:{body:'#fde047',accent:'#38bdf8',outline:'#854d0e'}},
+{id:'bolt',name:'Bolt',tag:'Écureuil survolté · queue foudre',colors:{body:'#fdba74',accent:'#facc15',outline:'#9a3412'}}
+];
+const PROMPTS=['Inventе un snack qui recharge le ki.','Décris une arène en nuages caramel.','Imagine une danse de victoire ridicule.','Propose un nom de technique inédite.','Écris un haiku sur un smash raté.','Design un stage trampoline gelée.']
+.map(s=>s.replace(/\u0435/g,'e'));
+let me='lumo', moveX=0, fighting=false;
+const $=id=>document.getElementById(id);
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on'); if(id==='home') paintHero();}
+function handleGameMsg(data){if(!data?.type)return; if(data.type==='ready')$('stage').textContent=data.stage||'Arène'; if(data.type==='log')$('log').textContent=(data.log||[]).map(l=>l.msg).slice(0,2).join(' · '); if(data.type==='ended'){fighting=false; const winners=new Set(data.winnerTeams||[]); const names=(data.fighters||[]).filter(f=>winners.has(f.team)).map(f=>f.name).join(' & '); $('winTitle').textContent=names||'Match terminé'; $('rewardText').textContent=PROMPTS[Math.floor(Math.random()*PROMPTS.length)]; show('victory');}}
+window.ReactNativeWebView={postMessage(raw){try{handleGameMsg(JSON.parse(raw))}catch{}}};
+function send(msg){window.AKI?.onMessage?.(msg)}
+function sendInput(extra={}){send({type:'input',slot:0,input:{moveX,...extra}})}
+function paintPortrait(canvas,ch){const ctx=canvas.getContext('2d'); window.AKI.drawPortrait(ctx,ch.id,ch.colors,canvas.width)}
+function paintHero(){const c=$('heroCanvas'); const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); const g=ctx.createLinearGradient(0,0,c.width,c.height); g.addColorStop(0,'#0b1d3a'); g.addColorStop(1,'#1e3a5f'); ctx.fillStyle=g; ctx.fillRect(0,0,c.width,c.height); ['lumo','kira','zib','bolt'].forEach((id,i)=>{ctx.save(); ctx.translate(90+i*140,170); ctx.scale(1.6,1.6); const ch=CHARS.find(x=>x.id===id); window.AKI.drawPortrait?null:null; // draw full sprite via temporary
+  // Use drawPortrait into offscreen then blit? Simpler: call onMessage no - use drawPortrait cropped
+  ctx.restore()});
+  // draw four portraits
+  ['lumo','kira','zib','bolt'].forEach((id,i)=>{const off=document.createElement('canvas'); off.width=120; off.height=120; const octx=off.getContext('2d'); const ch=CHARS.find(x=>x.id===id); window.AKI.drawPortrait(octx,ch.id,ch.colors,120); ctx.drawImage(off,40+i*150,70,120,120)})}
+function renderChars(){const grid=$('charGrid'); grid.innerHTML=''; CHARS.forEach(c=>{const b=document.createElement('button'); b.type='button'; b.className='card'+(me===c.id?' on':''); const cv=document.createElement('canvas'); cv.width=180; cv.height=180; b.appendChild(cv); const strong=document.createElement('strong'); strong.textContent=c.name; const small=document.createElement('small'); small.textContent=c.tag; b.appendChild(strong); b.appendChild(small); b.onclick=()=>{me=c.id; renderChars()}; grid.appendChild(b); paintPortrait(cv,c)})}
+function startCombat(){show('combat'); fighting=true; const foe=CHARS.find(c=>c.id!==me)||CHARS[1]; send({type:'start',config:{mode:'1v1',stocks:3,fighters:[{id:'p0',slot:0,team:0,characterId:me,name:CHARS.find(c=>c.id===me).name,stocks:3},{id:'p1',slot:1,team:1,characterId:foe.id,name:foe.name,stocks:3}]}})}
+setInterval(()=>{if(!fighting||!$('combat').classList.contains('on'))return; send({type:'input',slot:1,input:{moveX:Math.random()>.5?1:-1,jump:Math.random()>.92,attack:Math.random()>.85,special:Math.random()>.95,ultra:Math.random()>.985}})},180);
+function bindHold(el,on,off){const s=e=>{e.preventDefault();on()}; const e=ev=>{ev.preventDefault();off()}; el.addEventListener('touchstart',s,{passive:false}); el.addEventListener('touchend',e); el.addEventListener('touchcancel',e); el.addEventListener('mousedown',s); el.addEventListener('mouseup',e); el.addEventListener('mouseleave',e)}
+document.querySelectorAll('[data-hold]').forEach(el=>{const k=el.getAttribute('data-hold'); if(k==='left')bindHold(el,()=>{moveX=-1;sendInput({moveX:-1})},()=>{moveX=0;sendInput({moveX:0})}); else if(k==='right')bindHold(el,()=>{moveX=1;sendInput({moveX:1})},()=>{moveX=0;sendInput({moveX:0})}); else bindHold(el,()=>sendInput({[k]:true}),()=>sendInput({[k]:false}))});
+$('goPlay').onclick=startCombat; $('goChars').onclick=()=>{renderChars();show('chars')}; $('startFromChars').onclick=startCombat; $('forfeit').onclick=()=>send({type:'forfeit'});
+document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>show(b.getAttribute('data-back')));
+paintHero();
+</script>
 </body>
 </html>

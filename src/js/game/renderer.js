@@ -1,3 +1,5 @@
+import { drawCharacterSprite } from './sprites.js';
+
 /** Rendu canvas arène + fighters + FX */
 export class Renderer {
   constructor(canvas) {
@@ -56,12 +58,33 @@ export class Renderer {
     }
     ctx.globalAlpha = 1;
 
-    // Soft planet
+    // Soft planet + rings
     ctx.save();
-    ctx.globalAlpha = 0.35;
+    ctx.globalAlpha = 0.4;
     ctx.fillStyle = stage.accent || '#67e8f9';
     ctx.beginPath();
     ctx.arc(1100, 120, 70, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(1100, 120, 100, 28, -0.3, 0, Math.PI * 2);
+    ctx.stroke();
+    // distant mountains / skyline
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = '#0b1220';
+    ctx.beginPath();
+    ctx.moveTo(0, 480);
+    ctx.lineTo(120, 400);
+    ctx.lineTo(260, 450);
+    ctx.lineTo(400, 360);
+    ctx.lineTo(560, 430);
+    ctx.lineTo(720, 340);
+    ctx.lineTo(900, 420);
+    ctx.lineTo(1100, 350);
+    ctx.lineTo(1280, 400);
+    ctx.lineTo(1280, 520);
+    ctx.lineTo(0, 520);
     ctx.fill();
     ctx.restore();
   }
@@ -142,67 +165,37 @@ export class Renderer {
     }
 
     ctx.scale(f.facing || 1, 1);
+    drawCharacterSprite(ctx, f.characterId || 'lumo', f.colors, t, f.action || 'idle');
 
-    // Body
-    ctx.fillStyle = f.colors.body;
-    ctx.strokeStyle = f.colors.outline;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 20, 24, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-
-    // Accent belly / core
-    ctx.fillStyle = f.colors.accent;
-    ctx.beginPath();
-    ctx.ellipse(2, 4, 9, 11, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Eyes (cute)
-    ctx.fillStyle = '#0f172a';
-    ctx.beginPath();
-    ctx.arc(6, -8, 3.2, 0, Math.PI * 2);
-    ctx.arc(13, -8, 3.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(7, -9, 1.1, 0, Math.PI * 2);
-    ctx.arc(14, -9, 1.1, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Action pose flash / slash
+    // Action pose slash overlay
     if (f.action === 'attack' || f.action === 'special' || f.action === 'ultra') {
       ctx.globalAlpha = 0.9;
       ctx.fillStyle = f.action === 'ultra' ? '#fef08a' : '#ffffff';
       ctx.shadowColor = f.action === 'ultra' ? '#fb7185' : '#7dd3fc';
       ctx.shadowBlur = 16;
       ctx.beginPath();
-      ctx.moveTo(18, -10);
-      ctx.lineTo(f.action === 'ultra' ? 52 : 38, 0);
-      ctx.lineTo(18, 10);
+      ctx.moveTo(22, -14);
+      ctx.lineTo(f.action === 'ultra' ? 58 : 42, 0);
+      ctx.lineTo(22, 14);
       ctx.closePath();
       ctx.fill();
-      if (f.action === 'ultra') {
-        ctx.beginPath();
-        ctx.moveTo(12, -18);
-        ctx.lineTo(44, -6);
-        ctx.lineTo(12, 0);
-        ctx.closePath();
-        ctx.fill();
-      }
     }
 
     ctx.restore();
 
-    // Name + percent
+    // Name plate
     ctx.save();
-    ctx.font = 'bold 12px "Trebuchet MS", sans-serif';
+    ctx.font = '800 13px "Exo 2", "Trebuchet MS", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#e2e8f0';
-    ctx.fillText(f.name, f.x, f.y - 40);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(7,17,31,0.75)';
+    ctx.strokeText(f.name, f.x, f.y - 48);
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillText(f.name, f.x, f.y - 48);
     ctx.fillStyle = f.percent > 100 ? '#fb7185' : '#fde047';
-    ctx.font = 'bold 16px "Trebuchet MS", sans-serif';
-    ctx.fillText(`${f.percent.toFixed(0)}%`, f.x, f.y - 24);
+    ctx.font = '800 18px "Exo 2", "Trebuchet MS", sans-serif';
+    ctx.strokeText(`${f.percent.toFixed(0)}%`, f.x, f.y - 30);
+    ctx.fillText(`${f.percent.toFixed(0)}%`, f.x, f.y - 30);
     if (f.combo > 1 && (f.action === 'attack' || f.action === 'special' || f.action === 'ultra' || f.spectacleTimer > 0)) {
       ctx.fillStyle = '#67e8f9';
       ctx.font = 'bold 11px "Trebuchet MS", sans-serif';

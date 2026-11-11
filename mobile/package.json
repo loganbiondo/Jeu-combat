@@ -22,7 +22,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build:game": "node scripts/build-game.mjs",
-    "prestart": "node scripts/build-game.mjs"
+    "build:play": "node scripts/build-play.mjs",
+    "prestart": "node scripts/build-play.mjs"
   },
   "private": true
 }

@@ -4,6 +4,7 @@
 import { CombatEngine } from '../../src/js/game/engine.js';
 import { Renderer } from '../../src/js/game/renderer.js';
 import { audio } from '../../src/js/game/audio.js';
+import { drawPortrait } from '../../src/js/game/sprites.js';
 
 const held = {};
 const prevHeld = {};
@@ -130,5 +131,5 @@ function onMessage(raw) {
 
 document.addEventListener('message', (e) => onMessage(e.data));
 window.addEventListener('message', (e) => onMessage(e.data));
-window.AKI = { startCombat, onMessage };
+window.AKI = { startCombat, onMessage, drawPortrait };
 post({ type: 'boot' });
