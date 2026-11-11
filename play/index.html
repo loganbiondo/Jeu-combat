@@ -24413,29 +24413,30 @@ void main() {
       }
     }
     resize() {
-      var _a, _b;
-      const host = this._hudHost || this.canvas.parentElement;
-      if (!host) return;
-      const rect = host.getBoundingClientRect();
-      const scale = Math.min(rect.width / 1280, rect.height / 720) || Math.min(
-        (((_a = this.canvas.parentElement) == null ? void 0 : _a.clientWidth) || 1280) / 1280,
-        (((_b = this.canvas.parentElement) == null ? void 0 : _b.clientHeight) || 720) / 720
-      );
+      var _a;
+      const layout = this._layoutParent || ((_a = this._hudHost) == null ? void 0 : _a.parentElement) || this.canvas.parentElement;
+      if (!layout) return;
+      const rect = layout.getBoundingClientRect();
+      const availW = rect.width || layout.clientWidth || 1280;
+      const availH = rect.height || layout.clientHeight || 720;
+      const scale = Math.min(availW / 1280, availH / 720);
       const w = `${1280 * scale}px`;
       const h = `${720 * scale}px`;
       this.canvas.style.width = w;
       this.canvas.style.height = h;
       if (this._overlay) {
-        this._overlay.style.width = w;
-        this._overlay.style.height = h;
+        this._overlay.style.width = "100%";
+        this._overlay.style.height = "100%";
       }
       if (this._hudHost) {
         this._hudHost.style.width = w;
         this._hudHost.style.height = h;
+        this._hudHost.style.maxWidth = "100%";
+        this._hudHost.style.maxHeight = "100%";
       }
     }
     dispose() {
-      var _a, _b, _c;
+      var _a;
       if ((_a = this._overlay) == null ? void 0 : _a.parentElement) this._overlay.parentElement.removeChild(this._overlay);
       if (this._hudHost) {
         const parent = this._hudHost.parentElement;
@@ -24446,21 +24447,21 @@ void main() {
         this._hudHost = null;
       }
       this._overlay = null;
+      this._layoutParent = null;
       this.fighterMeshes.clear();
       this.fxMeshes.length = 0;
       this.scene.traverse((obj) => {
-        var _a2, _b2, _c2, _d;
-        if (obj.geometry) (_b2 = (_a2 = obj.geometry).dispose) == null ? void 0 : _b2.call(_a2);
+        var _a2, _b, _c, _d;
+        if (obj.geometry) (_b = (_a2 = obj.geometry).dispose) == null ? void 0 : _b.call(_a2);
         if (obj.material) {
           if (Array.isArray(obj.material)) obj.material.forEach((m) => {
             var _a3;
             return (_a3 = m.dispose) == null ? void 0 : _a3.call(m);
           });
-          else (_d = (_c2 = obj.material).dispose) == null ? void 0 : _d.call(_c2);
+          else (_d = (_c = obj.material).dispose) == null ? void 0 : _d.call(_c);
         }
       });
       this.renderer.dispose();
-      (_c = (_b = this.renderer).forceContextLoss) == null ? void 0 : _c.call(_b);
     }
     ensureFighter(f) {
       let mesh = this.fighterMeshes.get(f.id);
@@ -24598,10 +24599,11 @@ void main() {
     paintOverlay(engine2) {
       var _a;
       if (!this._hudHost && this.canvas.parentElement) {
+        const parent = this.canvas.parentElement;
+        this._layoutParent = parent;
         const host = document.createElement("div");
         host.className = "hud3d-host";
         host.style.cssText = "position:relative;display:inline-block;line-height:0;max-width:100%;max-height:100%";
-        const parent = this.canvas.parentElement;
         parent.insertBefore(host, this.canvas);
         host.appendChild(this.canvas);
         const overlay2 = document.createElement("canvas");

@@ -213,24 +213,29 @@ export class Renderer3D {
   }
 
   resize() {
-    const host = this._hudHost || this.canvas.parentElement;
-    if (!host) return;
-    const rect = host.getBoundingClientRect();
-    const scale = Math.min(rect.width / 1280, rect.height / 720) || Math.min(
-      (this.canvas.parentElement?.clientWidth || 1280) / 1280,
-      (this.canvas.parentElement?.clientHeight || 720) / 720
-    );
+    // Measure the layout container outside the HUD host so we don't lock to our own pixels
+    const layout =
+      this._layoutParent ||
+      this._hudHost?.parentElement ||
+      this.canvas.parentElement;
+    if (!layout) return;
+    const rect = layout.getBoundingClientRect();
+    const availW = rect.width || layout.clientWidth || 1280;
+    const availH = rect.height || layout.clientHeight || 720;
+    const scale = Math.min(availW / 1280, availH / 720);
     const w = `${1280 * scale}px`;
     const h = `${720 * scale}px`;
     this.canvas.style.width = w;
     this.canvas.style.height = h;
     if (this._overlay) {
-      this._overlay.style.width = w;
-      this._overlay.style.height = h;
+      this._overlay.style.width = '100%';
+      this._overlay.style.height = '100%';
     }
     if (this._hudHost) {
       this._hudHost.style.width = w;
       this._hudHost.style.height = h;
+      this._hudHost.style.maxWidth = '100%';
+      this._hudHost.style.maxHeight = '100%';
     }
   }
 
@@ -245,6 +250,7 @@ export class Renderer3D {
       this._hudHost = null;
     }
     this._overlay = null;
+    this._layoutParent = null;
     this.fighterMeshes.clear();
     this.fxMeshes.length = 0;
     this.scene.traverse((obj) => {
@@ -254,8 +260,8 @@ export class Renderer3D {
         else obj.material.dispose?.();
       }
     });
+    // Dispose GPU resources but keep the canvas WebGL-capable for rematch
     this.renderer.dispose();
-    this.renderer.forceContextLoss?.();
   }
 
   ensureFighter(f) {
@@ -413,10 +419,11 @@ export class Renderer3D {
 
   paintOverlay(engine) {
     if (!this._hudHost && this.canvas.parentElement) {
+      const parent = this.canvas.parentElement;
+      this._layoutParent = parent;
       const host = document.createElement('div');
       host.className = 'hud3d-host';
       host.style.cssText = 'position:relative;display:inline-block;line-height:0;max-width:100%;max-height:100%';
-      const parent = this.canvas.parentElement;
       parent.insertBefore(host, this.canvas);
       host.appendChild(this.canvas);
       const overlay = document.createElement('canvas');
