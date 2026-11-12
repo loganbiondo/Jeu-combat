@@ -32,6 +32,22 @@ const rooms = new Map();
 
 /** @type {Map<string, Set<string>>} */
 const serpentRooms = new Map();
+const SERPENT_MAX_ROOMS = 48;
+const SERPENT_JOIN_LIMIT = 6;
+const SERPENT_JOIN_WINDOW_MS = 10000;
+
+function dropSerpent(socket, notify) {
+  const code = socket.data.serpentRoom;
+  if (!code) return;
+  socket.leave(`serpent:${code}`);
+  const set = serpentRooms.get(code);
+  if (set) {
+    set.delete(socket.id);
+    if (set.size === 0) serpentRooms.delete(code);
+  }
+  if (notify) socket.to(`serpent:${code}`).emit('serpent:left', { id: socket.id });
+  socket.data.serpentRoom = null;
+}
 
 function serpentCode(value) {
   return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
@@ -207,18 +223,26 @@ io.on('connection', (socket) => {
   });
 
   socket.on('serpent:join', (payload = {}) => {
-    const code = serpentCode(payload.room) || 'WORLD';
-    if (socket.data.serpentRoom) {
-      socket.leave(`serpent:${socket.data.serpentRoom}`);
-      const prev = serpentRooms.get(socket.data.serpentRoom);
-      if (prev) prev.delete(socket.id);
-    }
-    let set = serpentRooms.get(code);
-    if (!set) serpentRooms.set(code, (set = new Set()));
-    if (set.size >= 8 && !set.has(socket.id)) {
+    const now = Date.now();
+    const stamps = socket.data.serpentJoins || (socket.data.serpentJoins = []);
+    while (stamps.length && now - stamps[0] > SERPENT_JOIN_WINDOW_MS) stamps.shift();
+    if (stamps.length >= SERPENT_JOIN_LIMIT) {
       socket.emit('serpent:full');
       return;
     }
+    const code = serpentCode(payload.room) || 'WORLD';
+    let set = serpentRooms.get(code);
+    if (!set && code !== 'WORLD' && serpentRooms.size >= SERPENT_MAX_ROOMS) {
+      socket.emit('serpent:full');
+      return;
+    }
+    if (set && set.size >= 8 && !set.has(socket.id)) {
+      socket.emit('serpent:full');
+      return;
+    }
+    stamps.push(now);
+    if (socket.data.serpentRoom && socket.data.serpentRoom !== code) dropSerpent(socket, true);
+    if (!set) serpentRooms.set(code, (set = new Set()));
     socket.join(`serpent:${code}`);
     socket.data.serpentRoom = code;
     socket.data.serpentName = String(payload.name || 'Joueur').replace(/[<>&"'`]/g, '').slice(0, 16) || 'Joueur';
@@ -247,13 +271,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('serpent:leave', () => {
-    const code = socket.data.serpentRoom;
-    if (!code) return;
-    socket.leave(`serpent:${code}`);
-    const set = serpentRooms.get(code);
-    if (set) set.delete(socket.id);
-    socket.to(`serpent:${code}`).emit('serpent:left', { id: socket.id });
-    socket.data.serpentRoom = null;
+    dropSerpent(socket, true);
   });
 
   socket.on('disconnect', () => {
@@ -261,12 +279,7 @@ io.on('connection', (socket) => {
       const idx = q.findIndex((p) => p.socket.id === socket.id);
       if (idx >= 0) q.splice(idx, 1);
     }
-    const serpentRoom = socket.data.serpentRoom;
-    if (serpentRoom && serpentRooms.has(serpentRoom)) {
-      serpentRooms.get(serpentRoom).delete(socket.id);
-      socket.to(`serpent:${serpentRoom}`).emit('serpent:left', { id: socket.id });
-      if (serpentRooms.get(serpentRoom).size === 0) serpentRooms.delete(serpentRoom);
-    }
+    dropSerpent(socket, true);
     const roomId = socket.data.roomId;
     if (roomId && rooms.has(roomId)) {
       io.to(roomId).emit('match:peer-left', { playerId: socket.data.playerId });

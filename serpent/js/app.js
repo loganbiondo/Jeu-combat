@@ -680,24 +680,30 @@ function pointerWorld() {
   };
 }
 
+const boostPointers = new Set();
+function holdBoost(id, held) {
+  if (held) boostPointers.add(id);
+  else boostPointers.delete(id);
+  input.boostHold = boostPointers.size > 0;
+}
+
 canvas.addEventListener('pointerdown', (event) => {
   if (screen !== 'game') return;
-  canvas.setPointerCapture(event.pointerId);
+  try { canvas.setPointerCapture(event.pointerId); } catch { /* pointeur déjà relâché */ }
   pointer = { x: event.clientX, y: event.clientY };
   input.pointer = performance.now();
-  input.boostHold = event.pointerType === 'mouse';
+  if (event.pointerType === 'mouse') holdBoost(`c:${event.pointerId}`, true);
   sound.unlock();
 });
 canvas.addEventListener('pointermove', (event) => {
   pointer = { x: event.clientX, y: event.clientY };
   input.pointer = performance.now();
 });
-canvas.addEventListener('pointerup', () => {
-  input.boostHold = false;
-});
-canvas.addEventListener('pointercancel', () => {
-  input.boostHold = false;
-});
+function releaseCanvasBoost(event) {
+  if (event.pointerType === 'mouse') holdBoost(`c:${event.pointerId}`, false);
+}
+canvas.addEventListener('pointerup', releaseCanvasBoost);
+canvas.addEventListener('pointercancel', releaseCanvasBoost);
 canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 
 window.addEventListener('keydown', (event) => {
@@ -777,13 +783,14 @@ press('gameover-menu-button', () => leaveMatch());
 const boostBtn = $('boost-button');
 const holdOn = (event) => {
   event.preventDefault();
-  input.boostHold = true;
+  holdBoost(`b:${event.pointerId}`, true);
   sound.unlock();
 };
+const releaseBtn = (event) => holdBoost(`b:${event.pointerId}`, false);
 boostBtn.addEventListener('pointerdown', holdOn);
-boostBtn.addEventListener('pointerup', () => { input.boostHold = false; });
-boostBtn.addEventListener('pointercancel', () => { input.boostHold = false; });
-boostBtn.addEventListener('pointerleave', () => { input.boostHold = false; });
+boostBtn.addEventListener('pointerup', releaseBtn);
+boostBtn.addEventListener('pointercancel', releaseBtn);
+boostBtn.addEventListener('pointerleave', releaseBtn);
 $('nova-button').addEventListener('click', () => {
   input.nova = true;
   sound.unlock();
