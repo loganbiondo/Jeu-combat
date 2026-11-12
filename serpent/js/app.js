@@ -234,6 +234,7 @@ function show(name) {
 }
 
 function start(nextMode, nextRoom) {
+  clearBoost();
   sound.unlock();
   mode = nextMode;
   room = (nextRoom || '').toUpperCase();
@@ -278,6 +279,7 @@ function hideOverlays() {
 }
 
 function leaveMatch() {
+  clearBoost();
   socket?.emit('serpent:leave');
   peers.clear();
   match = null;
@@ -686,6 +688,15 @@ function holdBoost(id, held) {
   else boostPointers.delete(id);
   input.boostHold = boostPointers.size > 0;
 }
+function clearBoost() {
+  boostPointers.clear();
+  input.boostHold = false;
+  input.boostKey = false;
+}
+function releasePointer(event) {
+  holdBoost(`c:${event.pointerId}`, false);
+  holdBoost(`b:${event.pointerId}`, false);
+}
 
 canvas.addEventListener('pointerdown', (event) => {
   if (screen !== 'game') return;
@@ -704,6 +715,7 @@ function releaseCanvasBoost(event) {
 }
 canvas.addEventListener('pointerup', releaseCanvasBoost);
 canvas.addEventListener('pointercancel', releaseCanvasBoost);
+canvas.addEventListener('lostpointercapture', releaseCanvasBoost);
 canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 
 window.addEventListener('keydown', (event) => {
@@ -713,7 +725,10 @@ window.addEventListener('keydown', (event) => {
   }
   if (event.key === 'f' || event.key === 'F') input.nova = true;
   if (event.key === 'Escape' && match) {
-    if (match.phase === 'playing') match.pause();
+    if (match.phase === 'playing') {
+      clearBoost();
+      match.pause();
+    }
     else if (match.phase === 'paused') match.resume();
   }
   if (match?.phase === 'mutate' && ['1', '2', '3'].includes(event.key)) {
@@ -773,7 +788,11 @@ press('set-sfx', () => { save.sfx = !save.sfx; writeSave(save); renderSettings()
 press('set-music', () => { save.music = !save.music; writeSave(save); renderSettings(); });
 press('set-shake', () => { save.shake = !save.shake; writeSave(save); renderSettings(); });
 press('set-flash', () => { save.flash = !save.flash; writeSave(save); renderSettings(); });
-press('pause-button', () => { if (match?.phase === 'playing') match.pause(); });
+press('pause-button', () => {
+  if (match?.phase !== 'playing') return;
+  clearBoost();
+  match.pause();
+});
 press('resume-button', () => match?.resume());
 press('pause-restart-button', () => start(mode, room));
 press('pause-quit-button', () => leaveMatch());
@@ -791,6 +810,9 @@ boostBtn.addEventListener('pointerdown', holdOn);
 boostBtn.addEventListener('pointerup', releaseBtn);
 boostBtn.addEventListener('pointercancel', releaseBtn);
 boostBtn.addEventListener('pointerleave', releaseBtn);
+boostBtn.addEventListener('lostpointercapture', releaseBtn);
+window.addEventListener('pointerup', releasePointer);
+window.addEventListener('pointercancel', releasePointer);
 $('nova-button').addEventListener('click', () => {
   input.nova = true;
   sound.unlock();
@@ -798,8 +820,11 @@ $('nova-button').addEventListener('click', () => {
 });
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && match?.phase === 'playing') match.pause();
+  if (!document.hidden) return;
+  clearBoost();
+  if (match?.phase === 'playing') match.pause();
 });
+window.addEventListener('blur', clearBoost);
 
 window.__serpent = { save, get match() { return match; } };
 
