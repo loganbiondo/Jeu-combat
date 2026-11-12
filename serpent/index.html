@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#03060d" />
+  <title>Neon Serpent 3.0</title>
+  <link rel="stylesheet" href="css/serpent.css" />
+</head>
+<body>
+  <canvas id="view"></canvas>
+  <div id="ui">
+    <section id="screen-menu" class="screen">
+      <div class="column" id="menu-scroll">
+        <div class="topbar">
+          <div class="langs">
+            <button type="button" class="lang" id="lang-fr" data-lang="fr">FR</button>
+            <button type="button" class="lang" id="lang-en" data-lang="en">EN</button>
+          </div>
+          <div class="audio">
+            <button type="button" class="icon-btn" id="toggle-sfx" aria-pressed="true">SFX</button>
+            <button type="button" class="icon-btn" id="toggle-music" aria-pressed="true">MUS</button>
+          </div>
+        </div>
+        <div class="title-wrap">
+          <div class="version" data-i18n="version">VERSION 3.0</div>
+          <h1 class="title"><span class="a">NEON</span><span class="b">SERPENT</span></h1>
+          <p class="tagline" data-i18n="tagline">Arène néon. Mange. Coupe. Survis.</p>
+        </div>
+        <div class="card score-card">
+          <div class="score-col" id="best-score-card">
+            <div class="score-label" data-i18n="bestScore">RECORD</div>
+            <div class="score-value cyan" id="best-score-value">0</div>
+          </div>
+          <div class="divider"></div>
+          <div class="score-col">
+            <div class="score-label" data-i18n="bestLevel">NIVEAU</div>
+            <div class="score-value gold" id="best-level-value">1</div>
+          </div>
+        </div>
+        <div class="card" id="daily-card">
+          <div class="daily-head">
+            <div class="daily-title" data-i18n="daily">DÉFI DU JOUR</div>
+            <span class="pill" id="stars-count">★ 0</span>
+            <span class="pill pink" id="streak-count" hidden>🔥 0</span>
+          </div>
+          <div class="daily-text" id="daily-text"></div>
+          <div class="track"><span id="daily-fill"></span></div>
+          <div class="sub" id="daily-progress"></div>
+        </div>
+        <div>
+          <div class="section" data-i18n="skin">PEAU</div>
+          <div class="skins" id="skin-picker"></div>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn primary" id="play-button" data-i18n="play">JOUER</button>
+          <button type="button" class="btn secondary" id="play-online-button" data-i18n="playOnline">ARÈNE</button>
+          <button type="button" class="btn secondary" id="private-room-button" data-i18n="privateRoom">SALLE PRIVÉE</button>
+          <div class="split">
+            <button type="button" class="btn secondary" id="leaderboard-button" data-i18n="leaderboard">CLASSEMENT</button>
+            <button type="button" class="gear warn" id="shop-button" aria-label="Boutique">★</button>
+            <button type="button" class="gear" id="settings-button" aria-label="Réglages">⚙</button>
+          </div>
+        </div>
+        <div class="card how">
+          <div class="how-title" data-i18n="howTo">COMMENT JOUER</div>
+          <div class="legend" aria-hidden="true">
+            <i class="dot" style="background:#7DF9FF"></i>
+            <i class="dot" style="background:#7CF25A"></i>
+            <i class="dot" style="background:#FFD60A"></i>
+            <i class="dot" style="background:#FFFFFF"></i>
+          </div>
+          <p data-i18n="howText"></p>
+          <p data-i18n="powersHelp"></p>
+          <p class="hint" data-i18n="boostHint"></p>
+        </div>
+        <div class="foot" id="player-name"></div>
+      </div>
+    </section>
+
+    <section id="screen-shop" class="screen" hidden>
+      <div class="column">
+        <button type="button" class="btn secondary" id="shop-back" data-i18n="back">RETOUR</button>
+        <h2 class="page-title" data-i18n="shop">BOUTIQUE</h2>
+        <div class="pill" id="shop-stars">★ 0</div>
+        <div id="shop-list"></div>
+      </div>
+    </section>
+
+    <section id="screen-board" class="screen" hidden>
+      <div class="column">
+        <button type="button" class="btn secondary" id="board-back" data-i18n="back">RETOUR</button>
+        <h2 class="page-title" data-i18n="leaderboard">CLASSEMENT</h2>
+        <div class="card" id="board-list"></div>
+      </div>
+    </section>
+
+    <section id="screen-settings" class="screen" hidden>
+      <div class="column">
+        <button type="button" class="btn secondary" id="settings-back" data-i18n="back">RETOUR</button>
+        <h2 class="page-title" data-i18n="settings">RÉGLAGES</h2>
+        <div class="card">
+          <label class="field"><span data-i18n="name">NOM</span><input id="name-input" type="text" maxlength="16" /></label>
+          <button type="button" class="btn secondary toggle" id="set-sfx"></button>
+          <button type="button" class="btn secondary toggle" id="set-music"></button>
+          <button type="button" class="btn secondary toggle" id="set-shake"></button>
+          <button type="button" class="btn secondary toggle" id="set-flash"></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-game" class="screen" hidden>
+      <div class="hud-top">
+        <div class="hpill" id="hud-score" style="border-color:#00f0ff;color:#00f0ff"><span data-i18n="score">SCORE</span><b>0</b></div>
+        <div class="hpill" id="hud-level" style="border-color:#ffd60a;color:#ffd60a"><span>LV 1</span><b>×1.00</b></div>
+        <div class="hpill" id="hud-shields" style="border-color:#7cf25a;color:#7cf25a"><span data-i18n="shields">BOUCLIERS</span><b>0</b></div>
+        <button type="button" class="pause" id="pause-button" aria-label="Pause">II</button>
+      </div>
+      <div class="powers" id="hud-powers"></div>
+      <div class="rank" id="online-status"></div>
+      <div class="hint-float" id="steer-hint" data-i18n="tapToSteer"></div>
+      <div class="controls">
+        <button type="button" class="btn hold" id="boost-button" data-i18n="boost">BOOST</button>
+        <button type="button" class="btn nova" id="nova-button" data-i18n="novaBtn">NOVA</button>
+      </div>
+      <div class="countdown" id="countdown" hidden>3</div>
+      <div class="banner" id="banner" hidden><div id="banner-text"></div><small id="banner-sub"></small></div>
+      <div class="overlay" id="pause-overlay" hidden>
+        <h2 style="color:#00f0ff" data-i18n="paused">PAUSE</h2>
+        <div class="actions">
+          <button type="button" class="btn primary" id="resume-button" data-i18n="resume">REPRENDRE</button>
+          <button type="button" class="btn secondary" id="pause-restart-button" data-i18n="restart">RECOMMENCER</button>
+          <button type="button" class="btn secondary" id="pause-quit-button" data-i18n="quit">QUITTER</button>
+        </div>
+      </div>
+      <div class="overlay" id="gameover-overlay" hidden>
+        <h2 id="gameover-title" style="color:#ff2d8a" data-i18n="gameOver">GAME OVER</h2>
+        <div class="stats" id="final-stats"></div>
+        <div class="earned" id="gameover-earned"></div>
+        <div class="sub" id="gameover-save-state" data-i18n="saved"></div>
+        <div class="card" id="gameover-daily" style="width:min(420px,100%)"></div>
+        <div class="actions">
+          <button type="button" class="btn primary" id="play-again-button" data-i18n="playAgain">REJOUER</button>
+          <button type="button" class="btn secondary" id="gameover-menu-button" data-i18n="menu">MENU</button>
+        </div>
+      </div>
+      <div class="overlay" id="mutate-overlay" hidden>
+        <h2 style="color:#ffd60a" data-i18n="mutationTitle">MUTATION</h2>
+        <p class="hint" data-i18n="mutationHint"></p>
+        <div class="perk-grid" id="perk-grid"></div>
+      </div>
+    </section>
+
+    <div class="sheet" id="room-sheet" hidden>
+      <div class="card">
+        <h2 class="page-title" data-i18n="privateRoom">SALLE PRIVÉE</h2>
+        <button type="button" class="btn primary" id="room-create" data-i18n="createRoom">CRÉER UNE SALLE</button>
+        <label class="field"><span data-i18n="code">CODE</span><input id="room-input" type="text" maxlength="4" autocapitalize="characters" /></label>
+        <div class="split">
+          <button type="button" class="btn secondary" id="room-join" data-i18n="joinRoom">REJOINDRE</button>
+          <button type="button" class="btn secondary" id="room-close" data-i18n="close">FERMER</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
