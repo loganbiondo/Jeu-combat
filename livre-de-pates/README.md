@@ -56,4 +56,4 @@ Depuis `livre-de-pates` :
 node src/build.mjs
 ```
 
-Il faut Node, Python avec Pillow, Google Chrome et Poppler (`pdfinfo`). Les illustrations sources déjà préparées sont dans `illustrations/`. Les polices Noto Serif Display et Inter sont dans `fonts/`, sous SIL Open Font License, non modifiées.
+Il faut Node, Google Chrome et Poppler (`pdfinfo`). Les images déjà préparées sont dans `illustrations/` : le script les réutilise, il ne les régénère pas. Pillow ne sert que si une image de ce dossier manque. Les polices Noto Serif Display et Inter sont dans `fonts/`, sous SIL Open Font License, non modifiées.

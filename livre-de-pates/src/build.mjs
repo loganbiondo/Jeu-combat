@@ -20,13 +20,17 @@ const copies = [
 
 function prepareImages() {
   fs.mkdirSync(illu, { recursive: true });
-  const jobs = copies.map(([src, dest, scale]) => ({
+  const pending = copies.filter(([, dest]) => !fs.existsSync(path.join(illu, dest)));
+  if (pending.length === 0) return;
+  const jobs = pending.map(([src, dest, scale]) => ({
     src: path.join(srcImg, src),
     dest: path.join(illu, dest),
     scale,
   }));
   for (const job of jobs) {
-    if (!fs.existsSync(job.src)) throw new Error(`Image manquante : ${job.src}`);
+    if (!fs.existsSync(job.src)) {
+      throw new Error(`Illustration manquante : ${path.basename(job.dest)}. Le dossier illustrations/ doit déjà contenir les images du livre.`);
+    }
   }
   const py = `
 from PIL import Image
@@ -228,11 +232,14 @@ function renderKind(page, pages) {
     }
     case "steps": {
       const r = page.data;
-      return `<div class="sheet"><p class="run">${typo(r.title)}</p><h2>Les étapes</h2><div class="mt">${stepsHtml(r.steps)}</div><div class="bottom"><div class="split"><div class="card sage"><h3>C’est réussi quand</h3><p>${typo(r.success)}</p></div><div class="card"><h3>On le garde</h3><p>${typo(r.keep)}</p></div></div><div class="card gold"><h3>Noisette dit</h3><p>${typo(r.tip)}</p></div><p class="note">${typo(r.oven)}</p></div></div>`;
+      const closing = r.stepsMore
+        ? `<div class="card gold"><h3>Pas encore fini</h3><p>La cuisson est sur la page d’après. On ne goûte pas maintenant.</p></div>`
+        : `<div class="split"><div class="card sage"><h3>C’est réussi quand</h3><p>${typo(r.success)}</p></div><div class="card"><h3>On le garde</h3><p>${typo(r.keep)}</p></div></div><div class="card gold"><h3>Noisette dit</h3><p>${typo(r.tip)}</p></div><p class="note">${typo(r.oven)}</p>`;
+      return `<div class="sheet"><p class="run">${typo(r.title)}</p><h2>Les étapes</h2><div class="mt">${stepsHtml(r.steps)}</div><div class="bottom">${closing}</div></div>`;
     }
     case "more": {
       const r = page.data;
-      return `<div class="sheet"><p class="run">${typo(r.title)}</p><h2>${typo(r.stepsMoreTitle)}</h2><div class="mt">${stepsHtml(r.stepsMore)}</div><div class="bottom"><div class="card sage"><h3>C’est réussi quand</h3><p>${typo(r.success)}</p></div><div class="quote mt"><img src="../illustrations/noisette-chaud.jpg" alt="Noisette demande d’attendre"/><p>${typo(r.noisette)}</p></div></div></div>`;
+      return `<div class="sheet"><p class="run">${typo(r.title)}</p><h2>${typo(r.stepsMoreTitle)}</h2><div class="mt">${stepsHtml(r.stepsMore)}</div><div class="bottom"><div class="split"><div class="card sage"><h3>C’est réussi quand</h3><p>${typo(r.success)}</p></div><div class="card"><h3>On le garde</h3><p>${typo(r.keep)}</p></div></div><div class="card gold"><h3>Noisette dit</h3><p>${typo(r.tip)} ${typo(r.noisette)}</p></div><p class="note">${typo(r.oven)}</p></div></div>`;
     }
     case "finish": {
       const r = page.data;
