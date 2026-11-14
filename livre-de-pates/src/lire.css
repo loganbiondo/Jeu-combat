@@ -347,6 +347,7 @@ button.minute {
   color: #FBF6EE;
 }
 #minuteur[hidden] { display: none; }
+#minuteur.alarm { background: #8C3228; }
 #minuteur strong { font-family: "Display", serif; font-size: 2rem; line-height: 1; display: block; }
 #minuteur .what { font-size: 0.95rem; }
 #minuteur button {

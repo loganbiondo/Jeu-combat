@@ -12,13 +12,56 @@ function save(data) {
   localStorage.setItem(KEY, JSON.stringify(data));
 }
 
-function secondsOf(text) {
+function durationAt(text, index) {
+  const slice = text.slice(index);
+  const hour = slice.match(/^(\d+)\s*h(?:eure|eures)?(?:\s*(\d+))?/i);
+  if (hour) {
+    return {
+      seconds: (Number(hour[1]) * 60 + (hour[2] ? Number(hour[2]) : 0)) * 60,
+      length: hour[0].length,
+    };
+  }
+  const minute = slice.match(/^(\d+)\s*min(?:ute|utes)?(?:\s*(\d+))?/i);
+  if (minute) {
+    return {
+      seconds: Number(minute[1]) * 60 + (minute[2] ? Number(minute[2]) : 0),
+      length: minute[0].length,
+    };
+  }
+  return null;
+}
+
+function spanOf(text) {
   const t = String(text).replace(/[\u00a0\u202f]/g, " ");
-  const hour = t.match(/(\d+)\s*h(?:eure|eures)?(?:\s*(\d+))?/i);
-  if (hour) return (Number(hour[1]) * 60 + (hour[2] ? Number(hour[2]) : 0)) * 60;
-  const minute = t.match(/(\d+)\s*min(?:ute|utes)?(?:\s*(\d+))?/i);
-  if (minute) return Number(minute[1]) * 60 + (minute[2] ? Number(minute[2]) : 0);
-  return 0;
+  const linked = /(\d+)\s*à\s*(\d+)\s*(h(?:eure|eures)?|min(?:ute|utes)?)(?:\s*(\d+))?/gi;
+  let match;
+  while ((match = linked.exec(t))) {
+    const before = t.slice(0, match.index);
+    if (/\d\s*h(?:eure|eures)?\s*$/i.test(before)) continue;
+    const hours = match[3].toLowerCase().startsWith("h");
+    const first = Number(match[1]) * (hours ? 3600 : 60);
+    const last = hours
+      ? (Number(match[2]) * 60 + (match[4] ? Number(match[4]) : 0)) * 60
+      : Number(match[2]) * 60 + (match[4] ? Number(match[4]) : 0);
+    return { first, last: Math.max(first, last) };
+  }
+  let first = 0;
+  let end = 0;
+  for (let i = 0; i < t.length; i += 1) {
+    if (!/\d/.test(t[i]) || (i > 0 && /\d/.test(t[i - 1]))) continue;
+    const hit = durationAt(t, i);
+    if (!hit) continue;
+    first = hit.seconds;
+    end = i + hit.length;
+    break;
+  }
+  if (!first) return { first: 0, last: 0 };
+  const link = t.slice(end).match(/^\s*à\s*/i);
+  if (link) {
+    const next = durationAt(t, end + link[0].length);
+    if (next) return { first, last: Math.max(first, next.seconds) };
+  }
+  return { first, last: first };
 }
 
 function timeLabel(total) {
@@ -57,10 +100,23 @@ const pauseBtn = bar.querySelector("#timer-pause");
 let tickHandle = 0;
 let audioCtx;
 
+function unlockAudio() {
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return;
+  audioCtx = audioCtx || new Ctx();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  const buffer = audioCtx.createBuffer(1, 1, 22050);
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(audioCtx.destination);
+  source.start();
+}
+
 function ding() {
   if (navigator.vibrate) navigator.vibrate([180, 80, 180, 80, 360]);
   try {
-    audioCtx = audioCtx || new AudioContext();
+    if (!audioCtx) return;
+    if (audioCtx.state === "suspended") audioCtx.resume();
     const now = audioCtx.currentTime;
     [0, 0.28, 0.56].forEach((at) => {
       const osc = audioCtx.createOscillator();
@@ -75,7 +131,7 @@ function ding() {
       osc.stop(now + at + 0.24);
     });
   } catch {
-    /* le téléphone peut refuser le son sans geste */
+    /* le bandeau reste visible si le son est bloqué */
   }
 }
 
@@ -85,6 +141,7 @@ function paintTimer() {
   if (!timer) {
     bar.hidden = true;
     document.body.classList.remove("timing");
+    bar.classList.remove("alarm");
     return;
   }
   bar.hidden = false;
@@ -93,12 +150,16 @@ function paintTimer() {
   if (timer.left != null) {
     countEl.textContent = clock(timer.left);
     pauseBtn.textContent = "Reprendre";
+    bar.classList.remove("alarm");
     return;
   }
   const left = Math.ceil((timer.endsAt - Date.now()) / 1000);
   if (left <= 0) {
     countEl.textContent = "00:00";
-    whatEl.textContent = `C’est l’heure, ${timer.what}`;
+    whatEl.textContent = timer.extra
+      ? `Vérifie maintenant. Tu peux attendre encore ${timeLabel(timer.extra)}.`
+      : `C’est l’heure, ${timer.what}`;
+    bar.classList.add("alarm");
     pauseBtn.textContent = "Pause";
     if (!timer.rang) {
       timer.rang = true;
@@ -109,11 +170,12 @@ function paintTimer() {
   }
   countEl.textContent = clock(left);
   pauseBtn.textContent = "Pause";
+  bar.classList.remove("alarm");
 }
 
-function startTimer(what, seconds) {
+function startTimer(what, seconds, extra) {
   const data = load();
-  data.timer = { what, endsAt: Date.now() + seconds * 1000, left: null, rang: false };
+  data.timer = { what, endsAt: Date.now() + seconds * 1000, left: null, rang: false, extra: extra || 0 };
   save(data);
   paintTimer();
   window.clearInterval(tickHandle);
@@ -236,15 +298,22 @@ function pixel(kind) {
 }
 
 function minuteButton(text) {
-  const seconds = secondsOf(text);
-  if (seconds < 30 || seconds > 3 * 60 * 60) return null;
+  const span = spanOf(text);
+  if (span.first < 30 || span.first > 3 * 60 * 60) return null;
   const button = document.createElement("button");
   button.type = "button";
   button.className = "minute";
-  button.textContent = `Minuteur ${timeLabel(seconds)}`;
+  button.textContent = span.last > span.first
+    ? `Minuteur ${timeLabel(span.first)} · jusqu’à ${timeLabel(span.last)}`
+    : `Minuteur ${timeLabel(span.first)}`;
   button.addEventListener("click", (event) => {
     event.stopPropagation();
-    startTimer(button.closest("article")?.querySelector("h2")?.textContent || "Minuteur", seconds);
+    unlockAudio();
+    startTimer(
+      button.closest("article")?.querySelector("h2")?.textContent || "Minuteur",
+      span.first,
+      span.last - span.first,
+    );
   });
   return button;
 }
