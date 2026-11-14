@@ -612,7 +612,12 @@ function buildReader() {
 <main class="wrap">
 <p class="kicker">Le cahier de Noisette</p>
 <h1>${typo(book.title)}</h1>
-<p class="lead">${typo(book.subtitle)}. Choisis une recette dans le sommaire. Le texte défile, en gros caractères.</p>
+<p class="lead">${typo(book.subtitle)}. Le livre peint, et le cahier qu’on joue. Touche un ingrédient : il s’anime en pixart. Le poids écrit à côté ne change jamais.</p>
+<div class="promesse">
+  <div><b>Recettes vraies</b><span>Les poids, les temps et les gestes restent ceux du livre.</span></div>
+  <div><b>Ingrédients pixart</b><span>Ils vivent quand on les touche, et ils répètent la quantité.</span></div>
+  <div><b>18 étoiles</b><span>Une étoile par recette menée jusqu’au bout.</span></div>
+</div>
 <div class="downloads">
   <a class="dl" href="dist/mes-premieres-pates.epub" download="mes-premieres-pates.epub">Télécharger pour le téléphone</a>
   <p>Ce fichier s’ouvre dans Livres sur iPhone, et dans Play Livres sur Android. Il reste sur le téléphone, même sans réseau.</p>
@@ -684,6 +689,7 @@ ${recipesHtml}
 <p class="quote">Si tu ne sais pas si c’est chaud, c’est que tu ne touches pas. Tu demandes.</p>
 </section>
 </main>
+<script src="src/lire.js" defer></script>
 </body>
 </html>`;
   fs.writeFileSync(path.join(root, "index.html"), html);
