@@ -410,6 +410,7 @@ function buildEbookCover() {
 }
 
 function buildEpub() {
+  fs.mkdirSync(dist, { recursive: true });
   const epubRoot = path.join(buildDir, "epub");
   const oeb = path.join(epubRoot, "OEBPS");
   fs.mkdirSync(path.join(oeb, "images"), { recursive: true });
