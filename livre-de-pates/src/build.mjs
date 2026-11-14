@@ -418,7 +418,7 @@ function buildEpub() {
   for (const file of fs.readdirSync(illu)) {
     if (file.endsWith(".jpg")) fs.copyFileSync(path.join(illu, file), path.join(oeb, "images", file));
   }
-  const css = `body{font-family:Georgia,serif;line-height:1.45;margin:1em} h1{font-size:1.6em} img{max-width:100%;height:auto} .adult{font-weight:bold} li{margin:0.3em 0}`;
+  const css = `body{font-family:Georgia,serif;font-size:1.15em;line-height:1.5;margin:1em} h1{font-size:1.7em;line-height:1.15} h2{font-size:1.25em} img{max-width:100%;height:auto;margin:0.6em 0} p,li{margin:0.45em 0} .adult{font-weight:bold}`;
   fs.writeFileSync(path.join(oeb, "style.css"), css);
   const manifest = [];
   const spine = [];
@@ -533,7 +533,10 @@ const uses = {
 
 function stepItems(list) {
   return list
-    .map((s) => `<li${s.adult ? ` class="adult"` : ""}>${s.adult ? `<span class="badge">Avec un adulte. </span>` : ""}${typo(s.t)}</li>`)
+    .map((s) => {
+      const phrase = `${s.adult ? `<span class="badge">Avec un adulte. </span>` : ""}${typo(s.t)}`;
+      return `<li${s.adult ? ` class="adult"` : ""}><span class="phrase">${phrase}</span></li>`;
+    })
     .join("");
 }
 
@@ -591,7 +594,7 @@ function buildReader() {
           </article>`;
         })
         .join("");
-      return `<section class="chapter" id="${c.id}"><p class="kicker">Chapitre ${c.num}</p><h2>${typo(c.title)}</h2><p class="lead">${typo(c.lead)}</p></section>${cards}`;
+      return `<section class="chapter" id="chapitre-${c.id}"><p class="kicker">Chapitre ${c.num}</p><h2>${typo(c.title)}</h2><p class="lead">${typo(c.lead)}</p></section>${cards}`;
     })
     .join("");
 
@@ -609,6 +612,11 @@ function buildReader() {
 <p class="kicker">Le cahier de Noisette</p>
 <h1>${typo(book.title)}</h1>
 <p class="lead">${typo(book.subtitle)}. Choisis une recette dans le sommaire. Le texte défile, en gros caractères.</p>
+<div class="downloads">
+  <a class="dl" href="dist/mes-premieres-pates.epub" download="mes-premieres-pates.epub">Télécharger pour le téléphone</a>
+  <p>Ce fichier s’ouvre dans Livres sur iPhone, et dans Play Livres sur Android. Il reste sur le téléphone, même sans réseau.</p>
+  <a class="dl secondary" href="dist/mes-premieres-pates-interieur.pdf" download="mes-premieres-pates.pdf">Télécharger le PDF</a>
+</div>
 <img class="hero-art" src="illustrations/cover.jpg" alt="Noisette et les gâteaux">
 <p class="block">Noisette est le personnage en dessin animé. Les gâteaux sont peints. Tu mesures, tu mélanges, tu plies. Quand une étape est sur fond rose, tu appelles l’adulte : four, poêle, couteau, eau bouillante, huile chaude.</p>
 
@@ -707,6 +715,10 @@ function main() {
 if (process.argv.includes("--lire")) {
   buildReader();
   console.log("index.html");
+} else if (process.argv.includes("--epub")) {
+  buildEpub();
+  buildReader();
+  console.log("epub");
 } else {
   main();
 }

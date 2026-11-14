@@ -62,6 +62,20 @@ h3 { font-size: 1.35rem; margin: 0 0 0.45rem; }
 .bar span { font-weight: 700; }
 
 .wrap { max-width: 40rem; margin: 0 auto; padding: 1.4rem 1.15rem 5rem; }
+.downloads { display: flex; flex-direction: column; gap: 0.65rem; margin: 1.15rem 0 0.2rem; }
+.downloads a.dl {
+  display: block;
+  text-align: center;
+  background: var(--brick);
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+  padding: 0.95rem 1rem;
+  border-radius: 999px;
+  font-size: 1.15rem;
+}
+.downloads a.secondary { background: white; color: var(--ink); border: 2px solid var(--ink); }
+.downloads p { font-size: 1.05rem; color: var(--muted); margin: 0; }
 .hero-art { width: 100%; border-radius: 10px; margin: 1rem 0 1.1rem; }
 .kicker {
   font-size: 0.95rem;
@@ -91,10 +105,10 @@ h3 { font-size: 1.35rem; margin: 0 0 0.45rem; }
   letter-spacing: 0.04em;
 }
 
-section.recipe, section.chapter, section.front, #sommaire, .recipe {
+article.recipe, section.chapter, section.front, #sommaire {
   scroll-margin-top: 4.4rem;
 }
-section.recipe, section.chapter, section.front {
+article.recipe, section.chapter, section.front {
   padding-top: 1.6rem;
   margin-top: 1.2rem;
   border-top: 2px solid var(--line);
@@ -145,8 +159,8 @@ ol.steps li.adult {
   border-radius: 10px;
   padding: 0.65rem 0.7rem 0.7rem 0.55rem;
 }
+ol.steps li > .phrase { flex: 1; min-width: 0; }
 .badge {
-  display: inline-block;
   font-weight: 700;
   color: var(--brick);
 }
