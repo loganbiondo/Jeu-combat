@@ -510,6 +510,176 @@ z.close()
   ]);
 }
 
+const uses = {
+  pancakes: "Matin et goûter",
+  crepes: "Dîner ou goûter",
+  gaufres: "Goûter croustillant",
+  cookies: "Boîte à biscuits",
+  muffins: "Dix gâteaux individuels",
+  cake: "Un cake à partager",
+  madeleines: "Coques à la bosse",
+  financiers: "Petits gâteaux à l’amande",
+  brisee: "Quiche et tartes salées",
+  sablee: "Tarte aux fruits frais",
+  sucree: "Tarte aux poires",
+  amandine: "Tarte à l’amande",
+  feuilletee: "Palmiers feuilletés",
+  choux: "Choux à garnir froids",
+  brioche: "Huit petites brioches",
+  beignets: "Friture, adulte seulement",
+  danois: "Carrés à la confiture",
+  croissants: "Le grand défi",
+};
+
+function stepItems(list) {
+  return list
+    .map((s) => `<li${s.adult ? ` class="adult"` : ""}>${s.adult ? `<span class="badge">Avec un adulte. </span>` : ""}${typo(s.t)}</li>`)
+    .join("");
+}
+
+function buildReader() {
+  const toc = chapters
+    .map((c) => {
+      const items = recipes
+        .filter((r) => r.chapter === c.id)
+        .map((r) => `<a href="#${r.id}">${typo(r.title)}<small>${typo(r.levelLabel)} · ${typo(uses[r.id] || r.yield)}</small></a>`)
+        .join("");
+      return `<p class="ch-label">${typo(c.num)} · ${typo(c.title)}</p>${items}`;
+    })
+    .join("");
+
+  const recipesHtml = chapters
+    .map((c) => {
+      const cards = recipes
+        .filter((r) => r.chapter === c.id)
+        .map((r) => {
+          const more = r.stepsMore
+            ? `<h3>${typo(r.stepsMoreTitle)}</h3><ol class="steps">${stepItems(r.stepsMore)}</ol>`
+            : "";
+          const finish = r.finish
+            ? `<h3>${typo(r.finish.title)}</h3><p class="block">${typo(r.finish.intro)}</p>${ings(r.finish.ingredients)}<ol class="steps">${stepItems(r.finish.steps)}</ol>`
+            : "";
+          return `<article class="recipe" id="${r.id}">
+            <p class="kicker">${typo(r.levelLabel)} · ${dots(r.level)}</p>
+            <h2>${typo(r.title)}</h2>
+            <img src="illustrations/${r.id}.jpg" alt="${typo(r.title)} avec Noisette">
+            <p class="lead">${typo(r.dek)}</p>
+            <div class="meta">
+              <div><b>Pour</b><span>${typo(r.yield)}</span></div>
+              <div><b>Préparer</b><span>${typo(r.prep)}</span></div>
+              <div><b>Attendre</b><span>${typo(r.rest)}</span></div>
+              <div><b>Cuire</b><span>${typo(r.bake)}</span></div>
+            </div>
+            <p class="block">${typo(r.why)}</p>
+            <h3>Il te faut</h3>
+            ${ings(r.ingredients)}
+            <div class="cards two">
+              <div class="card"><h3>Avant</h3><ul class="plain">${r.before.map((t) => `<li>${typo(t)}</li>`).join("")}</ul></div>
+              <div class="card sage"><h3>Matériel</h3><ul class="plain">${r.gear.map((t) => `<li>${typo(t)}</li>`).join("")}</ul><p><b>Allergènes.</b> ${typo(r.allergens)}.</p></div>
+            </div>
+            <p class="quote">${typo(r.noisette)}</p>
+            <h3>Les étapes</h3>
+            <ol class="steps">${stepItems(r.steps)}</ol>
+            ${more}
+            ${finish}
+            <div class="cards two">
+              <div class="card sage"><h3>C’est réussi quand</h3><p>${typo(r.success)}</p></div>
+              <div class="card"><h3>On le garde</h3><p>${typo(r.keep)}</p></div>
+            </div>
+            <div class="card gold"><h3>Noisette dit</h3><p>${typo(r.tip)}</p></div>
+            <p class="note">${typo(r.oven)}</p>
+          </article>`;
+        })
+        .join("");
+      return `<section class="chapter" id="${c.id}"><p class="kicker">Chapitre ${c.num}</p><h2>${typo(c.title)}</h2><p class="lead">${typo(c.lead)}</p></section>${cards}`;
+    })
+    .join("");
+
+  const html = `<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(book.title)} — à lire</title>
+<link rel="stylesheet" href="src/lire.css">
+</head>
+<body>
+<header class="bar"><span>Mes premières pâtes</span><a href="#sommaire">Sommaire</a></header>
+<main class="wrap">
+<p class="kicker">Le cahier de Noisette</p>
+<h1>${typo(book.title)}</h1>
+<p class="lead">${typo(book.subtitle)}. Choisis une recette dans le sommaire. Le texte défile, en gros caractères.</p>
+<img class="hero-art" src="illustrations/cover.jpg" alt="Noisette et les gâteaux">
+<p class="block">Noisette est le personnage en dessin animé. Les gâteaux sont peints. Tu mesures, tu mélanges, tu plies. Quand une étape est sur fond rose, tu appelles l’adulte : four, poêle, couteau, eau bouillante, huile chaude.</p>
+
+<section class="front" id="regles">
+<h2>Six règles, à chaque fois</h2>
+<ol class="steps">
+<li>Un adulte est dans la cuisine, pas dans une autre pièce.</li>
+<li>Je me lave les mains et j’attache les cheveux s’ils sont longs.</li>
+<li>Je lis la recette jusqu’au bout, puis je sors les ingrédients.</li>
+<li>Je pèse. La balance est plus juste qu’un verre. J’appuie sur tare pour repartir de zéro.</li>
+<li class="adult"><span class="badge">Avec un adulte. </span>Le four, la poêle et la friture, c’est l’adulte. Je ne m’en approche pas sans lui.</li>
+<li>On goûte quand l’adulte dit que ce n’est plus brûlant. Le sucre chaud brûle encore.</li>
+</ol>
+<p class="quote">La tare, c’est le bouton qui remet la balance à zéro avec le bol dessus.</p>
+</section>
+
+<section class="front" id="levures">
+<h2>Deux levures, deux métiers</h2>
+<div class="cards two">
+<div class="card sage"><h3>Levure de boulanger</h3><p>Elle est vivante. Elle fait gonfler la pâte avant le four : brioche, beignets, croissants, danois. 20 g de fraîche = 7 g de sèche. 25 g de fraîche = 8 g de sèche. Un liquide brûlant la tue.</p></div>
+<div class="card"><h3>Levure chimique</h3><p>C’est une poudre. Elle fait gonfler dans le four : pancakes, gaufres, cookies, muffins, cake, madeleines, financiers. On la mélange très bien à la farine. On ne l’échange pas avec la levure de boulanger.</p></div>
+</div>
+</section>
+
+<section class="front" id="mots">
+<h2>Les mots de Noisette</h2>
+<div class="cards">
+<div class="card white"><h3>Sabler</h3><p>Frotter le beurre froid dans la farine jusqu’à obtenir du sable.</p></div>
+<div class="card white"><h3>Foncer</h3><p>Étaler la pâte dans le moule, avec un bord qui monte.</p></div>
+<div class="card white"><h3>Piquer</h3><p>Faire des trous avec une fourchette pour que le fond ne gonfle pas.</p></div>
+<div class="card white"><h3>Dorer</h3><p>Badigeonner d’œuf battu, sans écraser la pâte.</p></div>
+<div class="card white"><h3>Tourer</h3><p>Plier la pâte en trois, comme une lettre, pour faire des feuilles.</p></div>
+<div class="card white"><h3>Cuisson à blanc</h3><p>Cuire la pâte seule, avec du papier et des légumes secs dessus.</p></div>
+</div>
+</section>
+
+<nav class="toc" id="sommaire">
+<h2>Les 18 recettes</h2>
+${toc}
+</nav>
+
+${recipesHtml}
+
+<section class="front" id="rates">
+<h2>Si ça coince</h2>
+<div class="cards">
+<div class="card"><h3>Pâte trop sèche</h3><p>Une cuillère à café d’eau froide. On attend, on regarde, on n’en verse pas un verre.</p></div>
+<div class="card"><h3>Pâte trop collante</h3><p>20 minutes au frais. Ensuite seulement, un peu de farine sur le plan.</p></div>
+<div class="card"><h3>Beurre qui fond dans les tours</h3><p>On s’arrête. 20 minutes au réfrigérateur. On ne roule pas un beurre mou.</p></div>
+<div class="card"><h3>Rien ne gonfle</h3><p>Le lait était trop chaud, ou la levure était périmée. On vérifie la date et on recommence.</p></div>
+<div class="card"><h3>Choux retombés</h3><p>La porte du four a été ouverte trop tôt. La prochaine fois, on attend 25 minutes.</p></div>
+<div class="card"><h3>Beignets gras</h3><p>L’huile n’était pas à 170 °C. On en fait moins à la fois, et on attend entre les fournées.</p></div>
+</div>
+</section>
+
+<section class="front" id="chaud">
+<h2>Ce que l’adulte garde</h2>
+<div class="cards two">
+<div class="card"><h3>Le four</h3><p>L’adulte l’allume, ouvre la porte avec une manique, et sort la plaque. On ne pose pas la main sur la porte.</p></div>
+<div class="card"><h3>La poêle</h3><p>Le manche ne dépasse pas de la cuisinière. On ne jette pas d’eau sur l’huile chaude.</p></div>
+<div class="card"><h3>Le couteau</h3><p>L’adulte coupe le beurre froid, épluche les fruits et tranche la pâte. Toi, tu peux décorer.</p></div>
+<div class="card"><h3>La friture</h3><p>Un seul adulte, une casserole haute, 170 °C, pas d’eau, un couvercle à portée. L’huile refroidit dans la casserole, sans qu’on la déplace.</p></div>
+</div>
+<p class="quote">Si tu ne sais pas si c’est chaud, c’est que tu ne touches pas. Tu demandes.</p>
+</section>
+</main>
+</body>
+</html>`;
+  fs.writeFileSync(path.join(root, "index.html"), html);
+}
+
 function main() {
   prepareImages();
   fs.mkdirSync(buildDir, { recursive: true });
@@ -530,7 +700,13 @@ function main() {
   buildEpub();
   const cover = buildCover(count);
   buildEbookCover();
+  buildReader();
   console.log(JSON.stringify({ htmlPages: pages.length, pdfPages: count, pageSize: size, cover }, null, 2));
 }
 
-main();
+if (process.argv.includes("--lire")) {
+  buildReader();
+  console.log("index.html");
+} else {
+  main();
+}

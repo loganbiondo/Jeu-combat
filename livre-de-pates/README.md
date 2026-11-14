@@ -2,6 +2,8 @@
 
 Livre illustré de 18 pâtes et gâteaux, écrit pour être fait par un enfant avec un adulte. Noisette, personnage de dessin animé, accompagne des assiettes peintes.
 
+Pour le lire à l’écran, ouvrez `index.html` dans un navigateur (téléphone ou ordinateur). Le texte défile en gros caractères. Le PDF de `dist/` est la version d’imprimerie : ses pages sont fixes, et GitHub ne les affiche pas comme un livre.
+
 86 pages, format 8 × 10 pouces (20,32 × 25,4 cm), sans fond perdu. Intérieur couleur. Les fichiers à envoyer sont dans `dist/`.
 
 | Fichier | Usage |
