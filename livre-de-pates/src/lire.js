@@ -116,27 +116,43 @@ function unlockAudio() {
   }
 }
 
+function tone(freq, at, dur, volume) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = "triangle";
+  osc.frequency.value = freq;
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  gain.gain.setValueAtTime(0.0001, at);
+  gain.gain.exponentialRampToValueAtTime(volume, at + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  osc.start(at);
+  osc.stop(at + dur + 0.02);
+}
+
+function blip(freq) {
+  try {
+    unlockAudio();
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    tone(freq, now, 0.16, 0.28);
+    tone(freq * 1.25, now + 0.09, 0.2, 0.22);
+  } catch {
+    /* la phrase reste écrite si le son est refusé */
+  }
+}
+
 function ding() {
   if (navigator.vibrate) navigator.vibrate([180, 80, 180, 80, 360]);
   try {
     if (!audioCtx) return;
     if (audioCtx.state === "suspended") audioCtx.resume();
     const now = audioCtx.currentTime;
-    [0, 0.28, 0.56].forEach((at) => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.frequency.value = 880;
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      gain.gain.setValueAtTime(0.0001, now + at);
-      gain.gain.exponentialRampToValueAtTime(0.2, now + at + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + at + 0.22);
-      osc.start(now + at);
-      osc.stop(now + at + 0.24);
-    });
+    [523, 659, 784].forEach((freq, i) => tone(freq, now + i * 0.16, 0.28, 0.32));
   } catch {
     /* le bandeau reste visible si le son est bloqué */
   }
+  speak(whatEl.textContent);
 }
 
 function paintTimer() {
@@ -210,40 +226,24 @@ bar.querySelector("#timer-stop").addEventListener("click", () => {
   paintTimer();
 });
 
-const colors = {
-  k: "#241C14",
-  w: "#FBF6EE",
-  y: "#E2A322",
-  b: "#F3D48A",
-  m: "#F7F3EA",
-  s: "#3E6B4F",
-  r: "#C44848",
-  g: "#C4A574",
-  f: "#F4EBD8",
-  c: "#5A3318",
-  u: "#8FB4D4",
-  l: "#6E9A62",
-  p: "#E7B7A2",
-};
-
-const sprites = {
-  farine: ["................", "......kkkk......", ".....kffffk.....", "....kffffffk....", "....kfokkofk....", "....kffffffk....", "....kffffffk....", "....kkkkkkkk....", ".....kffffk.....", ".....kffffk.....", "......kffk......", ".......kk.......", "................", "................", "................", "................"],
-  oeuf: ["................", ".....kkkkkk.....", "....kmmmmmmk....", "....kmmmmmmk....", "...kmmmmmmmmk...", "...kmmyymmmmk...", "...kmmokkmmmk...", "...kmmmmmmmmk...", "....kmmmmmmk....", ".....kkkkkk.....", "......k..k......", "......k..k......", "................", "................", "................", "................"],
-  beurre: ["................", "................", "....kkkkkkkk....", "....kbbbbbbk....", "....kbokkobk....", "....kbbbbbbk....", "....kbbbbbbk....", "....kkkkkkkk....", "......k..k......", "......k..k......", "................", "................", "................", "................", "................", "................"],
-  lait: ["................", ".......kk.......", "......kwwk......", "......kwwk......", ".....kwwwwk.....", "....kwokkook....", "....kwwwwwwk....", "....kwwwwwwk....", "....kwwwwwwk....", ".....kwwwwk.....", "......kkkk......", "......k..k......", "................", "................", "................", "................"],
-  sucre: ["................", "................", "...kkkkkkkkk....", "...kwwwwwwwwk...", "...kwokkwwwwk...", "...kwwwwwwwwk...", "...kwwwwwwwwk...", "...kkkkkkkkkk...", ".....k....k.....", ".....k....k.....", "................", "................", "................", "................", "................", "................"],
-  sel: ["................", "......kkkk......", ".....kwwwwk.....", ".....kokkwk.....", ".....kwwwwk.....", "......kkkk......", ".......kk.......", ".......kk.......", "......kwwk......", "......kwwk......", "......kwwk......", ".......kk.......", "................", "................", "................", "................"],
-  levure: ["................", "....kkkkkkkk....", "....kssssssk....", "....ksokkssk....", "....kssssssk....", "....kssssssk....", "....kkkkkkkk....", "......k..k......", "......k..k......", "................", "................", "................", "................", "................", "................", "................"],
-  chocolat: ["................", "....kkkkkkkk....", "....kcccccck....", "....kcokkock....", "....kcccccck....", "....kcccccck....", "....kkkkkkkk....", "......k..k......", "......k..k......", "................", "................", "................", "................", "................", "................", "................"],
-  amande: ["................", ".......kk.......", "......kggk......", ".....kggggk.....", "....kgokkogk....", "....kggggggk....", ".....kggggk.....", "......kggk......", ".......kk.......", "......k..k......", "................", "................", "................", "................", "................", "................"],
-  fruit: ["................", ".......ll.......", "......llll......", ".....krrrrk.....", "....krrrrrrk....", "....krokkrork...", "....krrrrrrk....", "....krrrrrrk....", ".....krrrrk.....", "......kkkk......", "......k..k......", "................", "................", "................", "................", "................"],
-  creme: ["................", "....kkkkkkkk....", "....kmmmmmmk....", "....kmokkmmk....", "....kmmmmmmk....", "....kmmmmmmk....", "....kkkkkkkk....", "....kmmmmmmk....", "....kmmmmmmk....", "....kkkkkkkk....", "......k..k......", "................", "................", "................", "................", "................"],
-  huile: ["................", ".......kk.......", "......kyyk......", "......kyyk......", ".....kyyyyk.....", "....kyokkyok....", "....kyyyyyyk....", "....kyyyyyyk....", ".....kyyyyk.....", "......kkkk......", "......k..k......", "................", "................", "................", "................", "................"],
-  eau: ["................", ".......kk.......", "......kuuk......", ".....kuuuuk.....", "....kuokuouk....", "....kuuuuuuk....", "....kuuuuuuk....", ".....kuuuuk.....", "......kuuk......", ".......kk.......", "......k..k......", "................", "................", "................", "................", "................"],
-  confiture: ["................", "....kkkkkkkk....", "....krrrrrrk....", "....krokkrork...", "....krrrrrrk....", "....kkkkkkkk....", "....kmmmmmmk....", "....kmmmmmmk....", "....kkkkkkkk....", "......k..k......", "................", "................", "................", "................", "................", "................"],
-  fromage: ["................", "....kkkk........", "....kyyyyk......", "....kyokyyk.....", "....kyyyyyk.....", "....kyyyyyyk....", "....kkkkkkkk....", "......k..k......", "......k..k......", "................", "................", "................", "................", "................", "................", "................"],
-  pate: ["................", "................", ".....kkkkkk.....", "....kppppppk....", "....kpokkppk....", "....kppppppk....", "....kppppppk....", ".....kkkkkk.....", "......k..k......", "......k..k......", "................", "................", "................", "................", "................", "................"],
-  bol: ["................", "................", "....kkkkkkkk....", "....kwokkwwk....", "....kwwwwwwk....", "....kwwwwwwk....", "...kwwwwwwwwk...", "...kkkkkkkkkk...", "................", "................", "................", "................", "................", "................", "................", "................"],
+const pitches = {
+  farine: 392,
+  oeuf: 523,
+  beurre: 349,
+  lait: 440,
+  sucre: 587,
+  sel: 494,
+  levure: 330,
+  chocolat: 294,
+  amande: 370,
+  fruit: 466,
+  creme: 415,
+  huile: 311,
+  eau: 554,
+  confiture: 380,
+  fromage: 340,
+  pate: 360,
+  bol: 420,
 };
 
 const voices = {
@@ -287,18 +287,143 @@ function kindOf(name) {
   return "bol";
 }
 
-function pixel(kind) {
-  const rows = sprites[kind] || sprites.bol;
-  const rects = [];
-  rows.forEach((row, y) => {
-    [...row].forEach((ch, x) => {
-      if (!colors[ch] && ch !== "o") return;
-      const fill = ch === "o" ? colors.k : colors[ch];
-      const cls = ch === "o" ? ` class="pupil"` : "";
-      rects.push(`<rect${cls} x="${x}" y="${y}" width="1" height="1" fill="${fill}"/>`);
-    });
-  });
-  return `<svg class="creature" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">${rects.join("")}</svg>`;
+let castN = 0;
+
+function face(x, y) {
+  return `<g class="eyes">
+    <ellipse cx="${x - 8}" cy="${y}" rx="7.2" ry="8.1" fill="#fff"/>
+    <ellipse cx="${x + 8}" cy="${y}" rx="7.2" ry="8.1" fill="#fff"/>
+    <ellipse class="pupil" cx="${x - 6.2}" cy="${y + 1.4}" rx="3.2" ry="3.6" fill="#2A2118"/>
+    <ellipse class="pupil" cx="${x + 9.8}" cy="${y + 1.4}" rx="3.2" ry="3.6" fill="#2A2118"/>
+    <circle cx="${x - 7.6}" cy="${y - 1.5}" r="1.5" fill="#fff"/>
+    <circle cx="${x + 8.4}" cy="${y - 1.5}" r="1.5" fill="#fff"/>
+  </g>
+  <ellipse cx="${x - 16}" cy="${y + 11}" rx="4.2" ry="2.2" fill="#E7A090" opacity="0.8"/>
+  <ellipse cx="${x + 16}" cy="${y + 11}" rx="4.2" ry="2.2" fill="#E7A090" opacity="0.8"/>
+  <path class="mouth" d="M${x - 7} ${y + 14} Q ${x} ${y + 21} ${x + 7} ${y + 14}" fill="none" stroke="#2A2118" stroke-width="1.8" stroke-linecap="round"/>`;
+}
+
+function cast(kind) {
+  castN += 1;
+  const id = `c${castN}`;
+  const gloss = `<ellipse cx="32" cy="34" rx="7" ry="5" fill="#fff" opacity="0.35"/>`;
+  const bodies = {
+    farine: {
+      light: "#FFF6E4", dark: "#E4C48A", fx: 40, fy: 42,
+      body: `<path d="M31 18 h18 l3 5 -2 3 c9 3 14 12 11 30 -2 14 -10 16 -21 16 s-19 -2 -21 -16 c-3 -18 2 -27 11 -30 l-2 -3 z" fill="url(#${id})"/>
+        <path d="M33 18 h14" stroke="#C4A06A" stroke-width="2" stroke-linecap="round"/>
+        <rect x="36" y="12" width="8" height="7" rx="2.5" fill="#E2A322"/>
+        <ellipse cx="33" cy="32" rx="6" ry="4" fill="#fff" opacity="0.4"/>`,
+    },
+    oeuf: {
+      light: "#FFFDF8", dark: "#F0C9A0", fx: 40, fy: 44,
+      body: `<ellipse cx="40" cy="44" rx="18" ry="24" fill="url(#${id})"/>${gloss}`,
+    },
+    beurre: {
+      light: "#FFE9A0", dark: "#E2A322", fx: 40, fy: 46,
+      body: `<rect x="15" y="30" width="50" height="30" rx="10" fill="url(#${id})"/>
+        <rect x="15" y="30" width="50" height="10" rx="6" fill="#FFF6D0" opacity="0.85"/>
+        <path d="M22 48 h36" stroke="#C4841A" stroke-width="1.3" opacity="0.4" stroke-linecap="round"/>`,
+    },
+    lait: {
+      light: "#FFFFFF", dark: "#D5E6F4", fx: 40, fy: 48,
+      body: `<rect x="34" y="8" width="12" height="6" rx="2" fill="#5C88B0"/>
+        <rect x="33" y="12" width="14" height="10" rx="3" fill="#7EA4C8"/>
+        <path d="M31 22 h18 l6 12 v20 a15 15 0 0 1 -30 0 v-20 z" fill="url(#${id})"/>
+        <ellipse cx="34" cy="36" rx="4" ry="7" fill="#fff" opacity="0.45"/>`,
+    },
+    sucre: {
+      light: "#FFFFFF", dark: "#E4DDD2", fx: 40, fy: 46,
+      body: `<g transform="rotate(-8 40 46)"><rect x="18" y="24" width="42" height="40" rx="9" fill="url(#${id})"/>
+        <rect x="18" y="24" width="42" height="12" rx="8" fill="#fff" opacity="0.65"/></g>`,
+    },
+    sel: {
+      light: "#FFFFFF", dark: "#E4DCCE", fx: 40, fy: 46,
+      body: `<rect x="28" y="12" width="24" height="10" rx="3" fill="#D7C4A4"/>
+        <circle cx="34" cy="16" r="1.15" fill="#6B5340"/><circle cx="40" cy="16" r="1.15" fill="#6B5340"/><circle cx="46" cy="16" r="1.15" fill="#6B5340"/>
+        <rect x="26" y="22" width="28" height="42" rx="11" fill="url(#${id})"/>
+        <ellipse cx="34" cy="32" rx="5" ry="6" fill="#fff" opacity="0.4"/>`,
+    },
+    levure: {
+      light: "#8FBF96", dark: "#3E6B4F", fx: 40, fy: 48,
+      body: `<rect x="22" y="16" width="36" height="50" rx="8" fill="url(#${id})"/>
+        <rect x="22" y="16" width="36" height="14" rx="8" fill="#2F5A40"/>
+        <rect x="30" y="34" width="20" height="8" rx="2" fill="#FBF6EE"/>`,
+    },
+    chocolat: {
+      light: "#A56B42", dark: "#4A2C18", fx: 40, fy: 46,
+      body: `<rect x="12" y="28" width="56" height="32" rx="8" fill="url(#${id})"/>
+        <path d="M30 28 v32 M50 28 v32 M12 44 h56" stroke="#3A2416" stroke-width="1.5" opacity="0.35"/>
+        <rect x="15" y="31" width="12" height="7" rx="3" fill="#fff" opacity="0.2"/>`,
+    },
+    amande: {
+      light: "#F3DCC0", dark: "#C4A574", fx: 40, fy: 42,
+      body: `<path d="M40 12 C60 32 58 58 40 68 C22 58 20 32 40 12" fill="url(#${id})"/>
+        <path d="M40 18 C50 34 50 52 40 62" fill="none" stroke="#A68458" stroke-width="1.3" opacity="0.55"/>
+        <ellipse cx="32" cy="30" rx="5" ry="7" fill="#fff" opacity="0.3"/>`,
+    },
+    fruit: {
+      light: "#F07070", dark: "#A83232", fx: 40, fy: 48,
+      body: `<path d="M40 24 C26 24 16 36 18 50 C20 66 30 70 40 70 C50 70 60 66 62 50 C64 36 54 24 40 24" fill="url(#${id})"/>
+        <path d="M40 24 C40 14 48 12 53 16" fill="none" stroke="#3E6B4F" stroke-width="2.2" stroke-linecap="round"/>
+        <ellipse cx="52" cy="16" rx="7" ry="3.4" fill="#6E9A62" transform="rotate(-24 52 16)"/>
+        <ellipse cx="30" cy="40" rx="6" ry="8" fill="#fff" opacity="0.22"/>`,
+    },
+    creme: {
+      light: "#FFFFFF", dark: "#F3E2C4", fx: 40, fy: 50,
+      body: `<rect x="22" y="24" width="36" height="40" rx="10" fill="#F7F1E6" stroke="#E2C99A" stroke-width="1.4"/>
+        <rect x="20" y="20" width="40" height="12" rx="6" fill="#E2A322"/>
+        <ellipse cx="40" cy="54" rx="12" ry="7" fill="url(#${id})"/>
+        <path d="M32 52 q8 -7 16 0" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`,
+    },
+    huile: {
+      light: "#FFF6D2", dark: "#E8C15A", fx: 40, fy: 48,
+      body: `<rect x="34" y="8" width="12" height="8" rx="2" fill="#C4A574"/>
+        <path d="M32 16 h16 l5 12 v26 a13 13 0 0 1 -26 0 v-26 z" fill="url(#${id})"/>
+        <rect x="30" y="36" width="20" height="24" rx="7" fill="#E2A322" opacity="0.9"/>
+        <ellipse cx="36" cy="28" rx="3" ry="5" fill="#fff" opacity="0.4"/>`,
+    },
+    eau: {
+      light: "#F4FBFF", dark: "#7EB0D8", fx: 40, fy: 50,
+      body: `<path d="M40 8 C40 8 16 36 16 50 a24 22 0 0 0 48 0 C64 36 40 8 40 8" fill="url(#${id})"/>
+        <ellipse cx="31" cy="40" rx="6" ry="9" fill="#fff" opacity="0.5"/>`,
+    },
+    confiture: {
+      light: "#FFF7F4", dark: "#F0D0C8", fx: 40, fy: 40,
+      body: `<rect x="24" y="14" width="32" height="10" rx="3" fill="#C44848"/>
+        <path d="M26 16 h6 M38 16 h6 M50 16 h4" stroke="#F7C4C4" stroke-width="2" stroke-linecap="round"/>
+        <rect x="22" y="24" width="36" height="40" rx="8" fill="url(#${id})" stroke="#E7C2BA" stroke-width="1.2"/>
+        <rect x="26" y="46" width="28" height="14" rx="4" fill="#C44848" opacity="0.85"/>`,
+    },
+    fromage: {
+      light: "#FFE9A2", dark: "#E2A322", fx: 40, fy: 48,
+      body: `<path d="M14 58 L40 16 L66 58 Z" fill="url(#${id})"/>
+        <circle cx="34" cy="46" r="3.2" fill="#F8E7B4"/><circle cx="48" cy="50" r="2.5" fill="#F8E7B4"/><circle cx="40" cy="56" r="2" fill="#F8E7B4"/>`,
+    },
+    pate: {
+      light: "#FBE0D0", dark: "#E7B7A2", fx: 40, fy: 46,
+      body: `<ellipse cx="40" cy="48" rx="24" ry="18" fill="url(#${id})"/>
+        <ellipse cx="30" cy="40" rx="7" ry="5" fill="#fff" opacity="0.35"/>
+        <path d="M24 54 q16 8 32 0" fill="none" stroke="#D9A888" stroke-width="2" stroke-linecap="round"/>`,
+    },
+    bol: {
+      light: "#FFFFFF", dark: "#F0E2D0", fx: 40, fy: 52,
+      body: `<path d="M14 34 h52 l-6 26 a22 14 0 0 1 -40 0 z" fill="url(#${id})"/>
+        <ellipse cx="40" cy="34" rx="26" ry="8" fill="#F7F1E6"/>
+        <ellipse cx="40" cy="34" rx="16" ry="5" fill="#E7C98A"/>
+        <ellipse cx="28" cy="48" rx="5" ry="7" fill="#fff" opacity="0.35"/>`,
+    },
+  };
+  const spec = bodies[kind] || bodies.bol;
+  return `<svg class="creature" viewBox="0 0 80 80" aria-hidden="true">
+    <defs><radialGradient id="${id}" cx="32%" cy="28%" r="78%">
+      <stop offset="0%" stop-color="${spec.light}"/>
+      <stop offset="100%" stop-color="${spec.dark}"/>
+    </radialGradient></defs>
+    <ellipse cx="40" cy="74" rx="18" ry="3.2" fill="#241C14" opacity="0.14"/>
+    ${spec.body}
+    ${face(spec.fx, spec.fy)}
+  </svg>`;
 }
 
 function minuteButton(text) {
@@ -312,7 +437,7 @@ function minuteButton(text) {
     : `Minuteur ${timeLabel(span.first)}`;
   button.addEventListener("click", (event) => {
     event.stopPropagation();
-    unlockAudio();
+    blip(660);
     startTimer(
       button.closest("article")?.querySelector("h2")?.textContent || "Minuteur",
       span.first,
@@ -339,7 +464,41 @@ document.body.appendChild(bubble);
 const bubbleText = bubble.querySelector("p");
 let bubbleTimer = 0;
 
+function frenchVoice() {
+  if (!window.speechSynthesis) return null;
+  const list = speechSynthesis.getVoices();
+  return list.find((voice) => voice.lang === "fr-FR") || list.find((voice) => /^fr/i.test(voice.lang || "")) || null;
+}
+
+function speak(text) {
+  const synth = window.speechSynthesis;
+  if (!synth || !text) return;
+  try {
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "fr-FR";
+    utter.rate = 0.96;
+    utter.pitch = 1.2;
+    utter.volume = 1;
+    const voice = frenchVoice();
+    if (voice) utter.voice = voice;
+    const busy = synth.speaking || synth.pending;
+    if (busy) synth.cancel();
+    if (busy) window.setTimeout(() => synth.speak(utter), 60);
+    else synth.speak(utter);
+  } catch {
+    /* le texte reste affiché si la voix est refusée */
+  }
+}
+
+if (window.speechSynthesis) {
+  speechSynthesis.getVoices();
+  speechSynthesis.addEventListener("voiceschanged", () => {
+    speechSynthesis.getVoices();
+  });
+}
+
 function say(text, image) {
+  speak(text);
   bubbleText.textContent = text;
   bubble.querySelector("img").src = image || "illustrations/noisette-bonjour.jpg";
   bubble.hidden = false;
@@ -454,7 +613,8 @@ document.querySelectorAll("article.recipe").forEach((article) => {
     const name = li.querySelector("span")?.textContent || "";
     const kind = kindOf(name);
     li.classList.add("live");
-    li.insertAdjacentHTML("afterbegin", pixel(kind));
+    li.dataset.kind = kind;
+    li.insertAdjacentHTML("afterbegin", cast(kind));
     const creature = li.querySelector(".creature");
     const delay = `${(index % 6) * 0.18}s`;
     creature.style.animationDelay = delay;
@@ -463,6 +623,7 @@ document.querySelectorAll("article.recipe").forEach((article) => {
     });
     li.addEventListener("click", () => {
       const already = recipeState(load(), article.id).i.includes(index);
+      blip(pitches[kind] || 440);
       toggle(article.id, "i", index);
       paintRecipe(article);
       if (already) return;
@@ -475,11 +636,13 @@ document.querySelectorAll("article.recipe").forEach((article) => {
         li.appendChild(voix);
       }
       const qty = li.querySelector("b")?.textContent?.trim() || "";
-      voix.textContent = qty ? `${qty}. ${voices[kind]}` : voices[kind];
+      const line = qty ? `${qty}. ${voices[kind]}` : voices[kind];
+      voix.textContent = line;
       voix.classList.add("on");
-      window.setTimeout(() => voix.classList.remove("on"), 2200);
+      window.setTimeout(() => voix.classList.remove("on"), 2600);
       const allIn = [...article.querySelectorAll(".ings li")].every((row) => row.classList.contains("done"));
       if (allIn) say("Tout est dans le bol. On peut suivre les étapes.");
+      else speak(line);
     });
   });
   article.querySelectorAll("ol.steps li").forEach((li, index) => {

@@ -189,16 +189,21 @@ article.recipe .ings li.live::before { content: none; }
 article.recipe .ings li > b { flex: 0 0 auto; min-width: 4.6rem; }
 article.recipe .ings li > span:not(.voix) { flex: 1 1 0; min-width: 0; }
 article.recipe .creature {
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 4.6rem;
+  height: 4.6rem;
   flex: none;
-  shape-rendering: crispEdges;
-  animation: bob 1.7s ease-in-out infinite;
+  overflow: visible;
+  filter: drop-shadow(0 6px 0 rgba(36, 28, 20, 0.1));
+  animation: bob 1.8s ease-in-out infinite;
   transform-origin: center bottom;
 }
-article.recipe .creature .pupil { animation: lid 4s linear infinite; }
+article.recipe .creature .eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: blink 4.8s linear infinite;
+}
 article.recipe li.done .creature { animation: none; transform: translateY(2px); }
-article.recipe li.pop .creature { animation: hop 0.42s ease; }
+article.recipe li.pop .creature { animation: hop 0.45s ease; }
 .voix {
   display: none;
   flex: 1 0 100%;
@@ -210,17 +215,17 @@ article.recipe li.pop .creature { animation: hop 0.42s ease; }
 }
 .voix.on { display: block; }
 @keyframes bob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50% { transform: translateY(-7px) scale(1.04, 0.96); }
 }
 @keyframes hop {
-  0% { transform: translateY(0) scale(1); }
-  40% { transform: translateY(-12px) scale(1.12); }
-  100% { transform: translateY(2px) scale(1); }
+  0% { transform: translateY(0) scale(1, 1); }
+  35% { transform: translateY(-18px) scale(0.9, 1.14); }
+  100% { transform: translateY(0) scale(1, 1); }
 }
-@keyframes lid {
-  0%, 86%, 100% { opacity: 1; }
-  90%, 94% { opacity: 0; }
+@keyframes blink {
+  0%, 84%, 100% { transform: scaleY(1); }
+  90%, 94% { transform: scaleY(0.08); }
 }
 article.recipe .ings li::before {
   content: "";

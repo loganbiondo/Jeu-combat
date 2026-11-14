@@ -612,10 +612,10 @@ function buildReader() {
 <main class="wrap">
 <p class="kicker">Le cahier de Noisette</p>
 <h1>${typo(book.title)}</h1>
-<p class="lead">${typo(book.subtitle)}. Le livre peint, et le cahier qu’on joue. Touche un ingrédient : il s’anime en pixart. Le poids écrit à côté ne change jamais.</p>
+<p class="lead">${typo(book.subtitle)}. Le livre peint, et le cahier qu’on joue. Touche un ingrédient : il parle, et il s’anime. Monte le son. Le poids écrit à côté ne change jamais.</p>
 <div class="promesse">
   <div><b>Recettes vraies</b><span>Les poids, les temps et les gestes restent ceux du livre.</span></div>
-  <div><b>Ingrédients pixart</b><span>Ils vivent quand on les touche, et ils répètent la quantité.</span></div>
+  <div><b>Ingrédients vivants</b><span>Ils ont un visage, ils parlent, et ils répètent la quantité écrite.</span></div>
   <div><b>18 étoiles</b><span>Une étoile par recette menée jusqu’au bout.</span></div>
 </div>
 <div class="downloads">
