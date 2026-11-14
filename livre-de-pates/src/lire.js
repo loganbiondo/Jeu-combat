@@ -145,10 +145,11 @@ function blip(freq) {
 function ding() {
   if (navigator.vibrate) navigator.vibrate([180, 80, 180, 80, 360]);
   try {
-    if (!audioCtx) return;
-    if (audioCtx.state === "suspended") audioCtx.resume();
-    const now = audioCtx.currentTime;
-    [523, 659, 784].forEach((freq, i) => tone(freq, now + i * 0.16, 0.28, 0.32));
+    if (audioCtx) {
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const now = audioCtx.currentTime;
+      [523, 659, 784].forEach((freq, i) => tone(freq, now + i * 0.16, 0.28, 0.32));
+    }
   } catch {
     /* le bandeau reste visible si le son est bloqué */
   }
@@ -470,6 +471,9 @@ function frenchVoice() {
   return list.find((voice) => voice.lang === "fr-FR") || list.find((voice) => /^fr/i.test(voice.lang || "")) || null;
 }
 
+let speakWait = 0;
+let speakGen = 0;
+
 function speak(text) {
   const synth = window.speechSynthesis;
   if (!synth || !text) return;
@@ -482,9 +486,16 @@ function speak(text) {
     const voice = frenchVoice();
     if (voice) utter.voice = voice;
     const busy = synth.speaking || synth.pending;
+    window.clearTimeout(speakWait);
+    speakGen += 1;
+    const gen = speakGen;
     if (busy) synth.cancel();
-    if (busy) window.setTimeout(() => synth.speak(utter), 60);
-    else synth.speak(utter);
+    const start = () => {
+      if (gen !== speakGen) return;
+      synth.speak(utter);
+    };
+    if (busy) speakWait = window.setTimeout(start, 60);
+    else start();
   } catch {
     /* le texte reste affiché si la voix est refusée */
   }
