@@ -101,15 +101,19 @@ let tickHandle = 0;
 let audioCtx;
 
 function unlockAudio() {
-  const Ctx = window.AudioContext || window.webkitAudioContext;
-  if (!Ctx) return;
-  audioCtx = audioCtx || new Ctx();
-  if (audioCtx.state === "suspended") audioCtx.resume();
-  const buffer = audioCtx.createBuffer(1, 1, 22050);
-  const source = audioCtx.createBufferSource();
-  source.buffer = buffer;
-  source.connect(audioCtx.destination);
-  source.start();
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    audioCtx = audioCtx || new Ctx();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const buffer = audioCtx.createBuffer(1, 1, 22050);
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioCtx.destination);
+    source.start();
+  } catch {
+    /* le compte à rebours part même si le son est refusé */
+  }
 }
 
 function ding() {
